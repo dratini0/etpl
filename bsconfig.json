@@ -1,0 +1,13 @@
+{
+    "$schema": "https://bucklescript.github.io/bucklescript/docson/build-schema.json",
+    "name": "etpl",
+    "sources": {
+        "dir": "src",
+        "subdirs": true
+    },
+    "package-specs": [
+        "commonjs",
+        "amdjs",
+        "es6"
+    ]
+}

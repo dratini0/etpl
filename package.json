@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "bs-platform": "^1.10.3",
+    "jquery": "^3.2.1",
+    "jquery-ui": "^1.12.1",
+    "webpack": "^3.8.1"
+  }
+}

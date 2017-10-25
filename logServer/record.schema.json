@@ -1,0 +1,32 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "type": "object",
+    "properties": {
+        "aud": {
+            "type": "string"
+        },
+        "token": {
+            "type": "string"
+        },
+        "data": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "timestamp": {
+                        "type": "number"
+                    }
+                },
+                "required": [
+                    "timestamp"
+                ]
+            }
+        }
+    },
+    "required":[
+        "aud",
+        "token",
+        "data"
+    ],
+    "additionalItems": false
+}

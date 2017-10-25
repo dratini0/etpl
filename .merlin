@@ -1,0 +1,23 @@
+PKG js_of_ocaml
+
+S ml
+
+B _build/ml
+
+FLG -ppx ~/.opam/system/lib/js_of_ocaml-ppx/ppx.exe
+
+####{BSB GENERATED: NO EDIT
+FLG -ppx /home/bala/iskola/2017-2018/project/etpl/node_modules/bs-platform/bin/bsppx.exe
+S /home/bala/iskola/2017-2018/project/etpl/node_modules/bs-platform/lib/ocaml
+B /home/bala/iskola/2017-2018/project/etpl/node_modules/bs-platform/lib/ocaml
+FLG -nostdlib -no-alias-deps -color always
+FLG -w -30-40+6+7+27+32..39+44+45
+S src
+B lib/bs/src
+S src/frontend
+B lib/bs/src/frontend
+S src/frontend/bindings
+B lib/bs/src/frontend/bindings
+S src/backend
+B lib/bs/src/backend
+####BSB GENERATED: NO EDIT}
