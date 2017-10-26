@@ -30,7 +30,7 @@ bucklescript:
 prepare-bundle:
 	mkdir -p build/bundle/js
 	cp -r web/* build/bundle
-	sed -i~ -e "s_SCRIPTPATH_js/bundle.js_" build/bundle/index.html
+	sed -e "/^\\s*<\!-- js includes -->\$$/r web/head/bundle.html" web/index.html > build/bundle/index.html
 
 build-bundle: prepare-bundle
 	webpack
@@ -41,23 +41,26 @@ watch-bundle: prepare-bundle
 serve-bundle: prepare-bundle
 	bsb -w & webpack -w & (cd build/bundle && python3 -m http.server)
 
-prepare-es6:
-	mkdir -p build/es6
-	cp -r web/* build/es6
-	sed -i~ -e "s_SCRIPTPATH_src/frontend/frontend.js_" build/es6/index.html
-	ln -sf $$(find "$(CURDIR)/node_modules/" -maxdepth 1 -mindepth 1 -type d -not -name ".bin") build/es6
-	ln -sf "$(CURDIR)/lib/es6/src" build/es6
+prepare-require:
+	mkdir -p build/require
+	cp -r web/* build/require
+	sed -e "/^\\s*<\!-- js includes -->\$$/r web/head/require.html" web/index.html > build/require/index.html
+	ln -sf $$(find "$(CURDIR)/node_modules/" -maxdepth 1 -mindepth 1 -type d -not -name ".bin") build/require
+	ln -sf "$(CURDIR)/lib/amdjs/src" build/require
 
-build-es6: prepare-es6 bucklescript
+build-require: prepare-require bucklescript
 
-watch-es6: prepare-es6
+watch-require: prepare-require
 	bsb -w
 
-serve-es6: prepare-es6
-	bsb -w & (cd build/es6 && python3 -m http.server)
+serve-require: prepare-require
+	bsb -w & (cd build/require && python3 -m http.server)
 
-build: build-bundle build-es6
+build: build-bundle build-require
 all: npm build
 
 clean:
 	rm -rf lib build
+
+.PHONY: npm bucklescript prepare-bundle build-bundle watch-bundle serve-bundle prepare-require build-require watch-require serve-require build all clean
+.DEFAULT_GOAL := all
