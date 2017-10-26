@@ -36,9 +36,11 @@ build-bundle: prepare-bundle
 	webpack
 
 watch-bundle: prepare-bundle
+	node_modules/.bin/chokidar "web/**" -c './chokidar.sh "{event}" "{path}" bundle' & \
 	bsb -w & webpack -w
 
 serve-bundle: prepare-bundle
+	node_modules/.bin/chokidar "web/**" -c './chokidar.sh "{event}" "{path}" bundle' & \
 	bsb -w & webpack -w & (cd build/bundle && python3 -m http.server)
 
 prepare-require:
@@ -51,9 +53,11 @@ prepare-require:
 build-require: prepare-require bucklescript
 
 watch-require: prepare-require
+	node_modules/.bin/chokidar "web/**" -c './chokidar.sh "{event}" "{path}" require' & \
 	bsb -w
 
 serve-require: prepare-require
+	node_modules/.bin/chokidar "web/**" -c './chokidar.sh "{event}" "{path}" require' & \
 	bsb -w & (cd build/require && python3 -m http.server)
 
 build: build-bundle build-require
