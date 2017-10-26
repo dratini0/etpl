@@ -1,24 +1,3 @@
-# _build/ml/tests.byte: ml/*.ml
-# 	ocamlbuild -use-ocamlfind -plugin-tag "package(js_of_ocaml.ocamlbuild)" ml/tests.byte
-
-# _build/ml/js_export.js: ml/*.ml
-# 	ocamlbuild -use-ocamlfind -plugin-tag "package(js_of_ocaml.ocamlbuild)" ml/js_export.js
-
-# builddirs:
-# 	mkdir -p build/ml
-# 	mkdir -p build/web
-
-# build.ml/tests.byte: builddirs _build/ml/tests.byte
-
-# all: _build/ml/tests.byte _build/ml/js_export.js
-# build: all
-
-# clean:
-# 	ocamlbuild -clean
-
-# .PHONY: all clean
-# .DEFAULT_GOAL := all
-
 export PATH := node_modules/.bin:$(PATH)
 
 npm:
