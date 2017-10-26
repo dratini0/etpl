@@ -3,3 +3,4 @@ lib/
 node_modules/
 .merlin
 logServer/database.sqlite
+npm-debug.log
