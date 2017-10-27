@@ -2,41 +2,43 @@ open Language
 
 exception RuntimeException of string * state
 
-let evalConstant (s:state) c = match c with
-  | Pi -> State(Literal(Number(3.1415926535897932384626433832795)))
+let updateState (State(_, loc)) e = State(e, loc)
 
-let evalUnary (s:state) o e1 = match (o, e1) with
-  | (Ln, Number(v1)) -> State(Literal(Number(log(v1))))
-  | (Floor, Number(v1)) -> State(Literal(Number(floor(v1))))
+let evalConstant s c = match c with
+  | Pi -> updateState s (Literal(Number(3.1415926535897932384626433832795)))
+
+let evalUnary s o e1 = match (o, e1) with
+  | (Ln, Number(v1)) -> updateState s (Literal(Number(log(v1))))
+  | (Floor, Number(v1)) -> updateState s (Literal(Number(floor(v1))))
   (* | _ -> raise (RuntimeException("evalUnary called wrong. The program is not well-typed.", s)) *)
   
-let evalBinary (s:state) o e1 e2 = match (o, e1, e2) with
-  | (Add, Number(e1), Number(e2)) -> State(Literal(Number(e1 +. e2)))
-  | (Sub, Number(e1), Number(e2)) -> State(Literal(Number(e1 -. e2)))
-  | (Mul, Number(e1), Number(e2)) -> State(Literal(Number(e1 *. e2)))
-  | (Div, Number(e1), Number(e2)) -> State(Literal(Number(e1 /. e2)))
+let evalBinary s o e1 e2 = match (o, e1, e2) with
+  | (Add, Number(e1), Number(e2)) -> updateState s (Literal(Number(e1 +. e2)))
+  | (Sub, Number(e1), Number(e2)) -> updateState s (Literal(Number(e1 -. e2)))
+  | (Mul, Number(e1), Number(e2)) -> updateState s (Literal(Number(e1 *. e2)))
+  | (Div, Number(e1), Number(e2)) -> updateState s (Literal(Number(e1 /. e2)))
   (* | _ -> raise (RuntimeException("evalBinary called wrong. The program is not well-typed.", s)) *)
 
-let rec nextStep (State(e)) = match e with
-  | Literal(_) -> raise (RuntimeException ("already a value", State(e)))
-  | Constant(c) -> evalConstant (State(e)) c
-  | UnaryOp(o, Literal(e1)) -> evalUnary (State(e)) o e1
+let rec nextStep s = match s with State(e, loc) -> match e with
+  | Literal(_) -> raise (RuntimeException ("already a value", s))
+  | Constant(c) -> evalConstant s c
+  | UnaryOp(o, Literal(e1)) -> evalUnary s o e1
   | UnaryOp(o, e1) ->
-    (match (nextStep(State(e1))) with State(e1_) ->
-      State(UnaryOp(o, e1_)))
-  | BinaryOp(o, Literal(e1), Literal(e2)) -> evalBinary (State(e)) o e1 e2
+    (match (nextStep(State(e1, 0::loc))) with State(e1_, _) ->
+      State(UnaryOp(o, e1_), loc))
+  | BinaryOp(o, Literal(e1), Literal(e2)) -> evalBinary s o e1 e2
   | BinaryOp(o, Literal(e1), e2) ->
-    (match (nextStep(State(e2))) with State(e2_) ->
-      State(BinaryOp(o, Literal(e1), e2_)))
+    (match (nextStep(State(e2, 1::loc))) with State(e2_, _) ->
+      State(BinaryOp(o, Literal(e1), e2_), loc))
   | BinaryOp(o, e1, e2) ->
-    (match (nextStep(State(e1))) with State(e1_) ->
-      State(BinaryOp(o, e1_, e2)))
-  | Hole -> raise(RuntimeException ("Programs with holes in them are not well typed", State(e)))
+    (match (nextStep(State(e1, 0::loc))) with State(e1_, _) ->
+      State(BinaryOp(o, e1_, e2), loc))
+  | Hole -> raise(RuntimeException ("Programs with holes in them are not well typed", s))
 
 let rec evaluateLoop s = match s with
-  | State(Literal(_)) -> s
+  | State(Literal(v), _) -> v
   | _ -> evaluateLoop (nextStep s)
 
 
-let evaluate e = match evaluateLoop (State(e)) with State(v) -> v
+let evaluate e = evaluateLoop (State(e, []))
 

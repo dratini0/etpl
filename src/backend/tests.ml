@@ -6,5 +6,5 @@ let exampleProgram = BinaryOp(Sub, BinaryOp(Div, Literal(Number(22.)), Literal(N
 
 let () = begin 
   print_endline (prettyPrintExpression exampleProgram);
-  print_endline (prettyPrintExpression (evaluate exampleProgram));
+  print_endline (prettyPrintValue (evaluate exampleProgram));
 end
