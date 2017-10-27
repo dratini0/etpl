@@ -11,7 +11,7 @@ prepare-bundle:
 	cp -r web/* build/bundle
 	sed -e "/^\\s*<\!-- js includes -->\$$/r web/head/bundle.html" web/index.html > build/bundle/index.html
 
-build-bundle: prepare-bundle
+build-bundle: bucklescript prepare-bundle
 	webpack
 
 watch-bundle: prepare-bundle
