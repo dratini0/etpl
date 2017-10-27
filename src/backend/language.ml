@@ -25,3 +25,6 @@ type position = int list
 
   (* This will eventually hold mutable state *)
 type state = State of expression * position
+
+type etplType =
+  | TNumber
