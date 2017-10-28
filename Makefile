@@ -3,7 +3,10 @@ export PATH := node_modules/.bin:$(PATH)
 npm:
 	npm install
 
-bucklescript:
+revision:
+	./revision.sh
+
+bucklescript: revision
 	bsb
 
 prepare-bundle:
@@ -15,14 +18,16 @@ build-bundle: bucklescript prepare-bundle
 	webpack
 
 watch-bundle: prepare-bundle
-	node_modules/.bin/chokidar "web/**" -c './chokidar.sh "{event}" "{path}" bundle' & \
+	chokidar "web/**" "src/**" -c './revision.sh "{path}"' & \
+	chokidar "web/**" -c './chokidar.sh "{event}" "{path}" bundle' & \
 	bsb -w & webpack -w
 
 serve-bundle: prepare-bundle
-	node_modules/.bin/chokidar "web/**" -c './chokidar.sh "{event}" "{path}" bundle' & \
+	chokidar "web/**" "src/**" -c './revision.sh "{path}"' & \
+	chokidar "web/**" -c './chokidar.sh "{event}" "{path}" bundle' & \
 	bsb -w & webpack -w & (cd build/bundle && python3 -m http.server)
 
-prepare-require:
+prepare-require: revision
 	mkdir -p build/require
 	cp -r web/* build/require
 	sed -e "/^\\s*<\!-- js includes -->\$$/r web/head/require.html" web/index.html > build/require/index.html
@@ -32,11 +37,13 @@ prepare-require:
 build-require: prepare-require bucklescript
 
 watch-require: prepare-require
-	node_modules/.bin/chokidar "web/**" -c './chokidar.sh "{event}" "{path}" require' & \
+	chokidar "web/**" "src/**" -c './revision.sh "{path}"' & \
+	chokidar "web/**" -c './chokidar.sh "{event}" "{path}" require' & \
 	bsb -w
 
 serve-require: prepare-require
-	node_modules/.bin/chokidar "web/**" -c './chokidar.sh "{event}" "{path}" require' & \
+	chokidar "web/**" "src/**" -c './revision.sh "{path}"' & \
+	chokidar "web/**" -c './chokidar.sh "{event}" "{path}" require' & \
 	bsb -w & (cd build/require && python3 -m http.server)
 
 build: build-bundle build-require

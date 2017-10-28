@@ -4,3 +4,5 @@ node_modules/
 .merlin
 logServer/database.sqlite
 npm-debug.log
+src/revision.ml
+.bsb.lock
