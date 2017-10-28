@@ -1,17 +1,5 @@
 open Language
-
-let constantName c = match c with
-  | Pi -> "Pi"
-
-let unaryOperatorName o = match o with
-  | Ln -> "Ln"
-  | Floor -> "Floor"
-
-let binaryOperatorName o = match o with
-  | Add -> "Add"
-  | Sub -> "Sub"
-  | Mul -> "Mul"
-  | Div -> "Div"
+open Names
 
 let prettyPrintValue v = match v with
   | Number(n) -> string_of_float(n)
