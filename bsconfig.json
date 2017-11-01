@@ -6,9 +6,7 @@
         "subdirs": true
     },
     "package-specs": [
-        "commonjs",
-        "amdjs",
-        "es6"
+        "amdjs"
     ],
     "bs-dependencies": [
         "bucklescript-jquery"
