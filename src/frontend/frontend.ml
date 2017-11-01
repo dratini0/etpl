@@ -49,6 +49,8 @@ let _ = jquery "#execute" |> Jquery.on "click" (fun [@bs.this] _ _ -> begin
 end)
 
 let () = begin
+  ignore (jquery "#logbox" |> Jquery.val_ (`str ""));
+  ignore (jquery "#revision" |> Jquery.text Revision.gitRevision);
   ignore (jquery "#prettyview" |> Jquery.text (prettyPrintExpression !currentProgram));
-  ignore (jquery "#encodedview" |> Jquery.val_ (`str (serialize !currentProgram)));  
+  ignore (jquery "#encodedview" |> Jquery.val_ (`str (serialize !currentProgram)));
 end
