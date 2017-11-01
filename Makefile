@@ -57,7 +57,8 @@ build: build-bundle build-require
 all: npm build
 
 clean:
-	rm -rf lib build
+	bsb -clean-world
+	rm -vrf lib build
 
 .PHONY: npm bucklescript prepare-bundle build-bundle watch-bundle serve-bundle prepare-require build-require watch-require serve-require test watch-test build all clean
 .DEFAULT_GOAL := all
