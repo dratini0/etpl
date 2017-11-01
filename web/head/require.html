@@ -2,7 +2,10 @@
     <script>
       requirejs.config({
         "nodeIdCompat": true,
-        "baseUrl": ""
+        //"baseUrl": "",
+        "paths": {
+          "jquery": "jquery/dist/jquery"
+        }
       });
       require(["src/frontend/frontend"], function(){});
     </script>

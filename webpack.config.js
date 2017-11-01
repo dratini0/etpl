@@ -5,8 +5,5 @@ module.exports = {
     output: {
         path: __dirname + '/build/bundle/js',
         filename: 'bundle.js'
-    },
-    externals: {
-        "jquery": "jQuery"
     }
 };

@@ -7,7 +7,7 @@ revision:
 	./revision.sh
 
 bucklescript: revision
-	bsb
+	bsb -make-world
 
 prepare-bundle:
 	mkdir -p build/bundle/js
@@ -31,7 +31,7 @@ prepare-require: revision
 	mkdir -p build/require
 	cp -r web/* build/require
 	sed -e "/^\\s*<\!-- js includes -->\$$/r web/head/require.html" web/index.html > build/require/index.html
-	ln -sf $$(find "$(CURDIR)/node_modules/" -maxdepth 1 -mindepth 1 -type d -not -name ".bin") build/require
+	ln -sf $$(find "$(CURDIR)/node_modules/" -maxdepth 1 -mindepth 1 \( -type d -o -type l \) -not -name ".bin") build/require
 	ln -sf "$(CURDIR)/lib/amdjs/src" build/require
 
 build-require: prepare-require bucklescript

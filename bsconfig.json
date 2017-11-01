@@ -9,5 +9,8 @@
         "commonjs",
         "amdjs",
         "es6"
+    ],
+    "bs-dependencies": [
+        "bucklescript-jquery"
     ]
 }
