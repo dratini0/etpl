@@ -2,7 +2,7 @@ open InfiniteJest
 open InfiniteJest.Test
 
 open Language
-open Prettyprint
+open PrettyPrint
 open Interpreter
 open Serialize
 open ExampleProgram

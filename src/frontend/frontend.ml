@@ -1,4 +1,4 @@
-open Prettyprint
+open PrettyPrint
 open Serialize
 open Names
 open Types
