@@ -15,6 +15,9 @@ let binaryOperatorName = function
   | Mul -> "Mul"
   | Div -> "Div"
 
+let typeName = function
+  | TNumber -> "Number"
+
 let constantByName = function
   | "Pi" -> Pi
   | name -> raise (UnknownNameException ("Constant " ^ name))
