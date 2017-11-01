@@ -1,14 +1,22 @@
 {
     "$schema": "https://bucklescript.github.io/bucklescript/docson/build-schema.json",
     "name": "etpl",
-    "sources": {
-        "dir": "src",
-        "subdirs": true
-    },
+    "sources": [
+        {
+            "dir": "src",
+            "subdirs": true
+        },
+        {
+            "dir": "tests",
+            "type": "dev"
+        }
+    ],
     "package-specs": [
-        "amdjs"
+        "amdjs",
+        "commonjs"
     ],
     "bs-dependencies": [
-        "bucklescript-jquery"
+        "bucklescript-jquery",
+        "infinite-jest"
     ]
 }

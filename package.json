@@ -3,8 +3,12 @@
     "bs-platform": "^1.10.3",
     "bucklescript-jquery": "git://github.com/dratini0/bucklescript-jquery",
     "chokidar-cli": "^1.2.0",
+    "infinite-jest": "git://github.com/glennsl/infinite-jest",
     "jquery": "^3.2.1",
     "jquery-ui": "^1.12.1",
     "webpack": "^3.8.1"
+  },
+  "jest": {
+    "testRegex": "/lib/js/tests/.*\\.js"
   }
 }

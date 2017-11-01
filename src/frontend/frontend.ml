@@ -11,7 +11,7 @@ let log message =
   let current = (logbox |> Jquery.val_get) in
   ignore (logbox |> Jquery.val_ (`str(current ^ message ^ "\n")))
 
-let currentProgram = ref Tests.exampleProgram
+let currentProgram = ref ExampleProgram.exampleProgram
 
 let _ = jquery "#encode" |> Jquery.on "click" (fun [@bs.this] _ _ -> begin
   ignore (jquery "#encodedview" |> Jquery.val_ (`str (serialize !currentProgram)));

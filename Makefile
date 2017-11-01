@@ -20,12 +20,12 @@ build-bundle: bucklescript prepare-bundle
 watch-bundle: prepare-bundle
 	chokidar "web/**" "src/**" -c './revision.sh "{path}"' & \
 	chokidar "web/**" -c './chokidar.sh "{event}" "{path}" bundle' & \
-	bsb -w & webpack -w
+	bsb -make-world -w & webpack -w
 
 serve-bundle: prepare-bundle
 	chokidar "web/**" "src/**" -c './revision.sh "{path}"' & \
 	chokidar "web/**" -c './chokidar.sh "{event}" "{path}" bundle' & \
-	bsb -w & webpack -w & (cd build/bundle && python3 -m http.server)
+	bsb -make-world -w & webpack -w & (cd build/bundle && python3 -m http.server)
 
 prepare-require: revision
 	mkdir -p build/require
@@ -39,12 +39,19 @@ build-require: prepare-require bucklescript
 watch-require: prepare-require
 	chokidar "web/**" "src/**" -c './revision.sh "{path}"' & \
 	chokidar "web/**" -c './chokidar.sh "{event}" "{path}" require' & \
-	bsb -w
+	bsb -make-world -w
 
 serve-require: prepare-require
 	chokidar "web/**" "src/**" -c './revision.sh "{path}"' & \
 	chokidar "web/**" -c './chokidar.sh "{event}" "{path}" require' & \
-	bsb -w & (cd build/require && python3 -m http.server)
+	bsb -make-world -w & (cd build/require && python3 -m http.server)
+
+test: bucklescript
+	node_modules/infinite-jest/node_modules/.bin/jest
+
+watch-test: revision
+	bsb -make-world -w > /dev/null & \
+	node_modules/infinite-jest/node_modules/.bin/jest --watchAll
 
 build: build-bundle build-require
 all: npm build
@@ -52,5 +59,5 @@ all: npm build
 clean:
 	rm -rf lib build
 
-.PHONY: npm bucklescript prepare-bundle build-bundle watch-bundle serve-bundle prepare-require build-require watch-require serve-require build all clean
+.PHONY: npm bucklescript prepare-bundle build-bundle watch-bundle serve-bundle prepare-require build-require watch-require serve-require test watch-test build all clean
 .DEFAULT_GOAL := all
