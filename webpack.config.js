@@ -4,6 +4,8 @@ module.exports = {
     entry: __dirname + "/lib/amdjs/src/frontend/frontend.js",
     output: {
         path: __dirname + '/build/bundle/js',
-        filename: 'bundle.js'
-    }
+        filename: 'bundle.js',
+        sourceMapFilename: 'bundle.js.map',
+    },
+    devtool: "source-map",
 };
