@@ -4,6 +4,12 @@ let jquery = Jquery.jquery
 
 let currentGetNumberCallback = ref (fun (number:float) -> Js.log number)
 
+let disableNormal () =
+  ignore (jquery "#numberinput_normal_flexbox input" |> Jquery.attr (`kv ("disabled", "disabled")))
+
+let enableNormal () =
+  ignore (jquery "#numberinput_normal_flexbox input" |> Jquery.removeAttr "disabled")
+  
 let frexpDecimal number =
   match classify_float number with
   | FP_infinite
@@ -19,17 +25,25 @@ let frexpDecimal number =
 
 let getNumber current callback =
 let (mantissa, exponent) = frexpDecimal current in begin
-  match classify_float current with
-  | FP_infinite ->
-    if current > 0. then
-      ignore (jquery "#numberinput_inf" |> Jquery.prop (`kv ("checked", "checked")))
-    else
-      ignore (jquery "#numberinput_neginf" |> Jquery.prop (`kv ("checked", "checked")))
-  | FP_nan -> ignore (jquery "#numberinput_nan" |> Jquery.prop (`kv ("checked", "checked")))
+  (match classify_float current with
+  | FP_infinite -> begin
+      disableNormal ();
+      if current > 0. then
+        ignore (jquery "#numberinput_inf" |> Jquery.prop (`kv ("checked", "checked")))
+      else
+        ignore (jquery "#numberinput_neginf" |> Jquery.prop (`kv ("checked", "checked")));
+    end
+  | FP_nan -> begin
+      disableNormal ();
+      ignore (jquery "#numberinput_nan" |> Jquery.prop (`kv ("checked", "checked")));
+    end
   | FP_zero
   | FP_normal
-  | FP_subnormal -> ignore (jquery "#numberinput_normal" |> Jquery.prop (`kv ("checked", "checked")))
-  ;
+  | FP_subnormal -> begin
+      enableNormal ();
+      ignore (jquery "#numberinput_normal" |> Jquery.prop (`kv ("checked", "checked")));
+    end
+  );
   ignore (jquery "#numberinput_mantissa" |> Jquery.val_ (`str mantissa));
   ignore (jquery "#numberinput_exponent" |> Jquery.val_ (`str exponent));
   currentGetNumberCallback := callback; 
@@ -64,4 +78,7 @@ let handleNumber () =
 let init () = begin
   jquery "#numberinput_ok" |> doSimpleFalseBind "click" handleNumber;
   jquery "#numberinput_cancel" |> doSimpleFalseBind "click" hideModals;
+  jquery "#numberinput_inf, #numberinput_neginf, #numberinput_nan" |>
+    doSimpleBind "click" disableNormal;
+  jquery "#numberinput_normal" |> doSimpleBind "click" enableNormal;
 end

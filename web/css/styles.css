@@ -167,8 +167,19 @@ a#debugpanel_button { /* needs more specificity than the general rule */
     padding-top: 5%;
 }
 
-#numberinput_mantissa, #numberinput_exponent {
+#numberinput_normal_flexbox {
+    display: flex;
+}
+
+#numberinput_normal_flexbox .stretchy {
     width: 30%;
+    flex: 1;
+    display: inline-block;
+}
+
+#numberinput_normal_flexbox .stretchy input {
+    width: 100%;
+    box-sizing: border-box;
 }
 
 #numberinput_error {
