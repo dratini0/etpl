@@ -35,6 +35,7 @@
     <div id="panelshade"></div>
     <div id="panelbuttons">
       <a href="#" id="debugpanel_button">D</a>
+      <a href="#" id="templatepanel_button">T</a>
       <a href="#" id="zoomin_button">+</a>
       <a href="#" id="zoomin_button">-</a>
     </div>
@@ -58,6 +59,25 @@
       </div>
       <div id="logbox-parent">
         <textarea id="logbox" readonly></textarea>
+      </div>
+    </div>
+    <div id="templatepanel" class="panel">
+      <div id="templates">
+        <h1>Templates</h1>
+        <h2>Constants</h2>
+        <p><span class="constant_Pi">&pi;</span></p>
+        <h2>Unary operators</h2>
+        <p><span class="unary_Ln">Ln(<span class="child0"></span>)</span></p>
+        <p><span class="unary_Abs">Abs(<span class="child0"></span>)</span></p>
+        <h2>Binary operators</h2>
+        <p><span class="binary_Add">(<span class="child0"></span> + <span class="child1"></span>)</span></p>
+        <p><span class="binary_Sub">(<span class="child0"></span> - <span class="child1"></span>)</span></p>
+        <p><span class="binary_Mul">(<span class="child0"></span> * <span class="child1"></span>)</span></p>
+        <p><span class="binary_Div">(<span class="child0"></span> / <span class="child1"></span>)</span></p>
+        <h2>Literals</h2>
+        <p><span class="literal_Number"><span class="child0"></span></span></p>
+        <h2>Hole</h2>
+        <p><a class="hole" href="#"></a></p>
       </div>
     </div>
   </div>

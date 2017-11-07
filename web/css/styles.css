@@ -194,3 +194,13 @@ a#debugpanel_button { /* needs more specificity than the general rule */
 #numberinput_modal.error #numberinput_error {
     display: block;
 }
+
+/* Template elements */
+
+.hole, #templates .child0, #templates .child1 {
+    width: 1em;
+    height: 1em;
+    background: salmon;
+    border: 1px dashed maroon;
+    display: inline-block;
+}
