@@ -170,3 +170,12 @@ a#debugpanel_button { /* needs more specificity than the general rule */
 #numberinput_modal input {
     width: 30%;
 }
+
+#numberinput_error {
+    display: none;
+    color: red;
+}
+
+#numberinput_modal.error #numberinput_error {
+    display: block;
+}

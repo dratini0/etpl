@@ -56,5 +56,5 @@ let () = begin
   ignore (jquery "#encodedview" |> Jquery.val_ (`str (serialize !currentProgram)));
   bindPanelHandlers();
   bindModalHandlers();
-  jquery "#get_number" |> doSimpleBind "click" (fun () -> getNumber 0. (fun number -> log(string_of_float number)));
+  jquery "#get_number" |> doSimpleBind "click" (fun () -> getNumber 0. (fun number -> log("Got: " ^ (string_of_float number))));
 end

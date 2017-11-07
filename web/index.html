@@ -66,14 +66,15 @@
     <div id="numberinput_modal" class="modal">
       <form id="numberinput_form">
         <p>
-          <input id="numberinput_mantissa" type="number" value="0">
+          <input id="numberinput_mantissa" type="number" value="0" step="any">
           &times; 10 ^
-          <input id="numberinput_exponent" type="number" value="0">
+          <input id="numberinput_exponent" type="number" value="0" step="1">
         </p>
         <p>
           <button id="numberinput_ok" type="submit">Done</button>
           <button id="numberinput_cancel">Cancel</button>
         </p>
+        <p id="numberinput_error">Invalid input!</p> 
       </form>
     </div>
   </div>

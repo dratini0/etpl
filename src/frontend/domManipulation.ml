@@ -67,12 +67,21 @@ end
 let handleNumber () =
   let mantissa = jquery "#numberinput_mantissa" |> Jquery.val_get in
   let exponent = jquery "#numberinput_exponent" |> Jquery.val_get in
-  begin
+  let number = 
     try
-      (mantissa ^ "e" ^ exponent) |> float_of_string |> !currentGetNumberCallback;
-      hideModals();
-    with Failure "float_of_string" -> (); (* TODO: handle error *)
-  end
+      Some((mantissa ^ "e" ^ exponent) |> float_of_string);
+    with Failure "float_of_string" -> try
+      let mantissa_ = float_of_string mantissa in
+      let exponent_ = exponent |> int_of_string |> float_of_int in
+      Some(mantissa_ *. exp(log 10. *. exponent_))
+    with Failure _ -> None in
+  match number with
+    | Some(number_) -> begin
+        ignore(jquery "#numberinput_modal" |> Jquery.removeClass(`str "error"));
+        hideModals ();
+        !currentGetNumberCallback number_;
+      end
+    | None -> ignore(jquery "#numberinput_modal" |> Jquery.addClass(`str "error"))
 
 let bindModalHandlers () = begin
   jquery "#modalshade" |> doSimpleBind "click" hideModals;
