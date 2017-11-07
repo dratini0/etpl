@@ -65,10 +65,47 @@
     <div id="modalshade"></div>
     <div id="numberinput_modal" class="modal">
       <form id="numberinput_form">
-        <p>
+        <fieldset>
+          <legend>
+            <label>
+              <input
+                type="radio"
+                name="numberinput_floatclass"
+                value="normal"
+                id="numberinput_normal"
+                checked>
+              Finite
+            </label>
+          </legend>
           <input id="numberinput_mantissa" type="number" value="0" step="any">
           &times; 10 ^
           <input id="numberinput_exponent" type="number" value="0" step="1">
+        </fieldset>
+        <p>
+          <label>
+            <input
+              type="radio"
+              name="numberinput_floatclass"
+              value="nan"
+              id="numberinput_nan">
+            Not a number
+          </label>
+          <label>
+            <input
+              type="radio"
+              name="numberinput_floatclass"
+              value="inf"
+              id="numberinput_inf">
+            Infinity
+          </label>
+          <label>
+            <input
+              type="radio"
+              name="numberinput_floatclass"
+              value="neginf"
+              id="numberinput_neginf">
+            Negative infinity
+          </label>
         </p>
         <p>
           <button id="numberinput_ok" type="submit">Done</button>

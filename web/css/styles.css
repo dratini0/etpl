@@ -167,7 +167,7 @@ a#debugpanel_button { /* needs more specificity than the general rule */
     padding-top: 5%;
 }
 
-#numberinput_modal input {
+#numberinput_mantissa, #numberinput_exponent {
     width: 30%;
 }
 
