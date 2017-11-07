@@ -22,13 +22,13 @@ let (mantissa, exponent) = frexpDecimal current in begin
   match classify_float current with
   | FP_infinite ->
     if current > 0. then
-      ignore (jquery "numberinput_inf" |> Jquery.prop (`kv ("checked", "checked")))
+      ignore (jquery "#numberinput_inf" |> Jquery.prop (`kv ("checked", "checked")))
     else
-      ignore (jquery "numberinput_neginf" |> Jquery.prop (`kv ("checked", "checked")))
-  | FP_nan -> ignore (jquery "numberinput_nan" |> Jquery.prop (`kv ("checked", "checked")))
+      ignore (jquery "#numberinput_neginf" |> Jquery.prop (`kv ("checked", "checked")))
+  | FP_nan -> ignore (jquery "#numberinput_nan" |> Jquery.prop (`kv ("checked", "checked")))
   | FP_zero
   | FP_normal
-  | FP_subnormal -> ignore (jquery "numberinput_normal" |> Jquery.prop (`kv ("checked", "checked")))
+  | FP_subnormal -> ignore (jquery "#numberinput_normal" |> Jquery.prop (`kv ("checked", "checked")))
   ;
   ignore (jquery "#numberinput_mantissa" |> Jquery.val_ (`str mantissa));
   ignore (jquery "#numberinput_exponent" |> Jquery.val_ (`str exponent));
