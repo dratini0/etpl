@@ -3,6 +3,7 @@ open Serialize
 open Names
 open Types
 open Interpreter
+open DomManipulation
 
 let jquery = Jquery.jquery
 
@@ -53,4 +54,7 @@ let () = begin
   ignore (jquery "#revision" |> Jquery.text Revision.gitRevision);
   ignore (jquery "#prettyview" |> Jquery.text (prettyPrintExpression !currentProgram));
   ignore (jquery "#encodedview" |> Jquery.val_ (`str (serialize !currentProgram)));
+  bindPanelHandlers();
+  bindModalHandlers();
+  jquery "#get_number" |> doSimpleBind "click" (fun () -> getNumber 0. (fun number -> log(string_of_float number)));
 end

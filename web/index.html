@@ -1,28 +1,83 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <title></title>
-    <!-- <link rel="stylesheet" href="css/styles.css?v=1.0"> -->
-  </head>
-  <body>
-    <pre id="revision"></pre>
-    <p>
-      <span id="prettyview"></span>
-    </p>
-    <p>
-      <input type="text" id="encodedview" style="width: 100%">
-    </p>
-    <p>
-      <button id="encode">Encode</button>
-      <button id="decode">Decode</button>
-      <button id="infer">Infer type</button>
-      <button id="fill_hole">Fill hole</button>
-      <button id="execute">Execute!</button>
-    </p>
-    <p>
-      <textarea id="logbox" style="width: 100%; height: 500px" readonly></textarea>
-    </p>
-    <!-- js includes -->
-  </body>
+
+<head>
+  <meta charset="utf-8">
+  <title>ETPL</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="HandheldFriendly" content="true" />
+</head>
+
+<body>
+  <div id="mainpanel">
+    <div id="codebox"></div>
+    <div id="keypad">
+      <div><button></button></div>
+      <div><button></button></div>
+      <div><button></button></div>
+      <div><button></button></div>
+      <div><button></button></div>
+      <div><button></button></div>
+      <div><button></button></div>
+      <div><button></button></div>
+      <div><button></button></div>
+      <div><button></button></div>
+      <div><button></button></div>
+      <div><button></button></div>
+      <div><button></button></div>
+      <div><button></button></div>
+      <div><button></button></div>
+      <div><button></button></div>
+    </div>
+  </div>
+  <div id="panelmeta">
+    <div id="panelshade"></div>
+    <div id="panelbuttons">
+      <a href="#" id="debugpanel_button">D</a>
+      <a href="#" id="zoomin_button">+</a>
+      <a href="#" id="zoomin_button">-</a>
+    </div>
+    <div id="debugpanel" class="panel">
+      <div>
+        Revision: <code id="revision"></code>
+      </div>
+      <div>
+        <span id="prettyview"></span>
+      </div>
+      <div>
+        <input type="text" id="encodedview">
+      </div>
+      <div>
+        <button id="encode">Encode</button>
+        <button id="decode">Decode</button>
+        <button id="infer">Infer type</button>
+        <button id="fill_hole">Fill hole</button>
+        <button id="execute">Execute!</button>
+        <button id="get_number">Get number</button>
+      </div>
+      <div id="logbox-parent">
+        <textarea id="logbox" readonly></textarea>
+      </div>
+    </div>
+  </div>
+  <div id="modalmeta">
+    <div id="modalshade"></div>
+    <div id="numberinput_modal" class="modal">
+      <form id="numberinput_form">
+        <p>
+          <input id="numberinput_mantissa" type="number" value="0">
+          &times; 10 ^
+          <input id="numberinput_exponent" type="number" value="0">
+        </p>
+        <p>
+          <button id="numberinput_ok" type="submit">Done</button>
+          <button id="numberinput_cancel">Cancel</button>
+        </p>
+      </form>
+    </div>
+  </div>
+  <!-- js includes -->
+</body>
+
 </html>

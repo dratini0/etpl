@@ -1,0 +1,172 @@
+body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+    font-family: sans-serif;
+    font-size: 14px;
+}
+
+/* Main panel */
+#mainpanel {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
+
+#codebox {
+    width: 100%;
+    height: 40%;
+}
+
+#keypad {
+    width: 100%;
+    height: 60%;
+}
+
+#keypad > * {
+    box-sizing: border-box;
+    width: 25%;
+    height: 25%;
+    float: left;
+    padding: 2px;
+}
+
+#keypad button {
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
+}
+
+/* Menu */
+#panelbuttons {
+    box-sizing: border-box;
+    position: absolute;
+    width: 48px;
+    height: 40%;
+    top: 0;
+    right: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    transition: right .5s;
+}
+
+#panelmeta.shown #panelbuttons {
+    right: 80%;
+}
+    
+#panelbuttons > a {
+    display: block;
+    color: initial;
+    text-decoration: initial;
+    width: 100%;
+    height: 48px;
+    margin: 8px 0;
+    background: yellow;
+    text-align: center;
+    line-height: 48px;
+}
+
+a#debugpanel_button { /* needs more specificity than the general rule */
+    background: darkgray;
+}
+
+/* Panel system */
+.panel {
+    position: absolute;
+    box-sizing: border-box;
+    width: 80%;
+    right: -80%;
+    top: 0;
+    bottom: 0;
+    padding: 5px;
+    transition: right .5s;
+    background: white; /* will be overridden, hopefully */
+}
+
+.panel.shown {
+    right: 0;
+}
+
+#panelshade {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 50%);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .5s;
+}
+
+#panelmeta.shown #panelshade {
+    opacity: 1;
+    pointer-events: all;
+}
+
+/* Debug panel */
+#debugpanel {
+    background: darkgray;
+    display: flex;
+    flex-direction: column;
+}
+
+#debugpanel > div {
+    margin: 5px 0;
+}
+
+#encodedview {
+    box-sizing: border-box;
+    width: 100%;
+}
+
+#logbox {
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
+}
+
+#logbox-parent {
+    flex: 1;
+}
+
+/* Modal system */
+.modal {
+    position: absolute;
+    box-sizing: border-box;
+    width: 80%;
+    height: 80%;
+    left: 10%;
+    bottom: -80%;
+    padding: 5px;
+    transition: bottom .5s;
+    background: white;
+}
+
+.modal.shown {
+    bottom: 10%;
+}
+
+#modalshade {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 50%);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .5s;
+}
+
+#modalmeta.shown #modalshade {
+    opacity: 1;
+    pointer-events: all;
+}
+
+/* Number input modal */
+#numberinput_modal {
+    text-align: center;
+    padding-top: 5%;
+}
+
+#numberinput_modal input {
+    width: 30%;
+}
