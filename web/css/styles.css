@@ -80,12 +80,14 @@ a#debugpanel_button { /* needs more specificity than the general rule */
     top: 0;
     bottom: 0;
     padding: 5px;
-    transition: right .5s;
+    visibility: hidden;
+    transition: right .5s, visibility .5s;
     background: white; /* will be overridden, hopefully */
 }
 
 .panel.shown {
     right: 0;
+    visibility: visible;
 }
 
 #panelshade {
@@ -138,12 +140,14 @@ a#debugpanel_button { /* needs more specificity than the general rule */
     left: 10%;
     bottom: -80%;
     padding: 5px;
-    transition: bottom .5s;
+    visibility: hidden;
+    transition: bottom .5s, visibility .5s;;
     background: white;
 }
 
 .modal.shown {
     bottom: 10%;
+    visibility: visible;
 }
 
 #modalshade {
