@@ -206,7 +206,7 @@ a#debugpanel_button { /* needs more specificity than the general rule */
     display: inline-block;
 }
 
-/* Throbberr */
+/* Throbber */
 #throbber_bg {
     position: absolute;
     width: 100%;
@@ -214,15 +214,21 @@ a#debugpanel_button { /* needs more specificity than the general rule */
     background: rgba(0, 0, 0, 50%);
 }
 
+#throbber_helper {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+}
+
 #throbber {
     box-sizing: border-box;
-    width: 10%;
-    height: 10%;
-    top: 45%;
-    left: 45%;
+    width: 10em;
+    height: 10em;
+    top: -5em;
+    left: -5em;
     position: relative;
-    border: 1em dotted black;
-    border-radius: 9999999px;
+    border: 1.8em dotted black;
+    border-radius: 5em;
     animation: 2s linear 0s infinite throbber;
 }
 
