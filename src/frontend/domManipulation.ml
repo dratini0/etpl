@@ -35,6 +35,10 @@ let doSimpleBind event binding jq =
 let doSimpleFalseBind event binding jq =
   ignore (jq |> Jquery.on event (fun [@bs.this] _ _ -> (binding (); Js.false_)))  
 
+let hideThrobber () = ignore (
+  jquery "#throbber_bg" |> Jquery.hide
+)
+
 let init () = begin
   jquery "#panelshade" |> doSimpleBind "click" hidePanels;
   jquery "#modalshade" |> doSimpleBind "click" hideModals;

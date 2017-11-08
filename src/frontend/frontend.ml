@@ -3,4 +3,5 @@ let () = begin
   PanelDebug.init();
   PanelTemplate.init();
   ModalGetNumber.init();
+  DomManipulation.hideThrobber();
 end
