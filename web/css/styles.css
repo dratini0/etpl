@@ -84,6 +84,7 @@ a#debugpanel_button { /* needs more specificity than the general rule */
     visibility: hidden;
     transition: right .5s, visibility .5s;
     background: white; /* will be overridden, hopefully */
+    overflow-y: auto;
 }
 
 .panel.shown {
@@ -144,6 +145,7 @@ a#debugpanel_button { /* needs more specificity than the general rule */
     visibility: hidden;
     transition: bottom .5s, visibility .5s;;
     background: white;
+    overflow-y: auto;
 }
 
 .modal.shown {
