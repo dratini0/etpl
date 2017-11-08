@@ -17,7 +17,7 @@ body {
 #codebox {
     width: 100%;
     height: 40%;
-    font-size: 20px;
+    font-size: 2em;
 }
 
 #keypad {
@@ -30,7 +30,7 @@ body {
     width: 25%;
     height: 25%;
     float: left;
-    padding: 2px;
+    padding: .15em;
 }
 
 #keypad button {
@@ -43,7 +43,7 @@ body {
 #panelbuttons {
     box-sizing: border-box;
     position: absolute;
-    width: 48px;
+    width: 3em;
     height: 40%;
     top: 0;
     right: 0;
@@ -61,11 +61,11 @@ body {
     color: initial;
     text-decoration: initial;
     width: 100%;
-    height: 48px;
-    margin: 8px 0;
+    height: 3em;
+    margin: 0.5em 0;
     background: yellow;
     text-align: center;
-    line-height: 48px;
+    line-height: 3em;
 }
 
 a#debugpanel_button { /* needs more specificity than the general rule */
@@ -80,7 +80,7 @@ a#debugpanel_button { /* needs more specificity than the general rule */
     right: -80%;
     top: 0;
     bottom: 0;
-    padding: 5px;
+    padding: 0.5em;
     visibility: hidden;
     transition: right .5s, visibility .5s;
     background: white; /* will be overridden, hopefully */
@@ -114,7 +114,7 @@ a#debugpanel_button { /* needs more specificity than the general rule */
 }
 
 #debugpanel > div {
-    margin: 5px 0;
+    margin: 0.5em 0;
 }
 
 #encodedview {
@@ -140,7 +140,7 @@ a#debugpanel_button { /* needs more specificity than the general rule */
     height: 80%;
     left: 10%;
     bottom: -80%;
-    padding: 5px;
+    padding: 0.5em;
     visibility: hidden;
     transition: bottom .5s, visibility .5s;;
     background: white;
