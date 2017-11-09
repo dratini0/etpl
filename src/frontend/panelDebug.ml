@@ -39,7 +39,7 @@ let inferButton () =
 (* Which hole are we filling? Well, that doesn't matter yet *)
 let fillHoleButton () = begin
   log "The following fragments fit in the hole:";
-  List.iter (fun fragment -> log (prettyPrintExpression fragment)) (whatFits !currentProgram [])
+  List.iter (fun fragment -> log (prettyPrintExpression fragment)) (whatFits !currentProgram Position.emptyPosition)
 end
 
 let executeButton () =

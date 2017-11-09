@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "bs-batteries": "git://github.com/dratini0/bs-batteries",
     "bs-platform": "^1.10.3",
     "bucklescript-jquery": "git://github.com/dratini0/bucklescript-jquery",
     "chokidar-cli": "^1.2.0",

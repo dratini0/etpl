@@ -1,4 +1,5 @@
 open Language
+open Position
 
 exception RuntimeException of string * state
 
@@ -24,14 +25,14 @@ let rec nextStep s = match s with State(e, loc) -> match e with
   | Constant(c) -> evalConstant s c
   | UnaryOp(o, Literal(e1)) -> evalUnary s o e1
   | UnaryOp(o, e1) ->
-    (match (nextStep(State(e1, 0::loc))) with State(e1_, _) ->
+    (match (nextStep(State(e1, posPush loc 0))) with State(e1_, _) ->
       State(UnaryOp(o, e1_), loc))
   | BinaryOp(o, Literal(e1), Literal(e2)) -> evalBinary s o e1 e2
   | BinaryOp(o, Literal(e1), e2) ->
-    (match (nextStep(State(e2, 1::loc))) with State(e2_, _) ->
+    (match (nextStep(State(e2, posPush loc 1))) with State(e2_, _) ->
       State(BinaryOp(o, Literal(e1), e2_), loc))
   | BinaryOp(o, e1, e2) ->
-    (match (nextStep(State(e1, 0::loc))) with State(e1_, _) ->
+    (match (nextStep(State(e1, posPush loc 0))) with State(e1_, _) ->
       State(BinaryOp(o, e1_, e2), loc))
   | Hole -> raise(RuntimeException ("Programs with holes in them are not well typed", s))
 
@@ -40,5 +41,5 @@ let rec evaluateLoop s = match s with
   | _ -> evaluateLoop (nextStep s)
 
 
-let evaluate e = evaluateLoop (State(e, []))
+let evaluate e = evaluateLoop (State(e, emptyPosition))
 

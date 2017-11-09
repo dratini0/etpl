@@ -1,3 +1,5 @@
+open Position
+
 type constant =
   | Pi
 
@@ -21,9 +23,7 @@ type expression =
   | BinaryOp of binaryOp * expression * expression
   | Hole
 
-type position = int list
-
-  (* This will eventually hold mutable state *)
+(* This will eventually hold mutable state *)
 type state = State of expression * position
 
 type etplType =

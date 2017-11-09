@@ -16,6 +16,7 @@
         "commonjs"
     ],
     "bs-dependencies": [
+        "bs-batteries",
         "bucklescript-jquery",
         "infinite-jest"
     ]
