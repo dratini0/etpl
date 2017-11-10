@@ -105,14 +105,14 @@ a#debugpanel_button { /* needs more specificity than the general rule */
     position: absolute;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 50%);
+    background: black;
     opacity: 0;
     pointer-events: none;
     transition: opacity .5s;
 }
 
 #panelmeta.shown #panelshade {
-    opacity: 1;
+    opacity: 0.5;
     pointer-events: all;
 }
 
@@ -166,14 +166,14 @@ a#debugpanel_button { /* needs more specificity than the general rule */
     position: absolute;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 50%);
+    background: black;
     opacity: 0;
     pointer-events: none;
     transition: opacity .5s;
 }
 
 #modalmeta.shown #modalshade {
-    opacity: 1;
+    opacity: 0.5;
     pointer-events: all;
 }
 
@@ -228,7 +228,7 @@ a#debugpanel_button { /* needs more specificity than the general rule */
     position: absolute;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 50%);
+    background: rgba(0, 0, 0, 0.5);
 }
 
 #throbber_helper {
