@@ -66,6 +66,19 @@ let setCurrentProgram expression = begin
   redraw()
 end
 
+let executeProgram() = begin
+  let result = Interpreter.evaluate !currentProgram in
+  ignore (jquery "#result"
+    |> Jquery.empty
+    |> Jquery.append_ (renderValue result));
+  showModal "result_modal" ();
+  ignore(Js.Global.setTimeout (fun () ->
+    ignore (jquery "#result_close" |> Jquery.focus);
+  ) 500);
+end
+
 let init () = begin
-  redraw ()
+  redraw ();
+  jquery "#codebox" |> doSimpleBind "dblclick" executeProgram;
+  jquery "#result_close" |> doSimpleBind "click" hideModals;
 end
