@@ -4,6 +4,7 @@ open TreeManipulation
 open CodeRender
 open Types
 open DomManipulation
+open ModalGetNumber
 
 let jquery = Jquery.jquery
 
@@ -48,7 +49,9 @@ and replaceCurrentHole expression = begin
 end
 
 (* This is meant to handle special cases like number literals *)
-and replaceCurrentHoleWrapper expression () = replaceCurrentHole expression
+and replaceCurrentHoleWrapper expression () = match expression with 
+  | Literal(Number(_)) -> getNumber 0. (fun x -> replaceCurrentHole(Literal(Number(x))))
+  | _ -> replaceCurrentHole expression
 
 let redraw () = begin
   ignore (jquery "#codebox"
