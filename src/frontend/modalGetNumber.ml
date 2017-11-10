@@ -17,10 +17,15 @@ let frexpDecimal number =
   | FP_zero
   | FP_normal
   | FP_subnormal ->
-      let strform = Printf.sprintf "%.17e" (abs_float number) in
-      let mantissa = String.sub strform 0 19 in
-      let exponent = String.sub strform 20 3 in
-      ((if number >= 0. then mantissa else ("-" ^ mantissa)), exponent)
+      let strform = Printf.sprintf "%.17g" number in
+      try (
+        let n = String.index strform 'e' in
+        let mantissa = String.sub strform 0 n in
+        let exponent = String.sub strform (n+1) ((String.length strform) - n - 1) in
+        let exponent = if exponent.[0] = '+' then String.sub exponent 1 (String.length exponent - 1) else exponent in
+        (mantissa, exponent)    
+      ) with Not_found -> (strform, "0")
+
       
 
 let getNumber current callback =
