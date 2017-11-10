@@ -2,6 +2,7 @@ open Language
 open Types
 open Names
 let jquery = Jquery.jquery
+open Position
 
 external createTextNode : string -> Dom.node = "document.createTextNode" [@@bs.val]
 
@@ -14,24 +15,35 @@ end
 
 let cloneElementFromTemplate id = jquery ("#templates ." ^ id) |> Jquery.clone
 
+let posToId position = "node" ^ (position
+                                  |> Position.list_of_pos
+                                  |> List.map string_of_int
+                                  |> String.concat "_")
+
 let renderValue = function
   | Number(n) -> (Jquery.jquery'' (createTextNode (string_of_float n)))
 
-let rec renderExpression expression = match expression with
-  | Literal value ->
-    let typeName_ = typeName (inferType expression) in
-    cloneElementFromTemplate ("literal_" ^ typeName_)
-      |> setChild 0 (renderValue value)
-  | Constant(c) ->
-    cloneElementFromTemplate ("constant_" ^ (constantName c))
-  | UnaryOp(o, e0) ->
-    cloneElementFromTemplate ("unary_" ^ (unaryOperatorName o))
-      |> setChild 0 (renderExpression e0)
-  | BinaryOp(o, e0, e1) ->
-    cloneElementFromTemplate ("binary_" ^ (binaryOperatorName o))
-      |> setChild 0 (renderExpression e0)
-      |> setChild 1 (renderExpression e1)
-  | Hole ->
-    cloneElementFromTemplate "hole"
-  
+let rec renderExpression expression position = begin
+  let element = (match expression with
+    | Literal value ->
+      let typeName_ = typeName (inferType expression) in
+      cloneElementFromTemplate ("literal_" ^ typeName_)
+        |> setChild 0 (renderValue value)
+    | Constant(c) ->
+      cloneElementFromTemplate ("constant_" ^ (constantName c))
+    | UnaryOp(o, e0) ->
+      cloneElementFromTemplate ("unary_" ^ (unaryOperatorName o))
+        |> setChild 0 (renderExpression e0 (Option.map (fun x -> posPush x 0) position))
+    | BinaryOp(o, e0, e1) ->
+      cloneElementFromTemplate ("binary_" ^ (binaryOperatorName o))
+        |> setChild 0 (renderExpression e0 (Option.map (fun x -> posPush x 0) position))
+        |> setChild 1 (renderExpression e1 (Option.map (fun x -> posPush x 1) position))
+    | Hole ->
+      cloneElementFromTemplate "hole"
+  ) in 
+  (match position with 
+    | None -> ()
+    | Some position -> ignore (element |> Jquery.attr (`kv ("id", posToId position))));
+  element;
+end
   

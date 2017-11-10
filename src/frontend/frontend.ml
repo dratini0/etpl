@@ -1,5 +1,6 @@
 let () = begin
   DomManipulation.init();
+  Programming.init();
   PanelDebug.init();
   PanelTemplate.init();
   ModalGetNumber.init();
