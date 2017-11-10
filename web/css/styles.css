@@ -210,11 +210,17 @@ a#debugpanel_button { /* needs more specificity than the general rule */
 /* Template elements */
 
 .hole, #templates .child0, #templates .child1 {
+    box-sizing: border-box;
     width: 1em;
     height: 1em;
     background: salmon;
     border: 1px dashed maroon;
     display: inline-block;
+}
+
+.focus.hole {
+    background: goldenrod;
+    border-width: 2px;
 }
 
 /* Throbber */

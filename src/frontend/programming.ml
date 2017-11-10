@@ -10,11 +10,15 @@ let jquery = Jquery.jquery
 let currentProgram = ref Hole
 let currentHole = ref emptyPosition
 
+let jqueryPosition position = jquery ("#" ^ (posToId position))
+
 let getCurrentHole () = !currentHole
 
 let rec setCurrentHole hole =
   let buttons = jquery "#keypad button" in
   begin
+    ignore (jqueryPosition !currentHole |> Jquery.removeClass (`str "focus"));
+    ignore (jqueryPosition hole |> Jquery.addClass (`str "focus"));
     currentHole := hole;
     ignore (buttons
       |> Jquery.empty
@@ -30,7 +34,7 @@ let rec setCurrentHole hole =
   end
 
 and replaceCurrentHole expression = begin
-  ignore (jquery ("#" ^ (posToId !currentHole))
+  ignore (jqueryPosition !currentHole
     |> Jquery.parent
     |> Jquery.empty
     |> Jquery.append_ (renderExpression expression (Some !currentHole)));
