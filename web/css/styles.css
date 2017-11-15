@@ -223,6 +223,31 @@ a#debugpanel_button { /* needs more specificity than the general rule */
     border-width: 2px;
 }
 
+.cut_control, .copy_control {
+    display: none;
+    color: initial;
+    text-decoration: initial;
+    font-size: 0.5em;
+    width: 2em;
+    height: 2em;
+    text-align: center;
+    line-height: 2em;
+    text-indent: 0;
+}
+
+.cut_control {
+    background-color: #ff6666;
+}
+
+.copy_control {
+    background-color: seagreen;
+}
+
+#templates .cut_control, #templates .copy_control,
+#codebox.cut_mode .cut_control, #codebox.copy_mode .copy_control {
+    display: inline-block;
+}
+
 /* Throbber */
 #throbber_bg {
     position: absolute;
