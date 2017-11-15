@@ -38,7 +38,7 @@ let rec firstHole_ tree accumulator = match tree with
   | UnaryOp(_, e0) -> firstHole_ e0 (posPush accumulator 0)
   | BinaryOp(_, e0, e1) -> (match firstHole_ e0 (posPush accumulator 0) with
     | Some result -> Some result
-    | None -> firstHole_ e1 (posPush accumulator 0))
+    | None -> firstHole_ e1 (posPush accumulator 1))
   | Hole -> Some(accumulator)
 
 let firstHole tree = firstHole_ tree emptyPosition

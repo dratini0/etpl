@@ -104,7 +104,7 @@ and replaceSubtreeVisual position expression = begin
     |> Jquery.empty
     |> Jquery.append_ (renderExpression expression (Some position) holeClickHandlerSpecialCasingFunction));
   currentProgram := replaceSubtree !currentProgram position expression;
-  if isInside !currentHole position then
+  if isInside !currentHole position || getSubtree !currentProgram (getCurrentHole()) != Hole then
     setCurrentHole (match nextHole !currentProgram position with
       | Some(pos) -> pos
       | None -> (match firstHole !currentProgram with

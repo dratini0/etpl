@@ -59,11 +59,15 @@ let treeManipulationTests =
       firstHole holeTest |> resolveOrFail |> list_of_pos |> Expect.toEqual [0; 0]
     );
 
+    test "FirstHoleRight" (fun () ->
+      firstHole (BinaryOp(Mul, Constant Pi, Hole)) |> resolveOrFail |> list_of_pos |> Expect.toEqual [1]
+    );
+
     test "NextHoleNegative" (fun () ->
       firstHole exampleProgram |> Expect.toEqual None
     );
 
-    (* test "NextHole" (fun () ->
+    test "NextHole" (fun () ->
       BatList.unfold emptyPosition 
         (fun pos -> 
           match nextHole holeTest pos with
@@ -71,7 +75,7 @@ let treeManipulationTests =
             | Some result -> Some(result, result))
         |> List.map list_of_pos
         |> Expect.toEqual [[0; 0]; [0; 1]; [1]]
-    ); *)
+    );
 
 ])
 
