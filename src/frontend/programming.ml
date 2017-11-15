@@ -29,16 +29,23 @@ let rec setCurrentHole hole =
     ignore (buttons
       |> Jquery.eq index
       |> Jquery.removeAttr "disabled"
-      |> Jquery.append_ (renderExpression expression None)
+      |> Jquery.append_ (renderExpression expression None emptySpecialCasingFunction)
       |> doSimpleBind "click" (replaceCurrentHoleWrapper expression)
     ));
   end
+
+and holeClickHandlerSpecialCasingFunction expression position element = match expression, position with
+  | Hole, Some(pos) -> begin
+    element |> doSimpleBind "click" (fun () -> setCurrentHole pos);
+    element
+  end
+  | _ -> element
 
 and replaceCurrentHole expression = begin
   ignore (jqueryPosition !currentHole
     |> Jquery.parent
     |> Jquery.empty
-    |> Jquery.append_ (renderExpression expression (Some !currentHole)));
+    |> Jquery.append_ (renderExpression expression (Some !currentHole) holeClickHandlerSpecialCasingFunction));
   currentProgram := replaceSubtree !currentProgram !currentHole expression;
   setCurrentHole (match nextHole !currentProgram !currentHole with
     | Some(pos) -> pos
@@ -56,7 +63,7 @@ and replaceCurrentHoleWrapper expression () = match expression with
 let redraw () = begin
   ignore (jquery "#codebox"
     |> Jquery.empty
-    |> Jquery.append_ (renderExpression !currentProgram (Some Position.emptyPosition)));
+    |> Jquery.append_ (renderExpression !currentProgram (Some Position.emptyPosition) holeClickHandlerSpecialCasingFunction));
   setCurrentHole (match firstHole !currentProgram with
     | Some(pos) -> pos
     | None -> emptyPosition

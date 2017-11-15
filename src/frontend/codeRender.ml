@@ -23,7 +23,7 @@ let posToId position = "node" ^ (position
 let renderValue = function
   | Number(n) -> (Jquery.jquery'' (createTextNode (string_of_float n)))
 
-let rec renderExpression expression position = begin
+let rec renderExpression expression position specialCasingFunction = begin
   let element = (match expression with
     | Literal value ->
       let typeName_ = typeName (inferType expression) in
@@ -33,17 +33,18 @@ let rec renderExpression expression position = begin
       cloneElementFromTemplate ("constant_" ^ (constantName c))
     | UnaryOp(o, e0) ->
       cloneElementFromTemplate ("unary_" ^ (unaryOperatorName o))
-        |> setChild 0 (renderExpression e0 (Option.map (fun x -> posPush x 0) position))
+        |> setChild 0 (renderExpression e0 (Option.map (fun x -> posPush x 0) position) specialCasingFunction)
     | BinaryOp(o, e0, e1) ->
       cloneElementFromTemplate ("binary_" ^ (binaryOperatorName o))
-        |> setChild 0 (renderExpression e0 (Option.map (fun x -> posPush x 0) position))
-        |> setChild 1 (renderExpression e1 (Option.map (fun x -> posPush x 1) position))
+        |> setChild 0 (renderExpression e0 (Option.map (fun x -> posPush x 0) position) specialCasingFunction)
+        |> setChild 1 (renderExpression e1 (Option.map (fun x -> posPush x 1) position) specialCasingFunction)
     | Hole ->
       cloneElementFromTemplate "hole"
   ) in 
   (match position with 
     | None -> ()
     | Some position -> ignore (element |> Jquery.attr (`kv ("id", posToId position))));
-  element;
+  specialCasingFunction expression position element;
 end
   
+let emptySpecialCasingFunction _ _ element = element;
