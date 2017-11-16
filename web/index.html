@@ -4,6 +4,7 @@
 <head>
   <meta charset="utf-8">
   <title>ETPL</title>
+  <link rel="stylesheet" href="fontawesome/css/font-awesome.min.css">
   <link rel="stylesheet" href="css/styles.css">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <meta name="HandheldFriendly" content="true" />
@@ -35,13 +36,13 @@
   <div id="panelmeta">
     <div id="panelshade"></div>
     <div id="panelbuttons">
-      <a href="#" id="debugpanel_button">D</a>
-      <a href="#" id="templatepanel_button">T</a>
-      <a href="#" id="zoomin_button">+</a>
-      <a href="#" id="zoomout_button">-</a>
-      <a href="#" id="cut_button">X</a>
-      <a href="#" id="copy_button">C</a>
-      <a href="#" id="paste_button">V</a>
+      <a href="#" id="debugpanel_button" title="Debugging"><i class="fa fa-bug" aria-hidden="true"></i></a>
+      <a href="#" id="templatepanel_button" title="Templates">T</a>
+      <a href="#" id="zoomin_button" title="Zoom in"><i class="fa fa-search-plus" aria-hidden="true"></i></a>
+      <a href="#" id="zoomout_button" title="Zoom out"><i class="fa fa-search-minus" aria-hidden="true"></i></a>
+      <a href="#" id="cut_button" title="Cut"><i class="fa fa-cut" aria-hidden="true"></i></a>
+      <a href="#" id="copy_button" title="Copy"><i class="fa fa-copy" aria-hidden="true"></i></a>
+      <a href="#" id="paste_button" title="Clipboard"><i class="fa fa-clipboard" aria-hidden="true"></i></a>
     </div>
     <div id="debugpanel" class="panel">
       <div>
@@ -84,7 +85,7 @@
         <h2>Hole</h2>
         <p><a class="hole" href="#">&zwnj;</a></p>
         <h2>Controls</h2>
-        <p><span class="controls"><a class="cut_control" href="#">X</a><a class="copy_control" href="#">C</a></span></p> 
+        <p><span class="controls"><a class="cut_control" href="#" title="Cut"><i class="fa fa-cut" aria-hidden="true"></i></a><a class="copy_control" href="#" title="Copy"><i class="fa fa-copy" aria-hidden="true"></i></a></span></p> 
       </div>
     </div>
   </div>
@@ -150,7 +151,10 @@
   </div>
   <div id="throbber_bg">
     <div id="throbber_helper">
-      <div id="throbber"></div>
+      <div id="throbber">
+        <i class="fa fa-spinner fa-pulse fa-fw"></i>
+        <span class="sr-only">Loading...</span>
+      </div>
     </div>
   </div>
   <!-- js includes -->
