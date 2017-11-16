@@ -78,6 +78,14 @@ input, textarea, button {
     line-height: 2em;
 }
 
+#panelbuttons > a.dev_only {
+    display: none;
+}
+
+body.dev #panelbuttons > a.dev_only {
+    display: block;
+}
+
 a#debugpanel_button { /* needs more specificity than the general rule */
     background: darkgray;
 }

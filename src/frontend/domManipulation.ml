@@ -37,10 +37,7 @@ let showModal name () = begin
 end
 
 let doSimpleBind event binding jq =
-  ignore (jq |> Jquery.on event (fun [@bs.this] _ _ -> (binding (); Js.true_)))
-
-let doSimpleFalseBind event binding jq =
-  ignore (jq |> Jquery.on event (fun [@bs.this] _ _ -> (binding (); Js.false_)))  
+  ignore (jq |> Jquery.on event (fun [@bs.this] _ _ -> (binding (); Js.false_)))
 
 let hideThrobber () = ignore (
   jquery "#throbber_bg" |> Jquery.hide

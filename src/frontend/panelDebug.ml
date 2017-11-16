@@ -9,6 +9,8 @@ open ModalGetNumber
 
 let jquery = Jquery.jquery
 
+external getQueryString: string = "location.search" [@@bs.val]
+
 let log message =
   let logbox = (jquery "#logbox") in
   let current = (logbox |> Jquery.val_get) in
@@ -50,7 +52,7 @@ let openPanel () = begin
   showPanel "debugpanel" ();
 end
 
-let init () = begin
+let init () = if getQueryString = "?dev" then begin
   ignore (jquery "#logbox" |> Jquery.val_ (`str ""));
   ignore (jquery "#revision" |> Jquery.text Revision.gitRevision);
   jquery "#encode" |> doSimpleBind "click" encodeButton;
@@ -61,4 +63,5 @@ let init () = begin
   jquery "#get_number" |> doSimpleBind "click" getNumberButton;
   jquery "#redraw" |> doSimpleBind "click" redraw;
   jquery "#debugpanel_button" |> doSimpleBind "click" openPanel;
+  jquery "body" |> Jquery.addClass (`str "dev") |> ignore;
 end

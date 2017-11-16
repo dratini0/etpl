@@ -81,8 +81,8 @@ let handleNumber () =
     | None -> ignore(jquery "#numberinput_modal" |> Jquery.addClass(`str "error"))
 
 let init () = begin
-  jquery "#numberinput_ok" |> doSimpleFalseBind "click" handleNumber;
-  jquery "#numberinput_cancel" |> doSimpleFalseBind "click" hideModals;
+  jquery "#numberinput_ok" |> doSimpleBind "click" handleNumber;
+  jquery "#numberinput_cancel" |> doSimpleBind "click" hideModals;
   jquery "#numberinput_inf, #numberinput_neginf, #numberinput_nan" |>
     doSimpleBind "click" disableNormal;
   jquery "#numberinput_normal" |> doSimpleBind "click" enableNormal;

@@ -203,6 +203,9 @@ let showClipboard () =
           |> Jquery.find ".clip_paste"
           |> doSimpleBind "click" (clipboardPasteHandler expression);
       end else begin
+        item
+          |> Jquery.find ".clip_paste"
+          |> doSimpleBind "click" (fun () -> ());
         item |> Jquery.addClass (`str "invalid") |> ignore;
       end;
       clipboardElement |> Jquery.append_ item |> ignore;
