@@ -2,21 +2,28 @@ let jquery = Jquery.jquery
 
 let currentPanel = ref None
 
+let getCurrentPanel () = !currentPanel
+
 let hidePanels () = begin
   ignore (jquery ".panel" |> Jquery.removeClass (`str "shown"));
   ignore (jquery "#panelmeta" |> Jquery.removeClass (`str "shown"));
   currentPanel := None;
 end
 
-let showPanel name () = begin
+let showPanelWithReturn name = begin
   if !currentPanel <> Some(name) then begin
     ignore (jquery ".panel" |> Jquery.removeClass (`str "shown"));
     ignore (jquery "#panelmeta" |> Jquery.addClass (`str "shown"));
     ignore (jquery ("#" ^ name) |> Jquery.addClass (`str "shown"));
-    currentPanel := Some(name)
-  end else
-    hidePanels()
+    currentPanel := Some(name);
+    true;
+  end else begin
+    hidePanels();
+    false;
+  end
 end
+
+let showPanel name () = ignore (showPanelWithReturn name)
 
 let hideModals () = begin
   ignore (jquery ".modal" |> Jquery.removeClass (`str "shown"));

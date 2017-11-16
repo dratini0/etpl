@@ -41,23 +41,34 @@ let setMode mode = begin
         |> Jquery.addClass (`str "copy_mode"))
 end
 
-let cutButton () = setMode (match !currentMode with
-  | ModeCut -> ModeCutLock
-  | ModeCutLock -> ModeInsert
-  | _ -> ModeCut)
+let resetMode () = 
+  match !currentMode with
+    | ModeCut
+    | ModeCopy -> setMode ModeInsert
+    | _ -> ()
 
-let copyButton () = setMode (match !currentMode with
-  | ModeCopy -> ModeCopyLock
-  | ModeCopyLock -> ModeInsert
-  | _ -> ModeCopy)
+let cutButton () = begin
+  setMode (match !currentMode with
+    | ModeCut -> ModeCutLock
+    | ModeCutLock -> ModeInsert
+    | _ -> ModeCut);
+  hidePanels ();
+end
 
-let resetMode () = setMode ModeInsert
+let copyButton () = begin
+  setMode (match !currentMode with
+    | ModeCopy -> ModeCopyLock
+    | ModeCopyLock -> ModeInsert
+    | _ -> ModeCopy);
+  hidePanels ();
+end
 
 let addToClipboard expression = clipboard := expression::!clipboard
 
 let rec setCurrentHole hole =
   let buttons = jquery "#keypad button" in
   begin
+    resetMode ();
     (match !currentHole with
       | Some oldHole -> ignore (jqueryPosition oldHole |> Jquery.removeClass (`str "focus"));
       | None -> ());
@@ -81,15 +92,15 @@ let rec setCurrentHole hole =
       | None -> ());
   end
 
-and handleCut position expression () = begin
-  if !currentMode = ModeCut then resetMode () else ();
-  addToClipboard expression;
+and handleCut position () = begin
+  resetMode ();
+  addToClipboard (getSubtree !currentProgram position);
   replaceSubtreeVisual position Hole;
 end
 
-and handleCopy _ expression () = begin
-  if !currentMode = ModeCopy then resetMode () else ();
-  addToClipboard expression;
+and handleCopy position () = begin
+  resetMode ();
+  addToClipboard (getSubtree !currentProgram position);
 end
 
 and holeClickHandlerSpecialCasingFunction expression position element = match expression, position with
@@ -99,13 +110,14 @@ and holeClickHandlerSpecialCasingFunction expression position element = match ex
   end
   | _, Some(pos) -> begin
     let controls = cloneElementFromTemplate "controls" in
-    controls |> Jquery.find ".cut_control" |> doSimpleBind "click" (handleCut pos expression);
-    controls |> Jquery.find ".copy_control" |> doSimpleBind "click" (handleCopy pos expression);
+    controls |> Jquery.find ".cut_control" |> doSimpleBind "click" (handleCut pos);
+    controls |> Jquery.find ".copy_control" |> doSimpleBind "click" (handleCopy pos);
     element |> Jquery.prepend_ controls;
   end
   | _ -> element
 
 and replaceSubtreeVisual position expression = begin
+  resetMode ();
   ignore (jqueryPosition position
     |> Jquery.parent
     |> Jquery.empty
@@ -154,10 +166,54 @@ let executeProgram() = begin
   ) 500);
 end
 
+let clipboardDeleteHandler = fun [@bs.this] node _ -> begin
+  let node = Jquery.jquery'' node |> Jquery.parent in
+  clipboard := !clipboard |> BatList.remove_at (node |> Jquery.index);
+  node |> Jquery.remove |> ignore;
+  Js.true_;
+end
+
+let clipboardPasteHandler expression () =
+  match getCurrentHole() with
+    | None -> ()
+    | Some hole -> 
+      if fitsHole !currentProgram hole expression then begin
+        replaceCurrentHole expression;
+        hidePanels();
+      end else ()
+
+let showClipboard () =
+  if showPanelWithReturn "clipboardpanel" then begin
+    let clipboardElement = jquery "#clipboard" |> Jquery.empty in
+    !clipboard |> List.iter (fun expression -> (
+      let item = cloneElementFromTemplate "clipboarditem" in
+      item
+        |> Jquery.find ".child0"
+        |> Jquery.append_(renderExpression expression None emptySpecialCasingFunction)
+        |> ignore;
+      item
+        |> Jquery.find ".clip_delete"
+        |> Jquery.on "click" clipboardDeleteHandler
+        |> ignore;
+      if match getCurrentHole() with
+        | Some hole -> fitsHole !currentProgram hole expression
+        | None -> false
+      then begin
+        item
+          |> Jquery.find ".clip_paste"
+          |> doSimpleBind "click" (clipboardPasteHandler expression);
+      end else begin
+        item |> Jquery.addClass (`str "invalid") |> ignore;
+      end;
+      clipboardElement |> Jquery.append_ item |> ignore;
+      ))
+  end else ()
+
 let init () = begin
   redraw ();
   jquery "#codebox" |> doSimpleBind "dblclick" executeProgram;
   jquery "#result_close" |> doSimpleBind "click" hideModals;
   jquery "#cut_button" |> doSimpleBind "click" cutButton;
   jquery "#copy_button" |> doSimpleBind "click" copyButton;
+  jquery "#clipboard_button" |> doSimpleBind "click" showClipboard;
 end

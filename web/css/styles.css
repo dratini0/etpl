@@ -208,8 +208,7 @@ a#debugpanel_button { /* needs more specificity than the general rule */
     display: block;
 }
 
-/* Template elements */
-
+/* Program elements */
 .hole, #templates .child0, #templates .child1 {
     box-sizing: border-box;
     width: 1em;
@@ -236,6 +235,7 @@ a#debugpanel_button { /* needs more specificity than the general rule */
     text-indent: 0;
 }
 
+/* Clipboard controls */
 .cut_control {
     background-color: #ff6666;
 }
@@ -247,6 +247,31 @@ a#debugpanel_button { /* needs more specificity than the general rule */
 #templates .cut_control, #templates .copy_control,
 #codebox.cut_mode .cut_control, #codebox.copy_mode .copy_control {
     display: inline-block;
+}
+
+.clipboarditem {
+    font-size: 2em;
+    margin: 0.5em 0;
+}
+
+.clipboarditem a {
+    color: initial;
+    text-decoration: initial;
+}
+
+.clipboarditem .clip_delete {
+    display: inline-block;
+    background-color: red;
+    font-size: 0.5em;
+    width: 2em;
+    height: 2em;
+    text-align: center;
+    line-height: 2em;
+}
+
+.clipboarditem.invalid .clip_paste {
+    color: darkgray;
+    cursor: auto;
 }
 
 /* Throbber */
