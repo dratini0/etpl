@@ -9,7 +9,7 @@ open ModalGetNumber
 let jquery = Jquery.jquery
 
 let currentProgram = ref Hole
-let currentHole = ref emptyPosition
+let currentHole = ref (Some emptyPosition)
 let clipboard = ref []
 
 type mode =
@@ -58,20 +58,27 @@ let addToClipboard expression = clipboard := expression::!clipboard
 let rec setCurrentHole hole =
   let buttons = jquery "#keypad button" in
   begin
-    ignore (jqueryPosition !currentHole |> Jquery.removeClass (`str "focus"));
-    ignore (jqueryPosition hole |> Jquery.addClass (`str "focus"));
+    (match !currentHole with
+      | Some oldHole -> ignore (jqueryPosition oldHole |> Jquery.removeClass (`str "focus"));
+      | None -> ());
+    (match hole with
+      | Some hole -> ignore (jqueryPosition hole |> Jquery.addClass (`str "focus"));
+      | None -> ());
     currentHole := hole;
     ignore (buttons
       |> Jquery.empty
       |> Jquery.attr (`kv ("disabled", "disabled"))
       |> Jquery.off "click");
-    whatFits !currentProgram !currentHole |> List.iteri (fun index expression ->
-    ignore (buttons
-      |> Jquery.eq index
-      |> Jquery.removeAttr "disabled"
-      |> Jquery.append_ (renderExpression expression None emptySpecialCasingFunction)
-      |> doSimpleBind "click" (replaceCurrentHoleWrapper expression)
-    ));
+    (match hole with
+      | Some hole ->
+          whatFits !currentProgram hole |> List.iteri (fun index expression ->
+          ignore (buttons
+            |> Jquery.eq index
+            |> Jquery.removeAttr "disabled"
+            |> Jquery.append_ (renderExpression expression None emptySpecialCasingFunction)
+            |> doSimpleBind "click" (replaceCurrentHoleWrapper expression)
+          ));
+      | None -> ());
   end
 
 and handleCut position expression () = begin
@@ -87,7 +94,7 @@ end
 
 and holeClickHandlerSpecialCasingFunction expression position element = match expression, position with
   | Hole, Some(pos) -> begin
-    element |> doSimpleBind "click" (fun () -> setCurrentHole pos);
+    element |> doSimpleBind "click" (fun () -> setCurrentHole (Some pos));
     element
   end
   | _, Some(pos) -> begin
@@ -104,17 +111,19 @@ and replaceSubtreeVisual position expression = begin
     |> Jquery.empty
     |> Jquery.append_ (renderExpression expression (Some position) holeClickHandlerSpecialCasingFunction));
   currentProgram := replaceSubtree !currentProgram position expression;
-  if isInside !currentHole position || getSubtree !currentProgram (getCurrentHole()) != Hole then
-    setCurrentHole (match nextHole !currentProgram position with
-      | Some(pos) -> pos
-      | None -> (match firstHole !currentProgram with
-        | Some(pos) -> pos
-        | None -> emptyPosition
-      ))
-  else ();
+  match !currentHole with
+    | Some hole ->
+      if isInside hole position then
+        setCurrentHole (match nextHole !currentProgram position with
+          | Some(pos) -> Some(pos)
+          | None -> firstHole !currentProgram)
+      else ();
+    | None -> setCurrentHole (firstHole !currentProgram);
 end
 
-and replaceCurrentHole expression = replaceSubtreeVisual !currentHole expression
+and replaceCurrentHole expression = match !currentHole with 
+  | Some hole -> replaceSubtreeVisual hole expression
+  | None -> ()
 
 (* This is meant to handle special cases like number literals *)
 and replaceCurrentHoleWrapper expression () = match expression with 
@@ -125,10 +134,7 @@ let redraw () = begin
   ignore (jquery "#codebox"
     |> Jquery.empty
     |> Jquery.append_ (renderExpression !currentProgram (Some Position.emptyPosition) holeClickHandlerSpecialCasingFunction));
-  setCurrentHole (match firstHole !currentProgram with
-    | Some(pos) -> pos
-    | None -> emptyPosition
-  );
+  setCurrentHole (firstHole !currentProgram);
 end
 
 let getCurrentProgram () = !currentProgram

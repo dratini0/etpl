@@ -28,10 +28,12 @@ let decodeButton () =
 let inferButton () =
   log ("Type: " ^ (getCurrentProgram() |> inferType |> typeName))
 
-let fillHoleButton () = begin
-  log "The following fragments fit in the hole:";
-  List.iter (fun fragment -> log (prettyPrintExpression fragment)) (whatFits (getCurrentProgram()) (getCurrentHole()))
-end
+let fillHoleButton () = match getCurrentHole() with
+  | Some hole -> begin
+      log "The following fragments fit in the hole:";
+      List.iter (fun fragment -> log (prettyPrintExpression fragment)) (whatFits (getCurrentProgram()) hole)
+    end
+  | None -> log "No hole to fill"
 
 let executeButton () =
   try(
