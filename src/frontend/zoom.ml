@@ -7,7 +7,7 @@ let zoomStep = 1.1
 
 let setZoom number = begin
   zoomLevel := number;
-  ignore(jquery "body" |> Jquery.css (`kv ("font-size", (string_of_float number) ^ "px")));
+  ignore(jquery "body" |> Jquery.css (`kv ("font-size", Printf.sprintf "%f%,px" number)));
 end
 
 let  zoomIn () = setZoom (!zoomLevel *. zoomStep)
