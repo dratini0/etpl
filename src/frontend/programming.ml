@@ -27,18 +27,30 @@ let getCurrentHole () = !currentHole
 
 let setMode mode = begin
   currentMode := mode;
-  match mode with
-    | ModeInsert -> ignore(jquery "#codebox"
-        |> Jquery.removeClass (`str "cut_mode")
-        |> Jquery.removeClass (`str "copy_mode"))
+  jquery "body"
+    |> Jquery.removeClass (`str "cut_mode")
+    |> Jquery.removeClass (`str "copy_mode")
+    |> Jquery.removeClass (`str "lock_mode")
+    |> ignore;
+  (match mode with
+    | ModeInsert -> ()
     | ModeCut
-    | ModeCutLock -> ignore(jquery "#codebox"
+    | ModeCutLock ->
+      jquery "body"
         |> Jquery.addClass (`str "cut_mode")
-        |> Jquery.removeClass (`str "copy_mode"))
+        |> ignore
     | ModeCopy
-    | ModeCopyLock -> ignore(jquery "#codebox"
-        |> Jquery.removeClass (`str "cut_mode")
-        |> Jquery.addClass (`str "copy_mode"))
+    | ModeCopyLock ->
+      jquery "body"
+        |> Jquery.addClass (`str "copy_mode")
+        |> ignore);
+  (match mode with
+    | ModeCutLock
+    | ModeCopyLock ->
+      jquery "body"
+        |> Jquery.addClass (`str "lock_mode")
+        |> ignore
+    | _ -> ());
 end
 
 let resetMode () = 

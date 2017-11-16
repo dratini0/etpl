@@ -90,6 +90,30 @@ a#debugpanel_button { /* needs more specificity than the general rule */
     background: darkgray;
 }
 
+a#cut_button {
+    background-color: #ff6666;
+}
+
+.cut_mode a#cut_button {
+    background-color: #ff3333;
+}
+
+.cut_mode.lock_mode a#cut_button {
+    background-color: red;
+}
+
+a#copy_button {
+    background-color: seagreen;
+}
+
+.copy_mode a#copy_button {
+    background-color: #17852b;
+}
+
+.copy_mode.lock_mode a#copy_button {
+    background-color: green;
+}
+
 /* Panel system */
 .panel {
     position: absolute;
@@ -253,7 +277,7 @@ a#debugpanel_button { /* needs more specificity than the general rule */
 }
 
 #templates .cut_control, #templates .copy_control,
-#codebox.cut_mode .cut_control, #codebox.copy_mode .copy_control {
+.cut_mode #codebox .cut_control, .copy_mode #codebox .copy_control {
     display: inline-block;
 }
 
