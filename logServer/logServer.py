@@ -74,22 +74,22 @@ def record():
         return wrap_error("Invalid token: " + str(e), status.HTTP_403_FORBIDDEN)
 
     now = datetime.datetime.utcnow().timestamp()
-    result = {}
+    result = []
     allgood = True
     db = get_db()
     cursor = db.cursor()
-    for index, line in enumerate(request.data["data"]):
+    for line in request.data["data"]:
         data = json.dumps(line)
         if len(data) > 10240:
             allgood = False
-            result[str(index)] = wrap_error("Object to large", status.HTTP_413_REQUEST_ENTITY_TOO_LARGE)[0]
+            result.append(wrap_error("Object to large", status.HTTP_413_REQUEST_ENTITY_TOO_LARGE)[0])
             continue
         try:
             cursor.execute(INSERT_STATEMENT, (request.data["aud"], now, line["timestamp"], data))
-            result[str(index)] = {"code": 200}
+            result.append({"code": 200})
         except apsw.Error as e:
             allgood = False
-            result[str(index)] = wrap_error("Database error", status.HTTP_413_REQUEST_ENTITY_TOO_LARGE)[0]
+            result.append(wrap_error("Database error", status.HTTP_500_INTERNAL_SERVER_ERROR)[0])
     if allgood:
         return {"code": 200}
     else:
