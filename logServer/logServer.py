@@ -3,6 +3,7 @@
 
 from uuid import uuid4
 import datetime
+import os
 import json
 import apsw
 from flask import request, g
@@ -10,7 +11,7 @@ from flask_api import FlaskAPI, status, exceptions
 import jsonschema
 import jwt
 
-JWT_SECRET = "asd" # offload to config file
+JWT_SECRET = os.urandom(16) # offload to config file
 JWT_VALIDITY = datetime.timedelta(days=1)
 JWT_LEEWAY = datetime.timedelta(seconds=10)
 DATABASE = 'database.sqlite'
@@ -19,14 +20,13 @@ CREATE TABLE IF NOT EXISTS records (
     sessionID TEXT NOT NULL,
     received REAL NOT NULL,
     timestamp REAL NOT NULL,
-    ip TEXT NOT NULL,
     json TEXT NOT NULL
 )
 '''
 RECORD_SCHEMA = json.load(open("record.schema.json", "r"))
 INSERT_STATEMENT = '''
-INSERT INTO records (sessionID, received, timestamp, ip, json)
-VALUES (?, ?, ?, ?, ?)
+INSERT INTO records (sessionID, received, timestamp, json)
+VALUES (?, ?, ?, ?)
 '''
 
 app = FlaskAPI(__name__)
@@ -56,7 +56,7 @@ def issue_token():
         "exp": now + JWT_VALIDITY,
         "aud": uuid4().urn
     }
-    message["token"] = jwt.encode(message, JWT_SECRET)
+    message["token"] = jwt.encode(message, JWT_SECRET).decode("ascii")
     return message
 
 @app.route("/record", methods=["GET", "POST"])
@@ -74,26 +74,22 @@ def record():
         return wrap_error("Invalid token: " + str(e), status.HTTP_403_FORBIDDEN)
 
     now = datetime.datetime.utcnow().timestamp()
-    ip = request.remote_addr
     result = {}
     allgood = True
     db = get_db()
     cursor = db.cursor()
     for index, line in enumerate(request.data["data"]):
         data = json.dumps(line)
-        print(repr(line))
-        print(repr(request.data))
         if len(data) > 10240:
             allgood = False
             result[str(index)] = wrap_error("Object to large", status.HTTP_413_REQUEST_ENTITY_TOO_LARGE)[0]
             continue
         try:
-            cursor.execute(INSERT_STATEMENT, (request.data["aud"], now, line["timestamp"], ip, data))
+            cursor.execute(INSERT_STATEMENT, (request.data["aud"], now, line["timestamp"], data))
             result[str(index)] = {"code": 200}
         except apsw.Error as e:
             allgood = False
             result[str(index)] = wrap_error("Database error", status.HTTP_413_REQUEST_ENTITY_TOO_LARGE)[0]
-            print(e)
     if allgood:
         return {"code": 200}
     else:
