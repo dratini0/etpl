@@ -91,7 +91,7 @@ a#debugpanel_button { /* needs more specificity than the general rule */
 }
 
 a#cut_button {
-    background-color: #ff6666;
+    background-color: lightcoral;
 }
 
 .cut_mode a#cut_button {
@@ -103,11 +103,11 @@ a#cut_button {
 }
 
 a#copy_button {
-    background-color: seagreen;
+    background-color: lightgreen;
 }
 
 .copy_mode a#copy_button {
-    background-color: #17852b;
+    background-color: seagreen;
 }
 
 .copy_mode.lock_mode a#copy_button {
