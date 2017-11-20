@@ -10,6 +10,7 @@ from flask import request, g
 from flask_api import FlaskAPI, status, exceptions
 import jsonschema
 import jwt
+from flask_cors import CORS
 
 JWT_SECRET = os.urandom(16) # offload to config file
 JWT_VALIDITY = datetime.timedelta(days=1)
@@ -30,6 +31,7 @@ VALUES (?, ?, ?, ?)
 '''
 
 app = FlaskAPI(__name__)
+CORS(app)
 
 def get_db():
     db = getattr(g, '_database', None)
