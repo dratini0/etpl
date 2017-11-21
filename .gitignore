@@ -6,3 +6,10 @@ logServer/database.sqlite
 npm-debug.log
 src/revision.ml
 .bsb.lock
+logServer/settings.py
+
+### Python ###
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class

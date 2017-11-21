@@ -12,10 +12,16 @@ import jsonschema
 import jwt
 from flask_cors import CORS
 
-JWT_SECRET = os.urandom(16) # offload to config file
-JWT_VALIDITY = datetime.timedelta(days=1)
-JWT_LEEWAY = datetime.timedelta(seconds=10)
-DATABASE = 'database.sqlite'
+class DefaultConfig(object):
+    JWT_VALIDITY = datetime.timedelta(days=1)
+    JWT_LEEWAY = datetime.timedelta(seconds=10)
+    DATABASE = 'database.sqlite'
+    RECORD_SCHEMA = "record.schema.json"
+
+    CORS_ALLOW_HEADERS = "*"
+    CORS_MAX_AGE = 3600
+    CORS_SEND_WILDCARD = True
+
 CREATE_STATEMENT = '''
 CREATE TABLE IF NOT EXISTS records (
     sessionID TEXT NOT NULL,
@@ -24,19 +30,23 @@ CREATE TABLE IF NOT EXISTS records (
     json TEXT NOT NULL
 )
 '''
-RECORD_SCHEMA = json.load(open("record.schema.json", "r"))
 INSERT_STATEMENT = '''
 INSERT INTO records (sessionID, received, timestamp, json)
 VALUES (?, ?, ?, ?)
 '''
 
 app = FlaskAPI(__name__)
+app.config.from_object(DefaultConfig)
+app.config.from_object('settings')
+app.config.from_envvar('SETTINGS_FILE', silent=True)
 CORS(app)
+
+RECORD_SCHEMA = json.load(open(app.config['RECORD_SCHEMA'], "r"))
 
 def get_db():
     db = getattr(g, '_database', None)
     if db is None:
-        db = g._database = apsw.Connection(DATABASE)
+        db = g._database = apsw.Connection(app.config['DATABASE'])
         cursor = db.cursor()
         cursor.execute(CREATE_STATEMENT)
     return db
@@ -55,10 +65,10 @@ def issue_token():
     now = datetime.datetime.utcnow()
     message = {
         "iat": now,
-        "exp": now + JWT_VALIDITY,
+        "exp": now + app.config['JWT_VALIDITY'],
         "aud": uuid4().urn
     }
-    message["token"] = jwt.encode(message, JWT_SECRET).decode("ascii")
+    message["token"] = jwt.encode(message, app.config['JWT_SECRET']).decode("ascii")
     return message
 
 @app.route("/record", methods=["GET", "POST"])
@@ -71,7 +81,7 @@ def record():
         return wrap_error(str(e), status.HTTP_400_BAD_REQUEST)
 
     try:
-        jwt.decode(request.data["token"], JWT_SECRET, leeway=JWT_LEEWAY, audience=request.data["aud"])
+        jwt.decode(request.data["token"], app.config['JWT_SECRET'], leeway=app.config['JWT_LEEWAY'], audience=request.data["aud"])
     except jwt.exceptions.InvalidTokenError as e:
         return wrap_error("Invalid token: " + str(e), status.HTTP_403_FORBIDDEN)
 
