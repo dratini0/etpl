@@ -18,6 +18,7 @@
     "bs-dependencies": [
         "bs-batteries",
         "bucklescript-jquery",
-        "infinite-jest"
+        "infinite-jest",
+        "json-codec"
     ]
 }
