@@ -1,6 +1,7 @@
 open Language
 open Position
 open DomManipulation
+open ProgrammingState
 
 let jquery = Jquery.jquery
 open Dom.Storage
@@ -10,27 +11,27 @@ type ajaxConfig
 type jqXHR
 
 type token = Token of string * string
-type signinRecord = {userAgent: string; width: float; height: float}
+type signinRecord = {userAgent: string; width: float; height: float; revision: string}
 type stateRecord = {program: expression; hole: position option; clipboard: expression list}
-type buttonPressRecord = {buttonNumber: int; expression: expression; hole: position}
-type replaceCurrentHoleRecord = {expression: expression; hole: position; newHole: position option}
+type buttonPressRecord = {buttonNumber: int; expression: expression; hole: position option}
+type replaceSubtreeRecord = {expression: expression; position: position; newHole: position option}
 type holeSelectRecord = {oldHole: position option; newHole: position}
 type clipboardCutCopyRecord = {copy: bool; expression: expression; position: position; oldHole: position option; newHole: position option}
 type clipboardPasteRecord = {number: int; expression: expression; hole: position option}
 type clipboardDeleteRecord = {number: int; expression: expression}
 type successfulExecutionRecord = {result: expression}
-type runtimeExceptionRecord = {messsage: string; location: position}
+type runtimeExceptionRecord = {message: string; expression: expression; location: position}
 type logEvent =
-  | Signin of signinRecord
-  | State of stateRecord
-  | ButtonPress of buttonPressRecord
-  | ReplaceCurrentHole of replaceCurrentHoleRecord
-  | HoleSelect of holeSelectRecord
-  | ClipboardCutCopy of clipboardCutCopyRecord
-  | ClipboardPaste of clipboardPasteRecord
-  | ClipboardDelete of clipboardDeleteRecord
-  | SuccessfulExecution of successfulExecutionRecord
-  | RuntimeException of runtimeExceptionRecord
+  | ESignin of signinRecord
+  | EState of stateRecord
+  | EButtonPress of buttonPressRecord
+  | EReplaceSubtree of replaceSubtreeRecord
+  | EHoleSelect of holeSelectRecord
+  | EClipboardCutCopy of clipboardCutCopyRecord
+  | EClipboardPaste of clipboardPasteRecord
+  | EClipboardDelete of clipboardDeleteRecord
+  | ESuccessfulExecution of successfulExecutionRecord
+  | ERuntimeException of runtimeExceptionRecord
 type logRecord = {timestamp: float; seq: int; event: logEvent}
 
 external makeAjaxConfig : 
@@ -84,14 +85,15 @@ let clipboardCodec = let open JsonCodec in
 
 let signinCodec = let open JsonCodec in
   wrap
-    (fun {userAgent=u; width=w; height=h} -> ((), u, w, h))
-    (fun ((), u, w, h) -> {userAgent=u; width=w; height=h})
-    (object4
+    (fun {userAgent=u; width=w; height=h; revision=r} -> ((), u, w, h, r))
+    (fun ((), u, w, h, r) -> {userAgent=u; width=w; height=h; revision=r})
+    (object5
       (field "tagSignin" null)
       (field "userAgent" string)
       (field "width" number)
-      (field "height" number))
-
+      (field "height" number)
+      (field "revision" string))
+      
 let stateCodec = let open JsonCodec in
   wrap
     (fun {program=pr; hole=pos; clipboard=c} -> ((), pr, pos, c))
@@ -110,14 +112,14 @@ let buttonPressCodec = let open JsonCodec in
       (field "tagButtonPress" null)
       (field "buttonNumber" int)
       (field "experssion" expressionCodec)
-      (field "hole" positionCodec))
+      (field "hole" (nullable positionCodec)))
 
-let replaceCurrentHoleCodec = let open JsonCodec in
+let replaceSubtreeCodec = let open JsonCodec in
   wrap
-    (fun {expression=e; hole=h; newHole=n} -> ((), e, h, n))
-    (fun ((), e, h, n) -> {expression=e; hole=h; newHole=n})
+    (fun ({expression=e; position=h; newHole=n}:replaceSubtreeRecord) -> ((), e, h, n))
+    (fun ((), e, h, n) -> {expression=e; position=h; newHole=n})
     (object4
-      (field "tagReplaceCurrentHole" null)
+      (field "tagReplaceSubtree" null)
       (field "expression" expressionCodec)
       (field "hole" positionCodec)
       (field "newHole" (nullable positionCodec)))
@@ -172,43 +174,44 @@ let successfulExecutionCodec = let open JsonCodec in
 
 let runtimeExceptionCodec = let open JsonCodec in
   wrap
-    (fun {messsage=m; location=l} -> ((), m, l))
-    (fun ((), m, l) -> {messsage=m; location=l})
-    (object3
+    (fun {message=m; expression=e; location=l} -> ((), m, e, l))
+    (fun ((), m, e, l) -> {message=m; expression=e; location=l})
+    (object4
       (field "tagRuntimeException" null)
       (field "message" string)
+      (field "expression" expressionCodec)
       (field "location" positionCodec))
 
 let logEventCodec = let open JsonCodec in let open JsonCodec.Xor in
   wrap
   (function
-    | Signin x -> Left(x)
-    | State x -> Right(Left(x))
-    | ButtonPress x -> Right(Right(Left(x)))
-    | ReplaceCurrentHole x -> Right(Right(Right(Left(x))))
-    | HoleSelect x -> Right(Right(Right(Right(Left(x)))))
-    | ClipboardCutCopy x -> Right(Right(Right(Right(Right(Left(x))))))
-    | ClipboardPaste x -> Right(Right(Right(Right(Right(Right(Left(x)))))))
-    | ClipboardDelete x -> Right(Right(Right(Right(Right(Right(Right(Left(x))))))))
-    | SuccessfulExecution x -> Right(Right(Right(Right(Right(Right(Right(Right(Left(x)))))))))
-    | RuntimeException x -> Right(Right(Right(Right(Right(Right(Right(Right(Right(x)))))))))
+    | ESignin x -> Left(x)
+    | EState x -> Right(Left(x))
+    | EButtonPress x -> Right(Right(Left(x)))
+    | EReplaceSubtree x -> Right(Right(Right(Left(x))))
+    | EHoleSelect x -> Right(Right(Right(Right(Left(x)))))
+    | EClipboardCutCopy x -> Right(Right(Right(Right(Right(Left(x))))))
+    | EClipboardPaste x -> Right(Right(Right(Right(Right(Right(Left(x)))))))
+    | EClipboardDelete x -> Right(Right(Right(Right(Right(Right(Right(Left(x))))))))
+    | ESuccessfulExecution x -> Right(Right(Right(Right(Right(Right(Right(Right(Left(x)))))))))
+    | ERuntimeException x -> Right(Right(Right(Right(Right(Right(Right(Right(Right(x)))))))))
     )
   (function
-    | Left(x) -> Signin x
-    | Right(Left(x)) -> State x
-    | Right(Right(Left(x))) -> ButtonPress x
-    | Right(Right(Right(Left(x)))) -> ReplaceCurrentHole x
-    | Right(Right(Right(Right(Left(x))))) -> HoleSelect x
-    | Right(Right(Right(Right(Right(Left(x)))))) -> ClipboardCutCopy x
-    | Right(Right(Right(Right(Right(Right(Left(x))))))) -> ClipboardPaste x
-    | Right(Right(Right(Right(Right(Right(Right(Left(x)))))))) -> ClipboardDelete x
-    | Right(Right(Right(Right(Right(Right(Right(Right(Left(x))))))))) -> SuccessfulExecution x
-    | Right(Right(Right(Right(Right(Right(Right(Right(Right(x))))))))) -> RuntimeException x
+    | Left(x) -> ESignin x
+    | Right(Left(x)) -> EState x
+    | Right(Right(Left(x))) -> EButtonPress x
+    | Right(Right(Right(Left(x)))) -> EReplaceSubtree x
+    | Right(Right(Right(Right(Left(x))))) -> EHoleSelect x
+    | Right(Right(Right(Right(Right(Left(x)))))) -> EClipboardCutCopy x
+    | Right(Right(Right(Right(Right(Right(Left(x))))))) -> EClipboardPaste x
+    | Right(Right(Right(Right(Right(Right(Right(Left(x)))))))) -> EClipboardDelete x
+    | Right(Right(Right(Right(Right(Right(Right(Right(Left(x))))))))) -> ESuccessfulExecution x
+    | Right(Right(Right(Right(Right(Right(Right(Right(Right(x))))))))) -> ERuntimeException x
     )
   (xor signinCodec
   (xor stateCodec
   (xor buttonPressCodec
-  (xor replaceCurrentHoleCodec
+  (xor replaceSubtreeCodec
   (xor holeSelectCodec
   (xor clipboardCutCopyCodec
   (xor clipboardPasteCodec
@@ -336,31 +339,34 @@ let enque item =
     scheduleSubmit ();
   end
 
-let signin () = enque (Signin{userAgent=userAgent; width=innerWidth; height=innerHeight})
+let signin () = enque (ESignin{userAgent=userAgent; width=innerWidth; height=innerHeight; revision=Revision.gitRevision})
+
+let logState () = enque (EState {program=(getCurrentProgram()); hole=(getCurrentHole ()); clipboard=(getClipboard ())})
 
 let disable manual = begin
   enabled := false;
   queue := [];
-  PanelDebug.log "Disabled";
+  PanelDebugLog.log "Disabled";
   if manual then localStorage |> removeItem "loggingEnabled";
 end
 
 let enable () = begin
   getToken (fun newToken -> begin
     currentToken := Some newToken;
-    PanelDebug.log "Enabled";
+    PanelDebugLog.log "Enabled";
     scheduleSubmit ();
   end) (fun error -> begin
-    PanelDebug.log error;
+    PanelDebugLog.log error;
     disable false;
   end);
   enabled := true;
   localStorage |> setItem "loggingEnabled" "1";
   signin();
+  logState();
 end
 
 let toggle () =
-  if !enabled then disable true else enable() 
+  if !enabled then disable true else enable()
 
 let init() = begin
   jquery "#logging" |> doSimpleBind "click" toggle;

@@ -6,15 +6,11 @@ open Interpreter
 open DomManipulation
 open Programming
 open ModalGetNumber
+include PanelDebugLog
 
 let jquery = Jquery.jquery
 
 external getQueryString: string = "location.search" [@@bs.val]
-
-let log message =
-  let logbox = (jquery "#logbox") in
-  let current = (logbox |> Jquery.val_get) in
-  ignore (logbox |> Jquery.val_ (`str(current ^ message ^ "\n")))
 
 let encodeButton () =
   ignore (jquery "#encodedview" |> Jquery.val_ (`str (serialize (getCurrentProgram ()))))

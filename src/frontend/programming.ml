@@ -5,12 +5,12 @@ open CodeRender
 open Types
 open DomManipulation
 open ModalGetNumber
+open Logging
 
 let jquery = Jquery.jquery
 
-let currentProgram = ref Hole
-let currentHole = ref (Some emptyPosition)
-let clipboard = ref []
+include ProgrammingState
+open ProgrammingState.Private
 
 type mode =
   | ModeInsert
@@ -22,8 +22,6 @@ type mode =
 let currentMode = ref ModeInsert
 
 let jqueryPosition position = jquery ("#" ^ (posToId position))
-
-let getCurrentHole () = !currentHole
 
 let setMode mode = begin
   currentMode := mode;
@@ -99,25 +97,33 @@ let rec setCurrentHole hole =
             |> Jquery.eq index
             |> Jquery.removeAttr "disabled"
             |> Jquery.append_ (renderExpression expression None emptySpecialCasingFunction)
-            |> doSimpleBind "click" (replaceCurrentHoleWrapper expression)
+            |> doSimpleBind "click" (replaceCurrentHoleWrapper index expression)
           ));
       | None -> ());
   end
 
 and handleCut position () = begin
+  let oldHole = getCurrentHole() in
+  let expression = getSubtree !currentProgram position in
   resetMode ();
-  addToClipboard (getSubtree !currentProgram position);
+  addToClipboard expression;
   replaceSubtreeVisual position Hole;
+  enque (EClipboardCutCopy{copy=false; expression=expression; position=position; oldHole=oldHole; newHole=(getCurrentHole())})
 end
 
 and handleCopy position () = begin
   resetMode ();
-  addToClipboard (getSubtree !currentProgram position);
+  let expression = getSubtree !currentProgram position in
+  addToClipboard expression;
+  enque (EClipboardCutCopy{copy=true; expression=expression; position=position; oldHole=(getCurrentHole()); newHole=(getCurrentHole())})
 end
 
 and holeClickHandlerSpecialCasingFunction expression position element = match expression, position with
   | Hole, Some(pos) -> begin
-    element |> doSimpleBind "click" (fun () -> setCurrentHole (Some pos));
+    element |> doSimpleBind "click" (fun () -> begin
+      enque (EHoleSelect {oldHole=(getCurrentHole()); newHole=pos});
+      setCurrentHole (Some pos);
+    end);
     element
   end
   | _, Some(pos) -> begin
@@ -135,14 +141,15 @@ and replaceSubtreeVisual position expression = begin
     |> Jquery.empty
     |> Jquery.append_ (renderExpression expression (Some position) holeClickHandlerSpecialCasingFunction));
   currentProgram := replaceSubtree !currentProgram position expression;
-  match !currentHole with
+  (match !currentHole with
     | Some hole ->
       if isInside hole position then
         setCurrentHole (match nextHole !currentProgram position with
           | Some(pos) -> Some(pos)
           | None -> firstHole !currentProgram)
       else ();
-    | None -> setCurrentHole (firstHole !currentProgram);
+    | None -> setCurrentHole (firstHole !currentProgram));
+  enque (EReplaceSubtree {position=position; expression=expression; newHole=(getCurrentHole())})
 end
 
 and replaceCurrentHole expression = match !currentHole with 
@@ -150,9 +157,12 @@ and replaceCurrentHole expression = match !currentHole with
   | None -> ()
 
 (* This is meant to handle special cases like number literals *)
-and replaceCurrentHoleWrapper expression () = match expression with 
-  | Literal(Number(_)) -> getNumber 0. (fun x -> replaceCurrentHole(Literal(Number(x))))
-  | _ -> replaceCurrentHole expression
+and replaceCurrentHoleWrapper number expression () = begin
+  enque(EButtonPress {buttonNumber=number; expression=expression; hole=(getCurrentHole())});
+  match expression with 
+    | Literal(Number(_)) -> getNumber 0. (fun x -> replaceCurrentHole(Literal(Number(x))))
+    | _ -> replaceCurrentHole expression;
+end
 
 let redraw () = begin
   ignore (jquery "#codebox"
@@ -161,38 +171,49 @@ let redraw () = begin
   setCurrentHole (firstHole !currentProgram);
 end
 
-let getCurrentProgram () = !currentProgram
 let setCurrentProgram expression = begin
   currentProgram := expression;
   redraw()
 end
 
 let executeProgram() = begin
-  let result = Interpreter.evaluate !currentProgram in
-  ignore (jquery "#result"
-    |> Jquery.empty
-    |> Jquery.append_ (renderValue result));
-  showModal "result_modal" ();
-  ignore(Js.Global.setTimeout (fun () ->
-    ignore (jquery "#result_close" |> Jquery.focus);
-  ) 500);
+  logState();
+  try
+    let result = Interpreter.evaluate !currentProgram in
+    enque (ESuccessfulExecution {result=Literal(result)});
+    ignore (jquery "#result"
+      |> Jquery.empty
+      |> Jquery.append_ (renderValue result));
+    showModal "result_modal" ();
+    ignore(Js.Global.setTimeout (fun () ->
+      ignore (jquery "#result_close" |> Jquery.focus);
+    ) 500);
+  with
+    | Interpreter.RuntimeException (message, State(expression, position)) ->
+      enque (ERuntimeException{message=message; expression=expression; location=position})
 end
 
 let clipboardDeleteHandler = fun [@bs.this] node _ -> begin
   let node = Jquery.jquery'' node |> Jquery.parent in
-  clipboard := !clipboard |> BatList.remove_at (node |> Jquery.index);
+  let index = node |> Jquery.index in
+  enque (EClipboardDelete {number=index; expression=(List.nth !clipboard index)});
+  clipboard := !clipboard |> BatList.remove_at (index);
   node |> Jquery.remove |> ignore;
   Js.true_;
 end
 
-let clipboardPasteHandler expression () =
-  match getCurrentHole() with
+let clipboardPasteHandler expression = fun [@bs.this] node _ -> begin
+  let index = Jquery.jquery'' node |> Jquery.parent |> Jquery.index in
+  enque (EClipboardPaste {expression=expression; hole=(getCurrentHole()); number=index});
+  (match getCurrentHole() with
     | None -> ()
-    | Some hole -> 
-      if fitsHole !currentProgram hole expression then begin
-        replaceCurrentHole expression;
-        hidePanels();
-      end else ()
+    | Some hole ->
+        if fitsHole !currentProgram hole expression then begin
+          replaceCurrentHole expression;
+          hidePanels();
+        end);
+  Js.true_;
+end
 
 let showClipboard () =
   if showPanelWithReturn "clipboardpanel" then begin
@@ -213,7 +234,8 @@ let showClipboard () =
       then begin
         item
           |> Jquery.find ".clip_paste"
-          |> doSimpleBind "click" (clipboardPasteHandler expression);
+          |> Jquery.on "click" (clipboardPasteHandler expression)
+          |> ignore;
       end else begin
         item
           |> Jquery.find ".clip_paste"

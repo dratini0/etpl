@@ -3,25 +3,26 @@ open Position
 
 type signinRecord
 type stateRecord = {program: expression; hole: position option; clipboard: expression list}
-type buttonPressRecord = {buttonNumber: int; expression: expression; hole: position}
-type replaceCurrentHoleRecord = {expression: expression; hole: position; newHole: position option}
+type buttonPressRecord = {buttonNumber: int; expression: expression; hole: position option}
+type replaceSubtreeRecord = {expression: expression; position: position; newHole: position option}
 type holeSelectRecord = {oldHole: position option; newHole: position}
 type clipboardCutCopyRecord = {copy: bool; expression: expression; position: position; oldHole: position option; newHole: position option}
 type clipboardPasteRecord = {number: int; expression: expression; hole: position option}
 type clipboardDeleteRecord = {number: int; expression: expression}
 type successfulExecutionRecord = {result: expression}
-type runtimeExceptionRecord = {messsage: string; location: position}
+type runtimeExceptionRecord = {message: string; expression: expression; location: position}
 type logEvent =
-  | Signin of signinRecord
-  | State of stateRecord
-  | ButtonPress of buttonPressRecord
-  | ReplaceCurrentHole of replaceCurrentHoleRecord
-  | HoleSelect of holeSelectRecord
-  | ClipboardCutCopy of clipboardCutCopyRecord
-  | ClipboardPaste of clipboardPasteRecord
-  | ClipboardDelete of clipboardDeleteRecord
-  | SuccessfulExecution of successfulExecutionRecord
-  | RuntimeException of runtimeExceptionRecord
+  | ESignin of signinRecord
+  | EState of stateRecord
+  | EButtonPress of buttonPressRecord
+  | EReplaceSubtree of replaceSubtreeRecord
+  | EHoleSelect of holeSelectRecord
+  | EClipboardCutCopy of clipboardCutCopyRecord
+  | EClipboardPaste of clipboardPasteRecord
+  | EClipboardDelete of clipboardDeleteRecord
+  | ESuccessfulExecution of successfulExecutionRecord
+  | ERuntimeException of runtimeExceptionRecord
 
 val enque: logEvent -> unit
+val logState: unit -> unit
 val init: unit -> unit
