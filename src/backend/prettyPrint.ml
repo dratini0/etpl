@@ -3,6 +3,7 @@ open Names
 
 let prettyPrintValue v = match v with
   | Number(n) -> string_of_float(n)
+  | String(s) -> Printf.sprintf "\"%s\"" s
 
 let rec prettyPrintExpression e = match e with
   | Literal(l) -> prettyPrintValue l

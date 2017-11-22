@@ -14,9 +14,12 @@ let binaryOperatorName = function
   | Sub -> "Sub"
   | Mul -> "Mul"
   | Div -> "Div"
+  | Concat -> "Concat"
 
 let typeName = function
   | TNumber -> "Number"
+  | TString -> "String"
+  | FTV -> "FTV"
 
 let constantByName = function
   | "Pi" -> Pi

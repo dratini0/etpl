@@ -7,6 +7,7 @@ let separator = ","
 
 let encodeValue = function
   | Number(n) -> ["Number"; Printf.sprintf "%.17g" n]
+  | String(_) -> ["String"] (* TODO *)
   (* This is lossless, assuming we are dealing with doubles *)
 
 let rec encode expression accumulator = match expression with

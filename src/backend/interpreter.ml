@@ -1,5 +1,7 @@
 open Language
 open Position
+open Names
+open Types
 
 exception RuntimeException of string * state
 
@@ -11,15 +13,16 @@ let evalConstant s c = match c with
 let evalUnary s o e1 = match (o, e1) with
   | (Ln, Number(v1)) -> updateState s (Literal(Number(log(v1))))
   | (Floor, Number(v1)) -> updateState s (Literal(Number(floor(v1))))
-  (* | _ -> raise (RuntimeException("evalUnary called wrong. The program is not well-typed.", s)) *)
-  
+  | (o, v1) -> raise (RuntimeException(Printf.sprintf "Program is not well-typed: %s is not defined for an argument of type %s" (unaryOperatorName o) (v1 |> inferTypeValue |> typeName), s))
+
 let evalBinary s o e1 e2 = match (o, e1, e2) with
   | (Add, Number(e1), Number(e2)) -> updateState s (Literal(Number(e1 +. e2)))
   | (Sub, Number(e1), Number(e2)) -> updateState s (Literal(Number(e1 -. e2)))
   | (Mul, Number(e1), Number(e2)) -> updateState s (Literal(Number(e1 *. e2)))
   | (Div, Number(e1), Number(e2)) -> updateState s (Literal(Number(e1 /. e2)))
-  (* | _ -> raise (RuntimeException("evalBinary called wrong. The program is not well-typed.", s)) *)
-
+  | (Concat, String(e1), String(e2)) -> updateState s (Literal(String(e1 ^ e2)))
+  | (o, v1, v2) -> raise (RuntimeException(Printf.sprintf "Program is not well-typed: %s is not defined for an arguments of type %s and %s" (binaryOperatorName o) (v1 |> inferTypeValue |> typeName) (v2 |> inferTypeValue |> typeName), s))
+  
 let rec nextStep s = match s with State(e, loc) -> match e with
   | Literal(_) -> raise (RuntimeException ("already a value", s))
   | Constant(c) -> evalConstant s c

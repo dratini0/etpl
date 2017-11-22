@@ -24,7 +24,9 @@ let decodeButton () =
   | Names.UnknownNameException name -> log ("Decoding failed: unknown " ^ name)
 
 let inferButton () =
-  log ("Type: " ^ (getCurrentProgram() |> inferType |> typeName))
+  match getCurrentProgram() |> inferType with
+    | None -> log ("Not properly typed")
+    | Some t -> log ("Type: " ^ (typeName t))
 
 let fillHoleButton () = match getCurrentHole() with
   | Some hole -> begin

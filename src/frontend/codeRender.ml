@@ -22,11 +22,12 @@ let posToId position = "node" ^ (position
 
 let renderValue = function
   | Number(n) -> (Jquery.jquery'' (createTextNode (string_of_float n)))
+  | String(s) -> (Jquery.jquery'' (createTextNode s))
 
 let rec renderExpression expression position specialCasingFunction = begin
   let element = (match expression with
     | Literal value ->
-      let typeName_ = typeName (inferType expression) in
+      let typeName_ = typeName (inferTypeValue value) in
       cloneElementFromTemplate ("literal_" ^ typeName_)
         |> setChild 0 (renderValue value)
     | Constant(c) ->
@@ -40,7 +41,7 @@ let rec renderExpression expression position specialCasingFunction = begin
         |> setChild 1 (renderExpression e1 (Option.map (fun x -> posPush x 1) position) specialCasingFunction)
     | Hole ->
       cloneElementFromTemplate "hole"
-  ) in 
+  ) in
   (match position with 
     | None -> ()
     | Some position -> ignore (element |> Jquery.attr (`kv ("id", posToId position))));

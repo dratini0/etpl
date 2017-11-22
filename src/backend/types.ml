@@ -1,9 +1,13 @@
 open Language
 open Position
+open TreeManipulation
+
+let (>>=) = Option.bind
 
 (* TODO: add some way of grouping these, because they will not always fit the screen *)
 let insertableExpressions = [
-  Literal(Number(0.)); (* This will need special handling *)
+  Literal(Number(0.));
+  Literal(String "");
   Constant(Pi);
   UnaryOp(Ln, Hole);
   UnaryOp(Floor, Hole);
@@ -11,10 +15,46 @@ let insertableExpressions = [
   BinaryOp(Sub, Hole, Hole);
   BinaryOp(Mul, Hole, Hole);
   BinaryOp(Div, Hole, Hole);
+  BinaryOp(Concat, Hole, Hole);
 ]
 
-let inferType (_:expression) = TNumber
+let unify a b = match a, b with
+  | FTV, FTV -> Some FTV
+  | _, FTV -> Some a
+  | FTV, _ -> Some b
+  | _, _ -> if a = b then Some a else None
 
-let fitsHole (_:expression) (_:position) (_:expression) = true
+let inferTypeValue = function
+  | Number _ -> TNumber
+  | String _ -> TString
+
+let inferTypeConstant = function
+  | Pi -> TNumber
+
+let unaryOpConstratints = function
+  | Ln
+  | Floor -> TNumber, TNumber
+
+let binaryOpConstratints = function
+  | Add
+  | Sub
+  | Mul
+  | Div -> TNumber, TNumber, TNumber
+  | Concat -> TString, TString, TString
+
+let rec inferType = function
+  | Literal v -> Some (inferTypeValue v)
+  | Constant(c) -> Some (inferTypeConstant c)
+  | UnaryOp(o, e1) -> let r, t1 = unaryOpConstratints o in
+      if Option.is_some(inferType e1 >>= unify t1) then Some r else None
+  | BinaryOp(o, e1, e2) -> let r, t1, t2 = binaryOpConstratints o in
+      if Option.is_some(inferType e1 >>= unify t1) && Option.is_some(inferType e2 >>= unify t2) then Some r else None
+  | Hole -> Some FTV
+
+(* TODO: we can do better *)
+let fitsHole expression position subExpression =
+  replaceSubtree expression position subExpression
+  |> inferType
+  |> Option.is_some
 
 let whatFits expression position = List.filter (fitsHole expression position) insertableExpressions

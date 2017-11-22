@@ -12,9 +12,11 @@ type binaryOp =
   | Sub
   | Mul
   | Div
+  | Concat
 
 type value =
   | Number of float
+  | String of string
 
 type expression =
   | Literal of value
@@ -28,3 +30,5 @@ type state = State of expression * position
 
 type etplType =
   | TNumber
+  | TString
+  | FTV

@@ -1,6 +1,7 @@
 open Language
 open Position
 
-val inferType : expression -> etplType
+val inferTypeValue : value -> etplType
+val inferType : expression -> etplType option
 val fitsHole : expression -> position -> expression -> bool
 val whatFits : expression -> position -> expression list
