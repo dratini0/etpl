@@ -240,6 +240,25 @@ a#copy_button {
     display: block;
 }
 
+/* Text input modal */
+#textinput_form {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+}
+
+#textinput_form .stretchy {
+    flex: 1;
+}
+
+#textinput_form textarea {
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+}
+
 /* Program elements */
 .hole, #templates .child0, #templates .child1 {
     box-sizing: border-box;

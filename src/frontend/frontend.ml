@@ -4,6 +4,7 @@ let () = begin
   PanelDebug.init();
   PanelTemplate.init();
   ModalGetNumber.init();
+  ModalGetText.init();
   Zoom.init();
   Logging.init();
   DomManipulation.hideThrobber();

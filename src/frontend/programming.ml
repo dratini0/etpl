@@ -5,6 +5,7 @@ open CodeRender
 open Types
 open DomManipulation
 open ModalGetNumber
+open ModalGetText
 open Logging
 
 let jquery = Jquery.jquery
@@ -161,6 +162,7 @@ and replaceCurrentHoleWrapper number expression () = begin
   enque(EButtonPress {buttonNumber=number; expression=expression; hole=(getCurrentHole())});
   match expression with 
     | Literal(Number(_)) -> getNumber 0. (fun x -> replaceCurrentHole(Literal(Number(x))))
+    | Literal(String(_)) -> getText "" (fun x -> replaceCurrentHole(Literal(String(x))))
     | _ -> replaceCurrentHole expression;
 end
 

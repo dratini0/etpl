@@ -61,6 +61,7 @@
         <button id="fill_hole">Fill hole</button>
         <button id="execute">Execute!</button>
         <button id="get_number">Get number</button>
+        <button id="get_text">Get text</button>
         <button id="redraw">Redraw</button>
         <button id="logging">Data collection</button>
       </div>
@@ -150,7 +151,18 @@
           <button id="numberinput_ok" type="submit">Done</button>
           <button id="numberinput_cancel">Cancel</button>
         </p>
-        <p id="numberinput_error">Invalid input!</p> 
+        <p id="numberinput_error">Invalid input!</p>
+      </form>
+    </div>
+    <div id="textinput_modal" class="modal">
+      <form id="textinput_form">
+        <p class="stretchy">
+          <textarea id="textinput_field"></textarea>
+        </p>
+        <p>
+          <button id="textinput_ok" type="submit">Done</button>
+          <button id="textinput_cancel">Cancel</button>
+        </p>
       </form>
     </div>
     <div id="result_modal" class="modal">
