@@ -11,10 +11,16 @@ let insertableExpressions = [
   Constant(Pi);
   UnaryOp(Ln, Hole);
   UnaryOp(Floor, Hole);
+  UnaryOp(StringOfNum, Hole);
+  UnaryOp(NumOfString, Hole);
+  UnaryOp(Strlen, Hole);
   BinaryOp(Add, Hole, Hole);
   BinaryOp(Sub, Hole, Hole);
   BinaryOp(Mul, Hole, Hole);
   BinaryOp(Div, Hole, Hole);
+  BinaryOp(SHead, Hole, Hole);
+  BinaryOp(STail, Hole, Hole);
+  BinaryOp(CharAt, Hole, Hole);
   BinaryOp(Concat, Hole, Hole);
 ]
 
@@ -34,6 +40,9 @@ let inferTypeConstant = function
 let unaryOpConstratints = function
   | Ln
   | Floor -> TNumber, TNumber
+  | StringOfNum -> TString, TNumber
+  | NumOfString -> TNumber, TString
+  | Strlen -> TNumber, TString
 
 let binaryOpConstratints = function
   | Add
@@ -41,6 +50,9 @@ let binaryOpConstratints = function
   | Mul
   | Div -> TNumber, TNumber, TNumber
   | Concat -> TString, TString, TString
+  | SHead
+  | STail
+  | CharAt -> TString, TString, TNumber
 
 let rec inferType = function
   | Literal v -> Some (inferTypeValue v)

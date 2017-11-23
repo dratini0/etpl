@@ -6,6 +6,9 @@ type constant =
 type unaryOp =
   | Ln
   | Floor
+  | StringOfNum
+  | NumOfString
+  | Strlen
 
 type binaryOp =
   | Add
@@ -13,6 +16,9 @@ type binaryOp =
   | Mul
   | Div
   | Concat
+  | SHead
+  | STail
+  | CharAt
 
 type value =
   | Number of float

@@ -8,6 +8,9 @@ let constantName = function
 let unaryOperatorName = function
   | Ln -> "Ln"
   | Floor -> "Floor"
+  | StringOfNum -> "StringOfNum"
+  | NumOfString -> "NumOfString"
+  | Strlen -> "Strlen"
 
 let binaryOperatorName = function
   | Add -> "Add"
@@ -15,6 +18,9 @@ let binaryOperatorName = function
   | Mul -> "Mul"
   | Div -> "Div"
   | Concat -> "Concat"
+  | SHead -> "SHead"
+  | STail -> "STail"
+  | CharAt -> "CharAt"
 
 let typeName = function
   | TNumber -> "Number"
@@ -28,6 +34,9 @@ let constantByName = function
 let unaryOperatorByName = function
   | "Ln" -> Ln
   | "Floor" -> Floor
+  | "StringOfNum" -> StringOfNum
+  | "NumOfString" -> NumOfString
+  | "Strlen" -> Strlen
   | name -> raise (UnknownNameException ("Unary operator " ^ name))
   
 let binaryOperatorByName = function
@@ -35,4 +44,8 @@ let binaryOperatorByName = function
   | "Sub" -> Sub
   | "Mul" -> Mul
   | "Div" -> Div
+  | "Concat" -> Concat
+  | "SHead" -> SHead
+  | "STail" -> STail
+  | "CharAt" -> CharAt
   | name -> raise (UnknownNameException ("Binary operator " ^ name))
