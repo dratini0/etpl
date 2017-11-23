@@ -8,7 +8,7 @@ open ModalGetNumber
 open ModalGetText
 open Logging
 
-let jquery = Jquery.jquery
+open JquerySafe
 
 include ProgrammingState
 open ProgrammingState.Private
@@ -77,7 +77,7 @@ end
 let addToClipboard expression = clipboard := expression::!clipboard
 
 let rec setCurrentHole hole =
-  let buttons = jquery "#keypad button" in
+  let buttons = jquerySome "#keypad button" in
   begin
     resetMode ();
     (match !currentHole with

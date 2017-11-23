@@ -1,8 +1,8 @@
 open Language
 open Types
 open Names
-let jquery = Jquery.jquery
 open Position
+open JquerySafe
 
 external createTextNode : string -> Dom.node = "document.createTextNode" [@@bs.val]
 

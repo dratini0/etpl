@@ -1,18 +1,18 @@
-let jquery = Jquery.jquery
+open JquerySafe
 
 let currentPanel = ref None
 
 let getCurrentPanel () = !currentPanel
 
 let hidePanels () = begin
-  ignore (jquery ".panel" |> Jquery.removeClass (`str "shown"));
+  ignore (jquerySome ".panel" |> Jquery.removeClass (`str "shown"));
   ignore (jquery "#panelmeta" |> Jquery.removeClass (`str "shown"));
   currentPanel := None;
 end
 
 let showPanelWithReturn name = begin
   if !currentPanel <> Some(name) then begin
-    ignore (jquery ".panel" |> Jquery.removeClass (`str "shown"));
+    ignore (jquerySome ".panel" |> Jquery.removeClass (`str "shown"));
     ignore (jquery "#panelmeta" |> Jquery.addClass (`str "shown"));
     ignore (jquery ("#" ^ name) |> Jquery.addClass (`str "shown"));
     currentPanel := Some(name);
@@ -26,12 +26,12 @@ end
 let showPanel name () = ignore (showPanelWithReturn name)
 
 let hideModals () = begin
-  ignore (jquery ".modal" |> Jquery.removeClass (`str "shown"));
+  ignore (jquerySome ".modal" |> Jquery.removeClass (`str "shown"));
   ignore (jquery "#modalmeta" |> Jquery.removeClass (`str "shown"));
 end
 
 let showModal name () = begin
-  ignore (jquery ".modal" |> Jquery.removeClass (`str "shown"));
+  ignore (jquerySome ".modal" |> Jquery.removeClass (`str "shown"));
   ignore (jquery "#modalmeta" |> Jquery.addClass (`str "shown"));
   ignore (jquery ("#" ^ name) |> Jquery.addClass (`str "shown"));
 end

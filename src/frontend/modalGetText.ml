@@ -1,6 +1,5 @@
 open DomManipulation
-
-let jquery = Jquery.jquery
+open JquerySafe
 
 let currentGetTextCallback = ref (fun (string:string) -> Js.log string)
 

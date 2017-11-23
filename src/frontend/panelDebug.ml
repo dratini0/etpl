@@ -9,7 +9,7 @@ open ModalGetNumber
 open ModalGetText
 include PanelDebugLog
 
-let jquery = Jquery.jquery
+open JquerySafe
 
 external getQueryString: string = "location.search" [@@bs.val]
 

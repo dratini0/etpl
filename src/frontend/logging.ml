@@ -2,8 +2,8 @@ open Language
 open Position
 open DomManipulation
 open ProgrammingState
+open JquerySafe
 
-let jquery = Jquery.jquery
 open Dom.Storage
 
 (* Ajax-related stuff should go to bucklescript-jquery *)

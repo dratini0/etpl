@@ -1,6 +1,6 @@
 open DomManipulation
 
-let jquery = Jquery.jquery
+open JquerySafe
 
 let zoomLevel = ref 14.
 let zoomStep = 1.1

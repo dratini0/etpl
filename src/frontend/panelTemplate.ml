@@ -1,6 +1,6 @@
 open DomManipulation
 
-let jquery = Jquery.jquery
+open JquerySafe
 
 let init () = begin
   jquery "#templatepanel_button" |> doSimpleBind "click" (showPanel "templatepanel")

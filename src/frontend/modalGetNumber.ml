@@ -1,14 +1,13 @@
 open DomManipulation
-
-let jquery = Jquery.jquery
+open JquerySafe
 
 let currentGetNumberCallback = ref (fun (number:float) -> Js.log number)
 
 let disableNormal () =
-  ignore (jquery "#numberinput_normal_flexbox input" |> Jquery.attr (`kv ("disabled", "disabled")))
+  ignore (jquerySome "#numberinput_normal_flexbox input" |> Jquery.attr (`kv ("disabled", "disabled")))
 
 let enableNormal () =
-  ignore (jquery "#numberinput_normal_flexbox input" |> Jquery.removeAttr "disabled")
+  ignore (jquerySome "#numberinput_normal_flexbox input" |> Jquery.removeAttr "disabled")
   
 let frexpDecimal number =
   match classify_float number with
@@ -83,7 +82,7 @@ let handleNumber () =
 let init () = begin
   jquery "#numberinput_ok" |> doSimpleBind "click" handleNumber;
   jquery "#numberinput_cancel" |> doSimpleBind "click" hideModals;
-  jquery "#numberinput_inf, #numberinput_neginf, #numberinput_nan" |>
+  jquerySome "#numberinput_inf, #numberinput_neginf, #numberinput_nan" |>
     doSimpleBind "click" disableNormal;
   jquery "#numberinput_normal" |> doSimpleBind "click" enableNormal;
 end
