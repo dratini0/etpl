@@ -7,7 +7,7 @@ let separator = ","
 
 let encodeValue = function
   | Number(n) -> ["Number"; Printf.sprintf "%.17g" n]
-  | String(_) -> ["String"] (* TODO *)
+  | String(s) -> ["String"; BatString.find_all s separator |> BatEnum.count |> (+) 1 |> string_of_int; s]
   (* This is lossless, assuming we are dealing with doubles *)
 
 let rec encode expression accumulator = match expression with
@@ -24,9 +24,13 @@ let rec encode expression accumulator = match expression with
 
 let serialize expression = String.concat separator (encode expression [])
 
+(* There is no type by name funtion because it will eventually get quite complicated *)
 let decodeValue code = match code with
   | typename :: encoded :: rest -> (match typename with
     | "Number" -> (Number(float_of_string encoded), rest)
+    | "String" -> let length = int_of_string encoded in
+                  let components, rest = (try BatList.split_at length rest with | Invalid_argument _ -> raise DecodingUnderrunError) in
+                  (String(String.concat separator components), rest)
     | _ -> raise (UnknownNameException("Type " ^ typename))
   )
   | _ -> raise DecodingUnderrunError
@@ -58,7 +62,6 @@ let rec decode = function
     | _ -> raise (UnknownNameException ("Token type " ^ tokenType)))
   | _ -> raise DecodingUnderrunError
 
-(* JS in backend *)
-let deserialize code = 
-  let e, _ = decode (Array.to_list (Js_string.split separator code)) in
+let deserialize code =
+  let e, _ = decode (BatString.nsplit ~by:separator code) in
     e
