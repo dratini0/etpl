@@ -7,6 +7,7 @@ open Interpreter
 open Serialize
 open Position
 open TreeManipulation
+open Types
 
 let resolveOrFail = function
   | Some(x) -> x
@@ -16,61 +17,73 @@ let interpreterTestCasesPositive = [
   BinaryOp(Sub, BinaryOp(Div, Literal(Number(22.)), Literal(Number(7.))), Constant(Pi)),  
   "BinaryOp,Sub,BinaryOp,Div,Literal,Number,22,Literal,Number,7,Constant,Pi",
   "Sub(Div(22., 7.), Pi)",
+  TNumber,
   Number(0.0012644892673496777)
   ;
   BinaryOp(CharAt, Literal(String("asd,fgh")), Literal(Number(0.))),  
   "BinaryOp,CharAt,Literal,String,2,asd,fgh,Literal,Number,0",
   "CharAt(\"asd,fgh\", 0.)",
+  TString,
   String("a")
   ;
   BinaryOp(Add, BinaryOp(Mul, Constant(Pi), Constant(Pi)), UnaryOp(Strlen, Literal(String({js|Árvíztűrő tükörfúrógép|js})))),
   {js|BinaryOp,Add,BinaryOp,Mul,Constant,Pi,Constant,Pi,UnaryOp,Strlen,Literal,String,1,Árvíztűrő tükörfúrógép|js},
   {js|Add(Mul(Pi, Pi), Strlen("Árvíztűrő tükörfúrógép"))|js},
+  TNumber,
   Number(31.869604401089358)
   ;
   BinaryOp(SHead, Literal(String({js|Árvíztűrő tükörfúrógép|js})), Literal(Number(5.))),
   {js|BinaryOp,SHead,Literal,String,1,Árvíztűrő tükörfúrógép,Literal,Number,5|js},
   {js|SHead("Árvíztűrő tükörfúrógép", 5.)|js},
+  TString,
   String({js|Árvíz|js})
   ;
   BinaryOp(STail, Literal(String({js|Árvíztűrő tükörfúrógép|js})), Literal(Number(3.))),
   {js|BinaryOp,STail,Literal,String,1,Árvíztűrő tükörfúrógép,Literal,Number,3|js},
   {js|STail("Árvíztűrő tükörfúrógép", 3.)|js},
+  TString,
   String({js|gép|js})
   ;
   BinaryOp(SHead, Literal(String("ETPL")), Literal(Number(0.))),
   "BinaryOp,SHead,Literal,String,1,ETPL,Literal,Number,0",
   "SHead(\"ETPL\", 0.)",
+  TString,
   String("")
   ;
   BinaryOp(STail, Literal(String("ETPL")), Literal(Number(0.))),
   "BinaryOp,STail,Literal,String,1,ETPL,Literal,Number,0",
   "STail(\"ETPL\", 0.)",
+  TString,
   String("")
   ;
   BinaryOp(SHead, Literal(String("ETPL")), Literal(Number(4.))),
   "BinaryOp,SHead,Literal,String,1,ETPL,Literal,Number,4",
   "SHead(\"ETPL\", 4.)",
+  TString,
   String("ETPL")
   ;
   BinaryOp(STail, Literal(String("ETPL")), Literal(Number(4.))),
   "BinaryOp,STail,Literal,String,1,ETPL,Literal,Number,4",
   "STail(\"ETPL\", 4.)",
+  TString,
   String("ETPL")
   ;
   BinaryOp(Sub, UnaryOp(NumOfString, Literal(String("3.1415926535897932384626433832795"))), Constant(Pi)),
   "BinaryOp,Sub,UnaryOp,NumOfString,Literal,String,1,3.1415926535897932384626433832795,Constant,Pi",
   "Sub(NumOfString(\"3.1415926535897932384626433832795\"), Pi)",
+  TNumber,
   Number(0.)
   ;
   UnaryOp(Ln, UnaryOp(NumOfString, Literal(String("2.7182818284590452353602874")))),
   "UnaryOp,Ln,UnaryOp,NumOfString,Literal,String,1,2.7182818284590452353602874",
   "Ln(NumOfString(\"2.7182818284590452353602874\"))",
+  TNumber,
   Number(1.)
   ;
   UnaryOp(StringOfNum, UnaryOp(Ln, Literal(Number(2.7182818284590452353602874)))),
   "UnaryOp,StringOfNum,UnaryOp,Ln,Literal,Number,2.7182818284590451",
   "StringOfNum(Ln(2.71828182846))",
+  TString,
   String("1")
   ;
 ]
@@ -79,6 +92,7 @@ let interpreterTestCasesNegative = [
   BinaryOp(Sub, BinaryOp(Div, Hole, Literal(Number(7.))), Constant(Pi)),  
   "BinaryOp,Sub,BinaryOp,Div,Hole,Literal,Number,7,Constant,Pi",
   "Sub(Div([], 7.), Pi)",
+  Some(TNumber),
   "Programs with holes in them are not well typed",
   Hole,
   [0; 0]
@@ -86,6 +100,7 @@ let interpreterTestCasesNegative = [
   BinaryOp(SHead, Literal(String("ETPL")), Literal(Number(5.))),
   "BinaryOp,SHead,Literal,String,1,ETPL,Literal,Number,5",
   "SHead(\"ETPL\", 5.)",
+  Some(TString),
   "Index out of range for SHead",
   BinaryOp(SHead, Literal(String("ETPL")), Literal(Number(5.))),
   []
@@ -93,6 +108,7 @@ let interpreterTestCasesNegative = [
   BinaryOp(STail, Literal(String("ETPL")), Literal(Number(5.))),
   "BinaryOp,STail,Literal,String,1,ETPL,Literal,Number,5",
   "STail(\"ETPL\", 5.)",
+  Some(TString),
   "Index out of range for STail",
   BinaryOp(STail, Literal(String("ETPL")), Literal(Number(5.))),
   []
@@ -100,6 +116,7 @@ let interpreterTestCasesNegative = [
   UnaryOp(NumOfString, Literal(String("ETPL"))),
   "UnaryOp,NumOfString,Literal,String,1,ETPL",
   "NumOfString(\"ETPL\")",
+  Some(TNumber),
   "String is not numeric",
   UnaryOp(NumOfString, Literal(String("ETPL"))),
   []
@@ -107,39 +124,53 @@ let interpreterTestCasesNegative = [
 ]
 
 let interpreterTestCasesAll =
-  (List.map (fun (tree, serialized, pretty, _) -> (tree, serialized, pretty)) interpreterTestCasesPositive) @
-  (List.map (fun (tree, serialized, pretty, _, _, _) -> (tree, serialized, pretty)) interpreterTestCasesNegative)
+  (List.map (fun (tree, serialized, pretty, type_, _) -> (tree, serialized, pretty, Some(type_))) interpreterTestCasesPositive) @
+  (List.map (fun (tree, serialized, pretty, type_, _, _, _) -> (tree, serialized, pretty, type_)) interpreterTestCasesNegative)
 
 let prettyPrintTests =
-  describe "Pretty print" (fun () -> interpreterTestCasesAll |> List.map (fun (tree, _, pretty) ->
+  describe "Pretty print" (fun () -> interpreterTestCasesAll |> List.map (fun (tree, _, pretty, _) ->
     test pretty (fun() ->
       prettyPrintExpression tree |> Expect.toEqual pretty)
     )
   )
 
 let serializeTests =
-  describe "Serialize" (fun () -> interpreterTestCasesAll |> List.map (fun (tree, serialized, pretty) ->
+  describe "Serialize" (fun () -> interpreterTestCasesAll |> List.map (fun (tree, serialized, pretty, _) ->
     test pretty (fun() ->
       serialize tree |> Expect.toEqual serialized)
     )
   )
 
 let deserializeTests =
-  describe "Deserialize" (fun () -> interpreterTestCasesAll |> List.map (fun (tree, serialized, pretty) ->
+  describe "Deserialize" (fun () -> interpreterTestCasesAll |> List.map (fun (tree, serialized, pretty, _) ->
     test pretty (fun() ->
       deserialize serialized |> Expect.toEqual tree)
     )
   )
 
+let inferTypeTests =
+  describe "Type inference" (fun () -> interpreterTestCasesAll |> List.map (fun (tree, _, pretty, type_) ->
+    test pretty (fun() ->
+      inferType tree |> Expect.toEqual type_)
+    )
+  )
+
 let evaluateTestsPositive =
-  describe "Evaluate - no error" (fun () -> interpreterTestCasesPositive |> List.map (fun (tree, _, pretty, result) ->
+  describe "Evaluate - no error" (fun () -> interpreterTestCasesPositive |> List.map (fun (tree, _, pretty, _, result) ->
     test pretty (fun() ->
       evaluate tree |> Expect.toEqual result)
     )
   )
 
+let typePreservationTests =
+  describe "Type preservation" (fun () -> interpreterTestCasesPositive |> List.map (fun (_, _, pretty, type_, result) ->
+    test pretty (fun() ->
+      inferTypeValue result |> Expect.toEqual type_)
+    )
+  )
+  
 let evaluateTestsNegative =
-  describe "Evaluate - runtime exception" (fun () -> interpreterTestCasesNegative |> List.map (fun (tree, _, pretty, message, expression, position) ->
+  describe "Evaluate - runtime exception" (fun () -> interpreterTestCasesNegative |> List.map (fun (tree, _, pretty, _, message, expression, position) ->
     test pretty (fun() ->
       (try let _ = evaluate tree in None
       with RuntimeException(actualMessage, State(actualExpression, actualPosition))
