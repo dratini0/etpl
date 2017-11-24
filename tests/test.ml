@@ -33,10 +33,30 @@ let interpreterTestCasesPositive = [
   {js|SHead("Árvíztűrő tükörfúrógép", 5.)|js},
   String({js|Árvíz|js})
   ;
-  BinaryOp(SHead, Literal(String({js|Árvíztűrő tükörfúrógép|js})), Literal(Number(5.))),
-  {js|BinaryOp,SHead,Literal,String,1,Árvíztűrő tükörfúrógép,Literal,Number,5|js},
-  {js|SHead("Árvíztűrő tükörfúrógép", 5.)|js},
-  String({js|Árvíz|js})
+  BinaryOp(STail, Literal(String({js|Árvíztűrő tükörfúrógép|js})), Literal(Number(3.))),
+  {js|BinaryOp,STail,Literal,String,1,Árvíztűrő tükörfúrógép,Literal,Number,3|js},
+  {js|STail("Árvíztűrő tükörfúrógép", 3.)|js},
+  String({js|gép|js})
+  ;
+  BinaryOp(SHead, Literal(String("ETPL")), Literal(Number(0.))),
+  "BinaryOp,SHead,Literal,String,1,ETPL,Literal,Number,0",
+  "SHead(\"ETPL\", 0.)",
+  String("")
+  ;
+  BinaryOp(STail, Literal(String("ETPL")), Literal(Number(0.))),
+  "BinaryOp,STail,Literal,String,1,ETPL,Literal,Number,0",
+  "STail(\"ETPL\", 0.)",
+  String("")
+  ;
+  BinaryOp(SHead, Literal(String("ETPL")), Literal(Number(4.))),
+  "BinaryOp,SHead,Literal,String,1,ETPL,Literal,Number,4",
+  "SHead(\"ETPL\", 4.)",
+  String("ETPL")
+  ;
+  BinaryOp(STail, Literal(String("ETPL")), Literal(Number(4.))),
+  "BinaryOp,STail,Literal,String,1,ETPL,Literal,Number,4",
+  "STail(\"ETPL\", 4.)",
+  String("ETPL")
   ;
   BinaryOp(Sub, UnaryOp(NumOfString, Literal(String("3.1415926535897932384626433832795"))), Constant(Pi)),
   "BinaryOp,Sub,UnaryOp,NumOfString,Literal,String,1,3.1415926535897932384626433832795,Constant,Pi",
@@ -62,6 +82,27 @@ let interpreterTestCasesNegative = [
   "Programs with holes in them are not well typed",
   Hole,
   [0; 0]
+  ;
+  BinaryOp(SHead, Literal(String("ETPL")), Literal(Number(5.))),
+  "BinaryOp,SHead,Literal,String,1,ETPL,Literal,Number,5",
+  "SHead(\"ETPL\", 5.)",
+  "Index out of range for SHead",
+  BinaryOp(SHead, Literal(String("ETPL")), Literal(Number(5.))),
+  []
+  ;
+  BinaryOp(STail, Literal(String("ETPL")), Literal(Number(5.))),
+  "BinaryOp,STail,Literal,String,1,ETPL,Literal,Number,5",
+  "STail(\"ETPL\", 5.)",
+  "Index out of range for STail",
+  BinaryOp(STail, Literal(String("ETPL")), Literal(Number(5.))),
+  []
+  ;
+  UnaryOp(NumOfString, Literal(String("ETPL"))),
+  "UnaryOp,NumOfString,Literal,String,1,ETPL",
+  "NumOfString(\"ETPL\")",
+  "String is not numeric",
+  UnaryOp(NumOfString, Literal(String("ETPL"))),
+  []
   ;
 ]
 
