@@ -8,9 +8,4 @@ module.exports = {
         sourceMapFilename: 'bundle.js.map',
     },
     devtool: "source-map",
-    resolve: {
-        alias: {
-            'bs-json-codec': path.resolve(__dirname, 'node_modules/json-codec'),
-        },
-    },
 };
