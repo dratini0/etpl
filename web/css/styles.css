@@ -236,6 +236,10 @@ a#copy_button {
     display: block;
 }
 
+#numberinput_modal label {
+    white-space: nowrap;
+}
+
 /* Text input modal */
 #textinput_form {
     width: 100%;
