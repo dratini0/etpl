@@ -93,7 +93,7 @@ let interpreterTestCasesNegative = [
   "BinaryOp,Sub,BinaryOp,Div,Hole,Literal,Number,7,Constant,Pi",
   "Sub(Div([], 7.), Pi)",
   Some(TNumber),
-  "Programs with holes in them are not well typed",
+  "Programs with holes in them can't be executed.",
   Hole,
   [0; 0]
   ;

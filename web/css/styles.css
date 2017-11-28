@@ -22,11 +22,7 @@ input, textarea, button {
     box-sizing: border-box;
     width: 100%;
     height: 40%;
-    font-size: 2em;
-    padding: 0.1em;
     padding-right: 1.5em;
-    padding-left: 0.7em;
-    text-indent: -0.6em;
 }
 
 #keypad {
@@ -259,7 +255,19 @@ a#copy_button {
     box-sizing: border-box;
 }
 
+/* Error modal */
+#error_msg {
+    font-weight: bold;
+}
+
 /* Program elements */
+.codebox {
+    font-size: 2em;
+    padding: 0.1em;
+    padding-left: 0.7em;
+    text-indent: -0.6em;
+}
+
 .hole, #templates .child0, #templates .child1 {
     box-sizing: border-box;
     width: 1em;
@@ -284,6 +292,10 @@ a#copy_button {
     text-align: center;
     line-height: 2em;
     text-indent: 0;
+}
+
+.errormarker {
+    color: red;
 }
 
 /* Clipboard controls */

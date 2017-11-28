@@ -43,7 +43,7 @@ let rec nextStep s = match s with State(e, loc) -> match e with
   | BinaryOp(o, e1, e2) ->
     (match (nextStep(State(e1, posPush loc 0))) with State(e1_, _) ->
       State(BinaryOp(o, e1_, e2), loc))
-  | Hole -> raise(RuntimeException ("Programs with holes in them are not well typed", s))
+  | Hole -> raise(RuntimeException ("Programs with holes in them can't be executed.", s))
 
 let rec evaluateLoop s = match s with
   | State(Literal(v), _) -> v

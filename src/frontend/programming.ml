@@ -137,6 +137,7 @@ and holeClickHandlerSpecialCasingFunction expression position element = match ex
 
 and replaceSubtreeVisual position expression = begin
   resetMode ();
+  jqueryMaybe ".errormarker" |> Jquery.removeClass (`str "errormarker") |> ignore;
   ignore (jqueryPosition position
     |> Jquery.parent
     |> Jquery.empty
@@ -191,8 +192,16 @@ let executeProgram() = begin
       ignore (jquery "#result_close" |> Jquery.focus);
     ) 500);
   with
-    | Interpreter.RuntimeException (message, State(expression, position)) ->
-      enque (ERuntimeException{message=message; expression=expression; location=position})
+    | Interpreter.RuntimeException (message, State(expression, position)) -> begin
+        enque (ERuntimeException{message=message; expression=expression; location=position});
+        jquery1 "#error_msg" |> Jquery.text message |> ignore;
+        jquery1 "#error_codebox"
+          |> Jquery.empty
+          |> Jquery.append_ (renderExpression expression None emptySpecialCasingFunction)
+          |> ignore;
+        jqueryPosition position |> Jquery.addClass (`str "errormarker") |> ignore;
+        showModal "error_modal" ();
+      end
 end
 
 let clipboardDeleteHandler = fun [@bs.this] node _ -> begin
@@ -252,6 +261,7 @@ let init () = begin
   redraw ();
   jquery "#codebox" |> doSimpleBind "dblclick" executeProgram;
   jquery "#result_close" |> doSimpleBind "click" hideModals;
+  jquery "#error_close" |> doSimpleBind "click" hideModals;
   jquery "#cut_button" |> doSimpleBind "click" cutButton;
   jquery "#copy_button" |> doSimpleBind "click" copyButton;
   jquery "#clipboard_button" |> doSimpleBind "click" showClipboard;

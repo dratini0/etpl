@@ -21,3 +21,24 @@ let jquerySome selector =
     end;
     result;
   end
+
+let jqueryMaybe selector =
+  let result = Jquery.jquery selector in begin
+    if result |> Jquery.length > 1 then begin
+      [%bs.debugger];
+      log (Printf.sprintf "jquerySome: Selector \"%s\" returned no elements" selector);
+    end;
+    result;
+  end
+
+let jqueryAny = Jquery.jquery
+
+let jqueryN selector n =
+  let result = Jquery.jquery selector in begin
+    if result |> Jquery.length != n then begin
+      [%bs.debugger];
+      log (Printf.sprintf "jquerySome: Selector \"%s\" returned no elements" selector);
+    end;
+    result;
+  end
+
