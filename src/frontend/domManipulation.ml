@@ -39,6 +39,9 @@ end
 let doSimpleBind event binding jq =
   ignore (jq |> Jquery.on event (fun [@bs.this] _ _ -> (binding (); Js.false_)))
 
+let doSimpleTrueBind event binding jq =
+  ignore (jq |> Jquery.on event (fun [@bs.this] _ _ -> (binding (); Js.true_)))
+  
 let hideThrobber () = ignore (
   jquery "#throbber_bg" |> Jquery.hide
 )

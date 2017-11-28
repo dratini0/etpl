@@ -4,11 +4,13 @@ open JquerySafe
 let currentGetNumberCallback = ref (fun (number:float) -> Js.log number)
 
 let disableNormal () =
-  ignore (jquerySome "#numberinput_normal_flexbox input" |> Jquery.attr (`kv ("disabled", "disabled")))
+  ignore (jquerySome "#numberinput_normal_flexbox input" |> Jquery.attr (`kv ("readonly", "readonly")))
 
-let enableNormal () =
-  ignore (jquerySome "#numberinput_normal_flexbox input" |> Jquery.removeAttr "disabled")
-  
+let enableNormal () = begin
+  ignore (jquerySome "#numberinput_normal_flexbox input" |> Jquery.removeAttr "readonly");
+  ignore (jquery "#numberinput_normal" |> Jquery.prop (`kv ("checked", "checked")));
+end
+
 let frexpDecimal number =
   match classify_float number with
   | FP_infinite
@@ -45,7 +47,6 @@ let (mantissa, exponent) = frexpDecimal current in begin
   | FP_normal
   | FP_subnormal -> begin
       enableNormal ();
-      ignore (jquery "#numberinput_normal" |> Jquery.prop (`kv ("checked", "checked")));
     end
   );
   ignore (jquery "#numberinput_mantissa" |> Jquery.val_ (`str mantissa));
@@ -83,6 +84,6 @@ let init () = begin
   jquery "#numberinput_ok" |> doSimpleBind "click" handleNumber;
   jquery "#numberinput_cancel" |> doSimpleBind "click" hideModals;
   jquerySome "#numberinput_inf, #numberinput_neginf, #numberinput_nan" |>
-    doSimpleBind "click" disableNormal;
-  jquery "#numberinput_normal" |> doSimpleBind "click" enableNormal;
+    doSimpleTrueBind "click" disableNormal;
+  jquery "#numberinput_normal_fields" |> doSimpleBind "click" enableNormal;
 end
