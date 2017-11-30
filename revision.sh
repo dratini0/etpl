@@ -5,7 +5,5 @@
 if [ "x$1" = "xsrc/revision.ml" ]; then exit; fi
 
 (
-    echo -n 'let gitRevision = "'
-    git describe --dirty | tr -d "\n"
-    echo "\""
+    echo "let gitRevision = \"`git describe --dirty | tr -d "\n"`\""
 ) | tee "src/revision.ml"

@@ -7,7 +7,7 @@
     "infinite-jest": "git://github.com/glennsl/infinite-jest",
     "jquery": "^3.2.1",
     "jquery-ui": "^1.12.1",
-    "json-codec": "git://github.com/state-machine-systems/JsonCodec",
+    "json-codec": "git://github.com/dratini0/JsonCodec",
     "requirejs": "^2.3.5",
     "webpack": "^3.8.1"
   },
