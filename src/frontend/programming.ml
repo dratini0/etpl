@@ -22,6 +22,16 @@ type mode =
 
 let currentMode = ref ModeInsert
 
+(* Would benefit from array-ness! *)
+let currentSuggestions = ref []
+
+let currentSuggestionPageStart = ref 0
+
+(* Pagination-related magic constants, for now *)
+let buttonCount = 16
+let nextPageButtonIndex = 15
+let prevPageButtonIndex = 12
+
 let jqueryPosition position = jquery ("#" ^ (posToId position))
 
 let setMode mode = begin
@@ -76,8 +86,73 @@ end
 
 let addToClipboard expression = clipboard := expression::!clipboard
 
-let rec setCurrentHole hole =
+let rec updateButtons () =
   let buttons = jquerySome "#keypad button" in
+  let renderPrevButton = !currentSuggestionPageStart != 0 in
+  let suggestionCount = List.length !currentSuggestions in
+  let possiblyRenderedSuggestions = !currentSuggestionPageStart
+                                    + buttonCount
+                                    - (if renderPrevButton then 1 else 0) in
+  let renderNextButton = possiblyRenderedSuggestions < suggestionCount in begin
+    ignore (buttons
+      |> Jquery.empty
+      |> Jquery.attr (`kv ("disabled", "disabled"))
+      |> Jquery.off "click");
+    let rec fillButtons index suggestions = (
+      if index >= buttonCount then () else
+      if renderPrevButton && index = prevPageButtonIndex then (
+        buttons
+          |> Jquery.eq index
+          |> Jquery.removeAttr "disabled"
+          |> Jquery.append_ (cloneElementFromTemplate "label_prev")
+          |> doSimpleBind "click" prevPage;
+        fillButtons (index + 1) suggestions
+      ) else
+      if renderNextButton && index = nextPageButtonIndex then (
+        buttons
+          |> Jquery.eq index
+          |> Jquery.removeAttr "disabled"
+          |> Jquery.append_ (cloneElementFromTemplate "label_next")
+          |> doSimpleBind "click" nextPage;
+        fillButtons (index + 1) suggestions
+      ) else 
+        match suggestions with
+          | [] -> fillButtons (index + 1) []
+          | suggestion::otherSuggestions -> (
+            ignore (buttons
+              |> Jquery.eq index
+              |> Jquery.removeAttr "disabled"
+              |> Jquery.append_ (renderExpression suggestion None emptySpecialCasingFunction)
+              |> doSimpleBind "click" (replaceCurrentHoleWrapper index suggestion)
+            );
+            fillButtons (index + 1) otherSuggestions
+          )
+    ) in
+    fillButtons 0 (BatList.drop !currentSuggestionPageStart !currentSuggestions)
+  end
+
+and nextPage () = begin
+  if !currentSuggestionPageStart = 0 then
+    currentSuggestionPageStart := buttonCount - 1
+  else
+    currentSuggestionPageStart := !currentSuggestionPageStart + (buttonCount - 2);
+  updateButtons ()
+end
+and prevPage () = begin
+  if !currentSuggestionPageStart <= buttonCount - 1 then
+    currentSuggestionPageStart := 0
+  else
+    currentSuggestionPageStart := !currentSuggestionPageStart - (buttonCount - 2);
+  updateButtons ()
+end
+
+and setSuggestions suggestions = begin
+  currentSuggestions := suggestions;
+  currentSuggestionPageStart := 0;
+  updateButtons ();
+end
+
+and setCurrentHole hole =
   begin
     resetMode ();
     (match !currentHole with
@@ -87,20 +162,10 @@ let rec setCurrentHole hole =
       | Some hole -> ignore (jqueryPosition hole |> Jquery.addClass (`str "focus"));
       | None -> ());
     currentHole := hole;
-    ignore (buttons
-      |> Jquery.empty
-      |> Jquery.attr (`kv ("disabled", "disabled"))
-      |> Jquery.off "click");
     (match hole with
-      | Some hole ->
-          whatFits !currentProgram hole |> List.iteri (fun index expression ->
-          ignore (buttons
-            |> Jquery.eq index
-            |> Jquery.removeAttr "disabled"
-            |> Jquery.append_ (renderExpression expression None emptySpecialCasingFunction)
-            |> doSimpleBind "click" (replaceCurrentHoleWrapper index expression)
-          ));
-      | None -> ());
+      | Some hole -> setSuggestions (whatFits !currentProgram hole) 
+      | None -> setSuggestions [];
+    )
   end
 
 and handleCut position () = begin
