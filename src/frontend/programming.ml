@@ -33,6 +33,7 @@ let nextPageButtonIndex = 15
 let prevPageButtonIndex = 12
 
 let jqueryPosition position = jquery ("#" ^ (posToId position))
+let jqueryMaybePosition position = jqueryMaybe ("#" ^ (posToId position))
 
 let setMode mode = begin
   currentMode := mode;
@@ -156,7 +157,7 @@ and setCurrentHole hole =
   begin
     resetMode ();
     (match !currentHole with
-      | Some oldHole -> ignore (jqueryPosition oldHole |> Jquery.removeClass (`str "focus"));
+      | Some oldHole -> ignore (jqueryMaybePosition oldHole |> Jquery.removeClass (`str "focus"));
       | None -> ());
     (match hole with
       | Some hole -> ignore (jqueryPosition hole |> Jquery.addClass (`str "focus"));
