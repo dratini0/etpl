@@ -11,6 +11,7 @@ type clipboardPasteRecord = {number: int; expression: expression; hole: position
 type clipboardDeleteRecord = {number: int; expression: expression}
 type successfulExecutionRecord = {result: expression}
 type runtimeExceptionRecord = {message: string; expression: expression; location: position}
+type pageChangeRecord = {next: bool; newStart: int}
 type logEvent =
   | ESignin of signinRecord
   | EState of stateRecord
@@ -22,6 +23,7 @@ type logEvent =
   | EClipboardDelete of clipboardDeleteRecord
   | ESuccessfulExecution of successfulExecutionRecord
   | ERuntimeException of runtimeExceptionRecord
+  | EPageChange of pageChangeRecord
 
 val enque: logEvent -> unit
 val logState: unit -> unit

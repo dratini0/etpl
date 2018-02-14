@@ -137,14 +137,16 @@ and nextPage () = begin
     currentSuggestionPageStart := buttonCount - 1
   else
     currentSuggestionPageStart := !currentSuggestionPageStart + (buttonCount - 2);
-  updateButtons ()
+  updateButtons ();
+  enque (EPageChange {next=true; newStart=(!currentSuggestionPageStart)});
 end
 and prevPage () = begin
   if !currentSuggestionPageStart <= buttonCount - 1 then
     currentSuggestionPageStart := 0
   else
     currentSuggestionPageStart := !currentSuggestionPageStart - (buttonCount - 2);
-  updateButtons ()
+  updateButtons ();
+  enque (EPageChange {next=false; newStart=(!currentSuggestionPageStart)});
 end
 
 and setSuggestions suggestions = begin

@@ -21,6 +21,7 @@ type clipboardPasteRecord = {number: int; expression: expression; hole: position
 type clipboardDeleteRecord = {number: int; expression: expression}
 type successfulExecutionRecord = {result: expression}
 type runtimeExceptionRecord = {message: string; expression: expression; location: position}
+type pageChangeRecord = {next: bool; newStart: int}
 type logEvent =
   | ESignin of signinRecord
   | EState of stateRecord
@@ -32,6 +33,7 @@ type logEvent =
   | EClipboardDelete of clipboardDeleteRecord
   | ESuccessfulExecution of successfulExecutionRecord
   | ERuntimeException of runtimeExceptionRecord
+  | EPageChange of pageChangeRecord
 type logRecord = {timestamp: float; seq: int; event: logEvent}
 
 external makeAjaxConfig : 
@@ -182,6 +184,15 @@ let runtimeExceptionCodec = let open JsonCodec in
       (field "expression" expressionCodec)
       (field "location" positionCodec))
 
+let pageChangeCodec = let open JsonCodec in
+  wrap
+    (fun {next=n; newStart=s} -> ((), n, s))
+    (fun ((), n, s) -> {next=n; newStart=s})
+    (object3
+      (field "tagPageChange" null)
+      (field "next" bool)
+      (field "newStart" int))
+
 let logEventCodec = let open JsonCodec in let open JsonCodec.Xor in
   wrap
   (function
@@ -194,7 +205,8 @@ let logEventCodec = let open JsonCodec in let open JsonCodec.Xor in
     | EClipboardPaste x -> Right(Right(Right(Right(Right(Right(Left(x)))))))
     | EClipboardDelete x -> Right(Right(Right(Right(Right(Right(Right(Left(x))))))))
     | ESuccessfulExecution x -> Right(Right(Right(Right(Right(Right(Right(Right(Left(x)))))))))
-    | ERuntimeException x -> Right(Right(Right(Right(Right(Right(Right(Right(Right(x)))))))))
+    | ERuntimeException x -> Right(Right(Right(Right(Right(Right(Right(Right(Right(Left(x))))))))))
+    | EPageChange x -> Right(Right(Right(Right(Right(Right(Right(Right(Right(Right(x))))))))))
     )
   (function
     | Left(x) -> ESignin x
@@ -206,7 +218,8 @@ let logEventCodec = let open JsonCodec in let open JsonCodec.Xor in
     | Right(Right(Right(Right(Right(Right(Left(x))))))) -> EClipboardPaste x
     | Right(Right(Right(Right(Right(Right(Right(Left(x)))))))) -> EClipboardDelete x
     | Right(Right(Right(Right(Right(Right(Right(Right(Left(x))))))))) -> ESuccessfulExecution x
-    | Right(Right(Right(Right(Right(Right(Right(Right(Right(x))))))))) -> ERuntimeException x
+    | Right(Right(Right(Right(Right(Right(Right(Right(Right(Left(x)))))))))) -> ERuntimeException x
+    | Right(Right(Right(Right(Right(Right(Right(Right(Right(Right(x)))))))))) -> EPageChange x
     )
   (xor signinCodec
   (xor stateCodec
@@ -216,7 +229,8 @@ let logEventCodec = let open JsonCodec in let open JsonCodec.Xor in
   (xor clipboardCutCopyCodec
   (xor clipboardPasteCodec
   (xor clipboardDeleteCodec
-  (xor successfulExecutionCodec runtimeExceptionCodec)))))))))
+  (xor successfulExecutionCodec
+  (xor runtimeExceptionCodec pageChangeCodec))))))))))
 
 let logRecordCodec = let open JsonCodec in
   wrap
