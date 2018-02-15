@@ -30,6 +30,12 @@ let rec substituteFTV index substitute = function
   | TArray t -> TArray (substituteFTV index substitute t)
   | t -> t
 
+let rec occurs index = function
+  | TString
+  | TNumber -> false
+  | TArray t -> occurs index t
+  | FTV i -> i = index
+
 let rec unify subtitutions a b =
   let a = match a with
     | FTV i -> findSubstitution i subtitutions |> Option.default (FTV i)
@@ -38,16 +44,13 @@ let rec unify subtitutions a b =
     | FTV i -> findSubstitution i subtitutions |> Option.default (FTV i)
     | x -> x in
   match a, b with
-    | FTV ai, b -> (
+    | FTV ai, FTV bi when ai = bi -> Some(subtitutions, a)
+    | FTV ai, _ -> if occurs ai b then None else (
         let subtitutions2 = mapSubstitutions (substituteFTV ai b) subtitutions in
         let subtitutions3 = addSubstitution ai b subtitutions2 in
         Some(subtitutions3, b)
       )
-    | a, FTV bi -> (
-        let subtitutions2 = mapSubstitutions (substituteFTV bi a) subtitutions in
-        let subtitutions3 = addSubstitution bi a subtitutions2 in
-        Some(subtitutions3, a)
-      )
+    | _, FTV bi -> unify subtitutions (FTV bi) a
     | TString, TString
     | TNumber, TNumber -> Some(subtitutions, a)
     | TArray a, TArray b -> (match unify subtitutions a b with

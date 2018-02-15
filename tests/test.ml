@@ -34,6 +34,10 @@ let unificationTestCases = [
   TArray(FTV 0),
   Some "String Array"
   ;
+  TArray(FTV 0),
+  FTV 0,
+  None
+  ;
 ]
 
 let interpreterTestCasesPositive = [
