@@ -8,11 +8,34 @@ open Serialize
 open Position
 open TreeManipulation
 open Types
+open Names
+open SubstitutionList
+
+let (>>=) = Option.bind
 
 let resolveOrFail = function
   | Some(x) -> x
   | None -> raise (Failure "resolveOrFail")
-  
+
+let unificationTestCases = [
+  FTV 0,
+  TArray(FTV 1 ),
+  Some "'a Array"
+  ;
+  TString,
+  TArray(FTV 0),
+  None
+  ;
+  TArray(TNumber),
+  TArray(TString),
+  None
+  ;
+  TArray(TString),
+  TArray(FTV 0),
+  Some "String Array"
+  ;
+]
+
 let interpreterTestCasesPositive = [
   BinaryOp(Sub, BinaryOp(Div, Literal(Number(22.)), Literal(Number(7.))), Constant(Pi)),  
   "BinaryOp,Sub,BinaryOp,Div,Literal,Number,22,Literal,Number,7,Constant,Pi",
@@ -127,6 +150,15 @@ let interpreterTestCasesAll =
   (List.map (fun (tree, serialized, pretty, type_, _) -> (tree, serialized, pretty, Some(type_))) interpreterTestCasesPositive) @
   (List.map (fun (tree, serialized, pretty, type_, _, _, _) -> (tree, serialized, pretty, type_)) interpreterTestCasesNegative)
 
+let unificaionTests = 
+  describe "Unify" (fun () -> unificationTestCases |> List.map (fun (a, b, expected) ->
+    let normalization, aname = typeNameInternal emptyTypeNormalization a in
+    let _, bname = typeNameInternal normalization b in
+    test (aname ^ " + " ^ bname ^ " = " ^ (Option.default "None" expected)) (fun() ->
+      unify emptySubstitutionList a b >>= (fun (_, type_) -> (Some(typeName type_))) |> Expect.toEqual expected)
+    )
+  )
+
 let prettyPrintTests =
   describe "Pretty print" (fun () -> interpreterTestCasesAll |> List.map (fun (tree, _, pretty, _) ->
     test pretty (fun() ->
@@ -227,4 +259,10 @@ let treeManipulationTests =
 ])
 
 let _ = 
-  run [prettyPrintTests; serializeTests; deserializeTests; evaluateTestsPositive; evaluateTestsNegative; treeManipulationTests]
+  run [prettyPrintTests;
+       serializeTests;
+       deserializeTests;
+       evaluateTestsPositive;
+       evaluateTestsNegative;
+       treeManipulationTests;
+       ]

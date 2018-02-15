@@ -37,4 +37,5 @@ type state = State of expression * position
 type etplType =
   | TNumber
   | TString
-  | FTV
+  | FTV of int
+  | TArray of etplType

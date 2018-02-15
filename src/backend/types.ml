@@ -1,6 +1,7 @@
 open Language
 open Position
 open TreeManipulation
+open SubstitutionList
 
 let (>>=) = Option.bind
 
@@ -24,11 +25,38 @@ let insertableExpressions = [
   BinaryOp(Concat, Hole, Hole);
 ]
 
-let unify a b = match a, b with
-  | FTV, FTV -> Some FTV
-  | _, FTV -> Some a
-  | FTV, _ -> Some b
-  | _, _ -> if a = b then Some a else None
+let rec substituteFTV index substitute = function
+  | FTV i -> if i = index then substitute else FTV i
+  | TArray t -> TArray (substituteFTV index substitute t)
+  | t -> t
+
+let rec unify subtitutions a b =
+  let a = match a with
+    | FTV i -> findSubstitution i subtitutions |> Option.default (FTV i)
+    | x -> x in
+  let b = match b with
+    | FTV i -> findSubstitution i subtitutions |> Option.default (FTV i)
+    | x -> x in
+  match a, b with
+    | FTV ai, b -> (
+        let subtitutions2 = mapSubstitutions (substituteFTV ai b) subtitutions in
+        let subtitutions3 = addSubstitution ai b subtitutions2 in
+        Some(subtitutions3, b)
+      )
+    | a, FTV bi -> (
+        let subtitutions2 = mapSubstitutions (substituteFTV bi a) subtitutions in
+        let subtitutions3 = addSubstitution bi a subtitutions2 in
+        Some(subtitutions3, a)
+      )
+    | TString, TString
+    | TNumber, TNumber -> Some(subtitutions, a)
+    | TArray a, TArray b -> (match unify subtitutions a b with
+      | Some(substitutions2, t) -> Some(substitutions2, TArray(t))
+      | None -> None
+      )
+    | _ -> None
+
+let unifySugar b (substitutions, a) = unify substitutions a b
 
 let inferTypeValue = function
   | Number _ -> TNumber
@@ -54,14 +82,27 @@ let binaryOpConstratints = function
   | STail
   | CharAt -> TString, TString, TNumber
 
-let rec inferType = function
-  | Literal v -> Some (inferTypeValue v)
-  | Constant(c) -> Some (inferTypeConstant c)
-  | UnaryOp(o, e1) -> let r, t1 = unaryOpConstratints o in
-      if Option.is_some(inferType e1 >>= unify t1) then Some r else None
-  | BinaryOp(o, e1, e2) -> let r, t1, t2 = binaryOpConstratints o in
-      if Option.is_some(inferType e1 >>= unify t1) && Option.is_some(inferType e2 >>= unify t2) then Some r else None
-  | Hole -> Some FTV
+let rec inferTypeInternal substitutions = function
+  | Literal v -> Some (substitutions, inferTypeValue v)
+  | Constant(c) -> Some (substitutions, inferTypeConstant c)
+  | UnaryOp(o, e1) -> let r, t1 = unaryOpConstratints o in (
+      match inferTypeInternal substitutions e1 >>= unifySugar t1 with
+        | Some(substitutions, _) -> Some(substitutions, r)
+        | None -> None
+      )
+  | BinaryOp(o, e1, e2) -> let r, t1, t2 = binaryOpConstratints o in (
+      match inferTypeInternal substitutions e1 >>= unifySugar t1 with
+        | Some(substitutions, _) -> (
+          match inferTypeInternal substitutions e2 >>= unifySugar t2 with
+            | Some(substitutions, _) -> Some (substitutions, r)
+            | None -> None
+          )
+        | None -> None
+      )
+  | Hole -> 
+    let index, substitutions = newFreeVariable substitutions in Some(substitutions, FTV(index))
+
+let inferType e = inferTypeInternal emptySubstitutionList e >>= (fun (_, t) -> Some t)
 
 (* TODO: we can do better *)
 let fitsHole expression position subExpression =
