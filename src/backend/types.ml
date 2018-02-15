@@ -28,15 +28,27 @@ let insertableExpressions = [
 let rec substituteFTV index substitute = function
   | FTV i -> if i = index then substitute else FTV i
   | TArray t -> TArray (substituteFTV index substitute t)
+  | TPair (t1, t2) -> TPair (substituteFTV index substitute t1,
+                             substituteFTV index substitute t2)
   | t -> t
 
 let rec occurs index = function
   | TString
   | TNumber -> false
   | TArray t -> occurs index t
+  | TPair (t1, t2) -> occurs index t1 || occurs index t2
   | FTV i -> i = index
 
-let rec unify subtitutions a b =
+let rec applySubstitutions substitutions = function
+  (* The substitution map should have everything consistent *)
+  (* Focus on should *)
+  | FTV n -> Option.default (FTV n) (findSubstitution n substitutions)
+  | TArray t -> TArray(applySubstitutions substitutions t)
+  | TPair (t1, t2) -> TPair(applySubstitutions substitutions t1,
+                            applySubstitutions substitutions t2)
+  | t -> t
+
+let rec unifyInternal subtitutions a b =
   let a = match a with
     | FTV i -> findSubstitution i subtitutions |> Option.default (FTV i)
     | x -> x in
@@ -44,20 +56,27 @@ let rec unify subtitutions a b =
     | FTV i -> findSubstitution i subtitutions |> Option.default (FTV i)
     | x -> x in
   match a, b with
-    | FTV ai, FTV bi when ai = bi -> Some(subtitutions, a)
-    | FTV ai, _ -> if occurs ai b then None else (
-        let subtitutions2 = mapSubstitutions (substituteFTV ai b) subtitutions in
-        let subtitutions3 = addSubstitution ai b subtitutions2 in
-        Some(subtitutions3, b)
-      )
-    | _, FTV bi -> unify subtitutions (FTV bi) a
+    | FTV ai, FTV bi when ai = bi -> Some(subtitutions)
+    | FTV ai, _ ->
+      let b = applySubstitutions subtitutions b in
+        if occurs ai b then None else (
+          let subtitutions2 = mapSubstitutions (substituteFTV ai b) subtitutions in
+          let subtitutions3 = addSubstitution ai b subtitutions2 in
+          Some(subtitutions3)
+        )
+    | _, FTV bi -> unifyInternal subtitutions (FTV bi) a
     | TString, TString
-    | TNumber, TNumber -> Some(subtitutions, a)
-    | TArray a, TArray b -> (match unify subtitutions a b with
-      | Some(substitutions2, t) -> Some(substitutions2, TArray(t))
+    | TNumber, TNumber -> Some(subtitutions)
+    | TArray a, TArray b -> unifyInternal subtitutions a b
+    | TPair (a1, a2), TPair (b1, b2) ->(match unifyInternal subtitutions a1 b1 with
+      | Some(substitutions2) -> unifyInternal substitutions2 a2 b2
       | None -> None
       )
     | _ -> None
+
+let unify substitutions a b = match unifyInternal substitutions a b with
+  | Some substitutions -> Some(substitutions, applySubstitutions substitutions a)
+  | None -> None
 
 let unifySugar b (substitutions, a) = unify substitutions a b
 

@@ -39,9 +39,9 @@ let rec base26Internal number accumulator =
 
 let base26 number = base26Internal number ""
 
-let rec typeNameInternal (nextLetter, normalization) = function
-  | TNumber -> ((nextLetter, normalization), "Number")
-  | TString -> ((nextLetter, normalization), "String")
+let rec typeNameInternal ((nextLetter, normalization) as state) = function
+  | TNumber -> (state, "Number")
+  | TString -> (state, "String")
   | FTV i ->
       if IntMap.mem i normalization then 
         ((nextLetter,
@@ -51,8 +51,12 @@ let rec typeNameInternal (nextLetter, normalization) = function
         ((nextLetter + 1,
          IntMap.add i nextLetter normalization),
          "'" ^ (base26 nextLetter))
-  | TArray t -> let (nextLetter_, normalization_), result = typeNameInternal (nextLetter, normalization) t in
-      ((nextLetter_, normalization_), result ^ " Array")
+  | TArray t -> let state_, result = typeNameInternal state t in
+      (state_, result ^ " Array")
+  | TPair (t1, t2) ->
+      let state_, result1 = typeNameInternal state t1 in
+      let state__, result2 = typeNameInternal state_ t2 in
+      (state__, "(" ^ result1 ^ " * " ^ result2 ^ ")")
 
 let typeName t = let _, result = typeNameInternal emptyTypeNormalization t in result
 

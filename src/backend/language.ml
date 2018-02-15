@@ -39,3 +39,4 @@ type etplType =
   | TString
   | FTV of int
   | TArray of etplType
+  | TPair of etplType * etplType

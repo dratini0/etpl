@@ -19,8 +19,8 @@ let resolveOrFail = function
 
 let unificationTestCases = [
   FTV 0,
-  TArray(FTV 1 ),
-  Some "'a Array"
+  TArray(FTV 1),
+  Some(TArray(FTV 1))
   ;
   TString,
   TArray(FTV 0),
@@ -32,10 +32,34 @@ let unificationTestCases = [
   ;
   TArray(TString),
   TArray(FTV 0),
-  Some "String Array"
+  Some(TArray TString)
   ;
   TArray(FTV 0),
   FTV 0,
+  None
+  ;
+  TPair(TString, TNumber),
+  FTV 0,
+  Some(TPair(TString, TNumber))
+  ;
+  TPair(TString, FTV 0),
+  TPair(FTV 1, TNumber),
+  Some(TPair(TString, TNumber))
+  ;
+  TPair(TString, FTV 0),
+  TPair(FTV 0, TNumber),
+  None
+  ;
+  TPair(TPair(FTV 0, FTV 0), FTV 1),
+  TPair(TPair(FTV 0, FTV 1), FTV 1),
+  Some(TPair(TPair(FTV 0, FTV 0), FTV 0))
+  ;
+  TPair(FTV 1, TPair(FTV 0, FTV 0)),
+  TPair(TPair(FTV 0, FTV 0), FTV 1),
+  Some(TPair(TPair(FTV 0, FTV 0), TPair(FTV 0, FTV 0)))
+  ;
+  TPair(FTV 0, TPair(FTV 0, FTV 0)),
+  TPair(TPair(FTV 1, FTV 1), FTV 1),
   None
   ;
 ]
@@ -158,8 +182,9 @@ let unificaionTests =
   describe "Unify" (fun () -> unificationTestCases |> List.map (fun (a, b, expected) ->
     let normalization, aname = typeNameInternal emptyTypeNormalization a in
     let _, bname = typeNameInternal normalization b in
-    test (aname ^ " + " ^ bname ^ " = " ^ (Option.default "None" expected)) (fun() ->
-      unify emptySubstitutionList a b >>= (fun (_, type_) -> (Some(typeName type_))) |> Expect.toEqual expected)
+    let expectedStr = expected >>= fun t -> Some(typeName t) in
+    test (aname ^ " + " ^ bname ^ " = " ^ (Option.default "None" expectedStr)) (fun() ->
+      unify emptySubstitutionList a b >>= (fun (_, type_) -> (Some(typeName type_))) |> Expect.toEqual expectedStr)
     )
   )
 
@@ -263,7 +288,8 @@ let treeManipulationTests =
 ])
 
 let _ = 
-  run [prettyPrintTests;
+  run [unificaionTests;
+       prettyPrintTests;
        serializeTests;
        deserializeTests;
        evaluateTestsPositive;
