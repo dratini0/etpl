@@ -23,6 +23,9 @@ let insertableExpressions = [
   BinaryOp(STail, Hole, Hole);
   BinaryOp(CharAt, Hole, Hole);
   BinaryOp(Concat, Hole, Hole);
+  BinaryOp(Pair, Hole, Hole);
+  UnaryOp(PairLeft, Hole);
+  UnaryOp(PairRight, Hole);
 ]
 
 let rec substituteFTV index substitute = function
@@ -80,39 +83,64 @@ let unify substitutions a b = match unifyInternal substitutions a b with
 
 let unifySugar b (substitutions, a) = unify substitutions a b
 
-let inferTypeValue = function
-  | Number _ -> TNumber
-  | String _ -> TString
+let rec literalConstraints substitutions = function
+  | Number _ -> substitutions, TNumber
+  | String _ -> substitutions, TString
+  | Array a -> if Array.length a = 0 then 
+      let i, substitutions_ = newFreeVariable substitutions in
+      substitutions_, FTV(i)
+    else
+      literalConstraints substitutions (Array.get a 0)
+  | Pair (v1, v2) ->
+      let substitutions2, t1 = literalConstraints substitutions v1 in
+      let substitutions3, t2 = literalConstraints substitutions2 v2 in
+      (substitutions3, TPair(t1, t2))
+
+let inferTypeValue v = let _, t = literalConstraints emptySubstitutionList v in t
 
 let inferTypeConstant = function
   | Pi -> TNumber
 
-let unaryOpConstratints = function
+(* Result: state, result, operand *)
+let unaryOpConstratints substitutions = function
   | Ln
-  | Floor -> TNumber, TNumber
-  | StringOfNum -> TString, TNumber
-  | NumOfString -> TNumber, TString
-  | Strlen -> TNumber, TString
+  | Floor -> substitutions, TNumber, TNumber
+  | StringOfNum -> substitutions, TString, TNumber
+  | NumOfString -> substitutions, TNumber, TString
+  | Strlen -> substitutions, TNumber, TString
+  | PairLeft ->
+      let alpha, substitutions2 = newFreeVariable substitutions in
+      let beta, substitutions3 = newFreeVariable substitutions2 in
+      substitutions3, FTV alpha, TPair(FTV alpha, FTV beta)
+  | PairRight ->
+      let alpha, substitutions2 = newFreeVariable substitutions in
+      let beta, substitutions3 = newFreeVariable substitutions2 in
+      substitutions3, FTV beta, TPair(FTV alpha, FTV beta)
 
-let binaryOpConstratints = function
+(* Result: state, result, operand1, operand2 *)
+let binaryOpConstratints substitutions = function
   | Add
   | Sub
   | Mul
-  | Div -> TNumber, TNumber, TNumber
-  | Concat -> TString, TString, TString
+  | Div -> substitutions, TNumber, TNumber, TNumber
+  | Concat -> substitutions, TString, TString, TString
   | SHead
   | STail
-  | CharAt -> TString, TString, TNumber
+  | CharAt -> substitutions, TString, TString, TNumber
+  | Pair ->
+      let alpha, substitutions2 = newFreeVariable substitutions in
+      let beta, substitutions3 = newFreeVariable substitutions2 in
+      substitutions3, TPair(FTV alpha, FTV beta), FTV alpha, FTV beta
 
 let rec inferTypeInternal substitutions = function
-  | Literal v -> Some (substitutions, inferTypeValue v)
+  | Literal v -> Some (literalConstraints substitutions v)
   | Constant(c) -> Some (substitutions, inferTypeConstant c)
-  | UnaryOp(o, e1) -> let r, t1 = unaryOpConstratints o in (
+  | UnaryOp(o, e1) -> let substitutions, r, t1 = unaryOpConstratints substitutions o in (
       match inferTypeInternal substitutions e1 >>= unifySugar t1 with
         | Some(substitutions, _) -> Some(substitutions, r)
         | None -> None
       )
-  | BinaryOp(o, e1, e2) -> let r, t1, t2 = binaryOpConstratints o in (
+  | BinaryOp(o, e1, e2) -> let substitutions, r, t1, t2 = binaryOpConstratints substitutions o in (
       match inferTypeInternal substitutions e1 >>= unifySugar t1 with
         | Some(substitutions, _) -> (
           match inferTypeInternal substitutions e2 >>= unifySugar t2 with
@@ -124,7 +152,8 @@ let rec inferTypeInternal substitutions = function
   | Hole -> 
     let index, substitutions = newFreeVariable substitutions in Some(substitutions, FTV(index))
 
-let inferType e = inferTypeInternal emptySubstitutionList e >>= (fun (_, t) -> Some t)
+let inferType e = inferTypeInternal emptySubstitutionList e >>=
+      (fun (substitutions, t) -> Some (applySubstitutions substitutions t))
 
 (* TODO: we can do better *)
 let fitsHole expression position subExpression =

@@ -9,6 +9,8 @@ type unaryOp =
   | StringOfNum
   | NumOfString
   | Strlen
+  | PairLeft
+  | PairRight
 
 type binaryOp =
   | Add
@@ -19,10 +21,13 @@ type binaryOp =
   | SHead
   | STail
   | CharAt
+  | Pair
 
 type value =
   | Number of float
   | String of string
+  | Array of value array
+  | Pair of value * value
 
 type expression =
   | Literal of value

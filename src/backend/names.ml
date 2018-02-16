@@ -19,6 +19,8 @@ let unaryOperatorName = function
   | StringOfNum -> "StringOfNum"
   | NumOfString -> "NumOfString"
   | Strlen -> "Strlen"
+  | PairLeft -> "PairLeft"
+  | PairRight -> "PairRight"
 
 let binaryOperatorName = function
   | Add -> "Add"
@@ -29,6 +31,7 @@ let binaryOperatorName = function
   | SHead -> "SHead"
   | STail -> "STail"
   | CharAt -> "CharAt"
+  | Pair -> "Pair"
 
 let rec base26Internal number accumulator =
   if number < alphabetlen then
@@ -70,6 +73,8 @@ let unaryOperatorByName = function
   | "StringOfNum" -> StringOfNum
   | "NumOfString" -> NumOfString
   | "Strlen" -> Strlen
+  | "PairLeft" -> PairLeft
+  | "PairRight" -> PairRight
   | name -> raise (UnknownNameException ("Unary operator " ^ name))
   
 let binaryOperatorByName = function
@@ -81,4 +86,5 @@ let binaryOperatorByName = function
   | "SHead" -> SHead
   | "STail" -> STail
   | "CharAt" -> CharAt
+  | "Pair" -> Pair
   | name -> raise (UnknownNameException ("Binary operator " ^ name))

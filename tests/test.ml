@@ -137,6 +137,24 @@ let interpreterTestCasesPositive = [
   TString,
   String("1")
   ;
+  BinaryOp(Pair, Literal(String("Pi")), Constant Pi),
+  "BinaryOp,Pair,Literal,String,1,Pi,Constant,Pi",
+  "Pair(\"Pi\", Pi)",
+  TPair(TString, TNumber),
+  Pair(String("Pi"), Number(3.1415926535897932384626433832795))
+  ;
+  UnaryOp(PairLeft, BinaryOp(Pair, Literal(String("Pi")), Constant Pi)),
+  "UnaryOp,PairLeft,BinaryOp,Pair,Literal,String,1,Pi,Constant,Pi",
+  "PairLeft(Pair(\"Pi\", Pi))",
+  TString,
+  String("Pi")
+  ;
+  UnaryOp(PairRight, BinaryOp(Pair, Literal(String("Pi")), Constant Pi)),
+  "UnaryOp,PairRight,BinaryOp,Pair,Literal,String,1,Pi,Constant,Pi",
+  "PairRight(Pair(\"Pi\", Pi))",
+  TNumber,
+  Number(3.1415926535897932384626433832795)
+  ;
 ]
 
 let interpreterTestCasesNegative = [
@@ -212,7 +230,8 @@ let deserializeTests =
 let inferTypeTests =
   describe "Type inference" (fun () -> interpreterTestCasesAll |> List.map (fun (tree, _, pretty, type_) ->
     test pretty (fun() ->
-      inferType tree |> Expect.toEqual type_)
+      let type_String = Option.map typeName type_ in
+      inferType tree |> (Option.map typeName) |> Expect.toEqual type_String)
     )
   )
 

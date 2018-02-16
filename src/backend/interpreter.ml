@@ -16,6 +16,8 @@ let evalUnary s o e1 = match (o, e1) with
   | (StringOfNum, Number(v1)) -> updateState s (Literal(String(Printf.sprintf "%g" v1)))
   | (NumOfString, String(v1)) -> (try updateState s (Literal(Number(float_of_string v1))) with Failure "float_of_string" -> raise (RuntimeException("String is not numeric", s)))
   | (Strlen, String(v1)) -> updateState s (Literal(Number(v1 |> String.length |> float_of_int)))
+  | (PairLeft, Pair(v1, _)) -> updateState s (Literal v1)
+  | (PairRight, Pair(_, v2)) -> updateState s (Literal v2)
   | (o, v1) -> raise (RuntimeException(Printf.sprintf "Program is not well-typed: %s is not defined for an argument of type %s" (unaryOperatorName o) (v1 |> inferTypeValue |> typeName), s))
 
 let evalBinary s o e1 e2 = match (o, e1, e2) with
@@ -27,6 +29,7 @@ let evalBinary s o e1 e2 = match (o, e1, e2) with
   | (SHead, String(e1), Number(e2)) -> (try updateState s (Literal(String(String.sub e1 0 (int_of_float e2)))) with Invalid_argument _ -> raise (RuntimeException("Index out of range for SHead", s)))
   | (STail, String(e1), Number(e2)) -> (try let len = String.length e1 in updateState s (Literal(String(String.sub e1 (len - (int_of_float e2)) (int_of_float e2)))) with Invalid_argument _ -> raise (RuntimeException("Index out of range for STail", s)))
   | (CharAt, String(e1), Number(e2)) -> (try updateState s (Literal(String(String.make 1 (String.get e1 (int_of_float e2))))) with Invalid_argument _ -> raise (RuntimeException("Index out of range for CharAt", s)))
+  | (Pair, e1, e2) -> updateState s (Literal(Pair(e1, e2)))
   | (o, v1, v2) -> raise (RuntimeException(Printf.sprintf "Program is not well-typed: %s is not defined for an arguments of type %s and %s" (binaryOperatorName o) (v1 |> inferTypeValue |> typeName) (v2 |> inferTypeValue |> typeName), s))
   
 let rec nextStep s = match s with State(e, loc) -> match e with
