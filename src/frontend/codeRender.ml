@@ -1,5 +1,4 @@
 open Language
-open Types
 open Names
 open Position
 open JquerySafe

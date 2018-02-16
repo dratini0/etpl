@@ -1,9 +1,11 @@
 open Language
 open Names
 
-let prettyPrintValue v = match v with
+let rec prettyPrintValue v = match v with
   | Number(n) -> string_of_float(n)
   | String(s) -> Printf.sprintf "\"%s\"" s
+  | Pair(v1, v2) -> "(" ^ (prettyPrintValue v1) ^ ", " ^ (prettyPrintValue v2) ^ ")"
+  | Array a -> "[" ^ (a |> Array.map prettyPrintValue |> Array.to_list |> BatString.concat ", ") ^ "]"
 
 let rec prettyPrintExpression e = match e with
   | Literal(l) -> prettyPrintValue l
