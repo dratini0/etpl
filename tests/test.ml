@@ -155,6 +155,18 @@ let interpreterTestCasesPositive = [
   TNumber,
   Number(3.1415926535897932384626433832795)
   ;
+  Literal(Pair(Number(1.), String("asd"))), 
+  "Literal,Pair,Number,1,String,1,asd",
+  "(1., \"asd\")",
+  TPair(TNumber,TString),
+  Pair(Number(1.), String("asd"))
+  ;
+  Literal(Array([|Number(1.); Number(2.)|])), 
+  "Literal,Array,2,Number,1,Number,2",
+  "[1., 2.]",
+  TArray(TNumber),
+  Array([|Number(1.); Number(2.)|]) 
+  ;
 ]
 
 let interpreterTestCasesNegative = [

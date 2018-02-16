@@ -90,7 +90,8 @@ let rec literalConstraints substitutions = function
       let i, substitutions_ = newFreeVariable substitutions in
       substitutions_, FTV(i)
     else
-      literalConstraints substitutions (Array.get a 0)
+      let substitutions_, t = literalConstraints substitutions (Array.get a 0) in
+      (substitutions_, TArray t)
   | Pair (v1, v2) ->
       let substitutions2, t1 = literalConstraints substitutions v1 in
       let substitutions3, t2 = literalConstraints substitutions2 v2 in
