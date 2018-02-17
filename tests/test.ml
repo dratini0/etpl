@@ -167,6 +167,24 @@ let interpreterTestCasesPositive = [
   TArray(TNumber),
   Array([|Number(1.); Number(2.)|]) 
   ;
+  NAryOp(ArrayForm, [], 0, []),
+  "NAryOp,ArrayForm,0",
+  "ArrayForm()",
+  TArray(FTV 0),
+  Array [||]
+  ;
+  NAryOp(ArrayForm, [BinaryOp(Pair, Constant Pi, Literal(String "pi")); BinaryOp(Pair, Literal(Number 2.), Literal(String "two"))], 0, []),
+  "NAryOp,ArrayForm,2,BinaryOp,Pair,Constant,Pi,Literal,String,1,pi,BinaryOp,Pair,Literal,Number,2,Literal,String,1,two",
+  "ArrayForm(Pair(Pi, \"pi\"), Pair(2., \"two\"))",
+  TArray(TPair(TNumber, TString)),
+  Array [|Pair(Number 3.1415926535897932384626433832795, String "pi"); Pair(Number 2., String "two")|]
+  ;
+  NAryOp(ArrayForm, [NAryOp(ArrayForm, [Literal (Number 5.)], 0, [])], 0, []),
+  "NAryOp,ArrayForm,1,NAryOp,ArrayForm,1,Literal,Number,5",
+  "ArrayForm(ArrayForm(5.))",
+  TArray (TArray TNumber),
+  Array[|Array[|Number 5.|]|]
+  ;
 ]
 
 let interpreterTestCasesNegative = [
@@ -257,7 +275,7 @@ let evaluateTestsPositive =
 let typePreservationTests =
   describe "Type preservation" (fun () -> interpreterTestCasesPositive |> List.map (fun (_, _, pretty, type_, result) ->
     test pretty (fun() ->
-      inferTypeValue result |> Expect.toEqual type_)
+      inferTypeValue result |> typeName |> Expect.toEqual (type_ |> typeName))
     )
   )
   
@@ -271,7 +289,7 @@ let evaluateTestsNegative =
     )
   )
 
-let holeTest = BinaryOp(Sub, BinaryOp(Div, Hole, Hole), Hole)
+let holeTest = NAryOp(ArrayForm, [BinaryOp(Sub, BinaryOp(Div, Hole, Hole), Hole); Hole], 0, [])
 let treeManipulationExample = BinaryOp(Sub, BinaryOp(Div, Literal(Number(22.)), Literal(Number(7.))), Constant(Pi))
 
 let treeManipulationTests =
@@ -282,8 +300,16 @@ let treeManipulationTests =
       getSubtree treeManipulationExample (pos_of_list [1]) |> Expect.toEqual (Constant(Pi))
     );
 
+    test "GetSubtreeNAry" (fun () -> 
+      getSubtree holeTest (pos_of_list [1]) |> Expect.toEqual Hole
+    );
+
     test "ReplaceSubtree" (fun () ->
       replaceSubtree treeManipulationExample (pos_of_list [0]) Hole |> Expect.toEqual (BinaryOp(Sub, Hole, Constant(Pi)))
+    );
+
+    test "ReplaceSubtreeNAry" (fun () ->
+      replaceSubtree holeTest (pos_of_list [0]) (Constant Pi) |> Expect.toEqual (NAryOp(ArrayForm, [Constant Pi; Hole], 0, []))
     );
 
     test "FirstHoleTrivial" (fun () ->
@@ -295,7 +321,7 @@ let treeManipulationTests =
     );
 
     test "FirstHole" (fun () ->
-      firstHole holeTest |> resolveOrFail |> list_of_pos |> Expect.toEqual [0; 0]
+      firstHole holeTest |> resolveOrFail |> list_of_pos |> Expect.toEqual [0; 0; 0]
     );
 
     test "FirstHoleRight" (fun () ->
@@ -313,7 +339,7 @@ let treeManipulationTests =
             | None -> None
             | Some result -> Some(result, result))
         |> List.map list_of_pos
-        |> Expect.toEqual [[0; 0]; [0; 1]; [1]]
+        |> Expect.toEqual [[0; 0; 0]; [0; 0; 1]; [0; 1]; [1]]
     );
 
 ])

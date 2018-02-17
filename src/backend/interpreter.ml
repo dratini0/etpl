@@ -31,8 +31,11 @@ let evalBinary s o e1 e2 = match (o, e1, e2) with
   | (CharAt, String(e1), Number(e2)) -> (try updateState s (Literal(String(String.make 1 (String.get e1 (int_of_float e2))))) with Invalid_argument _ -> raise (RuntimeException("Index out of range for CharAt", s)))
   | (Pair, e1, e2) -> updateState s (Literal(Pair(e1, e2)))
   | (o, v1, v2) -> raise (RuntimeException(Printf.sprintf "Program is not well-typed: %s is not defined for an arguments of type %s and %s" (binaryOperatorName o) (v1 |> inferTypeValue |> typeName) (v2 |> inferTypeValue |> typeName), s))
-  
-let rec nextStep s = match s with State(e, loc) -> match e with
+
+let evalNAry s o values = match o with
+  | ArrayForm -> updateState s (Literal(Array(values |> List.rev |> Array.of_list)))
+
+let rec nextStep (State(e, loc) as s) = match e with
   | Literal(_) -> raise (RuntimeException ("already a value", s))
   | Constant(c) -> evalConstant s c
   | UnaryOp(o, Literal(e1)) -> evalUnary s o e1
@@ -46,6 +49,11 @@ let rec nextStep s = match s with State(e, loc) -> match e with
   | BinaryOp(o, e1, e2) ->
     (match (nextStep(State(e1, posPush loc 0))) with State(e1_, _) ->
       State(BinaryOp(o, e1_, e2), loc))
+  | NAryOp(o, [], _, values) -> evalNAry s o values
+  | NAryOp(o, Literal(v) :: es, n, values) -> State(NAryOp(o, es, n+1, v::values), loc)
+  | NAryOp(o, e::es, n, values) ->
+      let State(e_, _) = nextStep(State(e, posPush loc n)) in 
+      State(NAryOp(o, e_::es, n, values), loc)
   | Hole -> raise(RuntimeException ("Programs with holes in them can't be executed.", s))
 
 let rec evaluateLoop s = match s with

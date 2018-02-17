@@ -88,7 +88,7 @@ let rec literalConstraints substitutions = function
   | String _ -> substitutions, TString
   | Array a -> if Array.length a = 0 then 
       let i, substitutions_ = newFreeVariable substitutions in
-      substitutions_, FTV(i)
+      substitutions_, TArray (FTV i)
     else
       let substitutions_, t = literalConstraints substitutions (Array.get a 0) in
       (substitutions_, TArray t)
@@ -133,6 +133,12 @@ let binaryOpConstratints substitutions = function
       let beta, substitutions3 = newFreeVariable substitutions2 in
       substitutions3, TPair(FTV alpha, FTV beta), FTV alpha, FTV beta
 
+let nAryOpConstraints substitutions n = function
+  | ArrayForm ->
+      let alpha, substitutions2 = newFreeVariable substitutions in
+      substitutions2, TArray(FTV alpha), BatList.make n (FTV alpha)
+
+
 let rec inferTypeInternal substitutions = function
   | Literal v -> Some (literalConstraints substitutions v)
   | Constant(c) -> Some (substitutions, inferTypeConstant c)
@@ -150,7 +156,19 @@ let rec inferTypeInternal substitutions = function
           )
         | None -> None
       )
-  | Hole -> 
+  | NAryOp(o, es, _, _) ->
+      let substitutions, t, args = nAryOpConstraints substitutions (List.length es) o in
+      let helper = fun s argument constraint_ -> match s with
+        | Some substitutions -> (
+          match inferTypeInternal substitutions argument with
+            | Some(substitutions, t) -> unifyInternal substitutions constraint_ t
+            | None -> None
+          )
+        | None -> None in
+      (match List.fold_left2 helper (Some substitutions) es args with
+        | Some(substitutions) -> Some(substitutions, t)
+        | None -> None)
+  | Hole ->
     let index, substitutions = newFreeVariable substitutions in Some(substitutions, FTV(index))
 
 let inferType e = inferTypeInternal emptySubstitutionList e >>=

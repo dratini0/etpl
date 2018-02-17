@@ -33,6 +33,9 @@ let binaryOperatorName = function
   | CharAt -> "CharAt"
   | Pair -> "Pair"
 
+let nAryOperatorName = function
+  | ArrayForm -> "ArrayForm"
+
 let rec base26Internal number accumulator =
   if number < alphabetlen then
   (String.make 1 alphabet.[number mod alphabetlen]) ^ accumulator
@@ -88,3 +91,7 @@ let binaryOperatorByName = function
   | "CharAt" -> CharAt
   | "Pair" -> Pair
   | name -> raise (UnknownNameException ("Binary operator " ^ name))
+
+let nAryOperatorByName = function
+  | "ArrayForm" -> ArrayForm
+  | name -> raise (UnknownNameException ("N-ary operator " ^ name))

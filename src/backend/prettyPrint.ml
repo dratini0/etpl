@@ -12,4 +12,6 @@ let rec prettyPrintExpression e = match e with
   | Constant(c) -> constantName c
   | UnaryOp(o, e1) -> (unaryOperatorName o) ^ "(" ^ (prettyPrintExpression e1) ^ ")"
   | BinaryOp(o, e1, e2) -> (binaryOperatorName o) ^ "(" ^ (prettyPrintExpression e1) ^ ", " ^ (prettyPrintExpression e2) ^ ")"
+  | NAryOp(o, es, 0, []) -> (nAryOperatorName o) ^ "(" ^ (es |> List.map prettyPrintExpression |> String.concat ", ") ^ ")"
+  | NAryOp _ -> raise IntermediateStateError
   | Hole -> "[]"

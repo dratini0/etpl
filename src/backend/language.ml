@@ -1,5 +1,9 @@
 open Position
 
+(* Raised when the serialization/pretty-printing of an internal-only state is
+   attempted *)
+exception IntermediateStateError
+
 type constant =
   | Pi
 
@@ -23,6 +27,9 @@ type binaryOp =
   | CharAt
   | Pair
 
+type nAryOp =
+  | ArrayForm
+
 type value =
   | Number of float
   | String of string
@@ -34,6 +41,7 @@ type expression =
   | Constant of constant
   | UnaryOp of unaryOp * expression
   | BinaryOp of binaryOp * expression * expression
+  | NAryOp of nAryOp * expression list * int * value list
   | Hole
 
 (* This will eventually hold mutable state *)

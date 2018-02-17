@@ -22,6 +22,11 @@ let rec encode expression accumulator = match expression with
     let accumulator2 = encode e2 accumulator in
     let accumulator3 = encode e1 accumulator2 in
       "BinaryOp" :: binaryOperatorName o :: accumulator3
+  | NAryOp(o, es, 0, []) ->
+    let length = List.length es in
+      "NAryOp":: (nAryOperatorName o) :: (string_of_int length) ::
+        BatList.fold_right encode es accumulator
+  | NAryOp _ -> raise IntermediateStateError
   | Hole -> "Hole" :: accumulator
 
 let serialize expression = String.concat separator (encode expression [])
@@ -54,8 +59,14 @@ and decodeValue code = match code with
   | [] -> raise DecodingUnderrunError
   | typename :: _ -> raise (UnknownNameException("Type " ^ typename))
   
-
-let rec decode = function
+let rec decodeNAry count rest accumulator =
+  if count = 0 then
+    (accumulator, rest)
+  else
+    let value, rest_ = decode rest in
+    decodeNAry (count - 1) rest_ (value::accumulator)
+  
+and decode = function
   | tokenType :: tail -> (match tokenType with
     | "Literal" -> let v, tail2 = decodeValue tail in (Literal(v), tail2)
     | "Constant" -> (match tail with
@@ -77,9 +88,18 @@ let rec decode = function
       )
       | _ -> raise DecodingUnderrunError
     )
+    | "NAryOp" -> (match tail with
+      | o_ :: n_ :: tail2 -> (
+        let o = nAryOperatorByName o_ in 
+        let n = int_of_string n_ in
+        let results, tail3 = decodeNAry n tail2 [] in
+        (NAryOp(o, List.rev results, 0, []), tail3)
+      )
+      | _ -> raise DecodingUnderrunError
+    )
     | "Hole" -> (Hole, tail)
     | _ -> raise (UnknownNameException ("Token type " ^ tokenType)))
-  | _ -> raise DecodingUnderrunError
+  | [] -> raise DecodingUnderrunError
 
 let deserialize code =
   let e, _ = decode (BatString.nsplit ~by:separator code) in
