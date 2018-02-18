@@ -3,8 +3,6 @@ open Position
 open TreeManipulation
 open SubstitutionList
 
-let (>>=) = Option.bind
-
 (* TODO: add some way of grouping these, because they will not always fit the screen *)
 let insertableExpressions = [
   Literal(Number(0.));
@@ -81,8 +79,6 @@ let unify substitutions a b = match unifyInternal substitutions a b with
   | Some substitutions -> Some(substitutions, applySubstitutions substitutions a)
   | None -> None
 
-let unifySugar b (substitutions, a) = unify substitutions a b
-
 let rec literalConstraints substitutions = function
   | Number _ -> substitutions, TNumber
   | String _ -> substitutions, TString
@@ -99,8 +95,8 @@ let rec literalConstraints substitutions = function
 
 let inferTypeValue v = let _, t = literalConstraints emptySubstitutionList v in t
 
-let inferTypeConstant = function
-  | Pi -> TNumber
+let inferTypeConstant substitutions = function
+  | Pi -> substitutions, TNumber
 
 (* Result: state, result, operand *)
 let unaryOpConstratints substitutions = function
@@ -138,41 +134,43 @@ let nAryOpConstraints substitutions n = function
       let alpha, substitutions2 = newFreeVariable substitutions in
       substitutions2, TArray(FTV alpha), BatList.make n (FTV alpha)
 
+let rec fold_left2_option_bind fn acc left right = match acc, left, right with
+  | _, [], [] -> acc
+  | None, _, _ -> None
+  | Some acc, left::leftRest, right::rightRest -> fold_left2_option_bind fn (fn acc left right) leftRest rightRest
+  | _ -> raise (Invalid_argument "fold_left2_option_map")
 
-let rec inferTypeInternal substitutions = function
-  | Literal v -> Some (literalConstraints substitutions v)
-  | Constant(c) -> Some (substitutions, inferTypeConstant c)
-  | UnaryOp(o, e1) -> let substitutions, r, t1 = unaryOpConstratints substitutions o in (
-      match inferTypeInternal substitutions e1 >>= unifySugar t1 with
-        | Some(substitutions, _) -> Some(substitutions, r)
-        | None -> None
-      )
-  | BinaryOp(o, e1, e2) -> let substitutions, r, t1, t2 = binaryOpConstratints substitutions o in (
-      match inferTypeInternal substitutions e1 >>= unifySugar t1 with
-        | Some(substitutions, _) -> (
-          match inferTypeInternal substitutions e2 >>= unifySugar t2 with
-            | Some(substitutions, _) -> Some (substitutions, r)
-            | None -> None
-          )
-        | None -> None
-      )
-  | NAryOp(o, es, _, _) ->
-      let substitutions, t, args = nAryOpConstraints substitutions (List.length es) o in
-      let helper = fun s argument constraint_ -> match s with
-        | Some substitutions -> (
-          match inferTypeInternal substitutions argument with
-            | Some(substitutions, t) -> unifyInternal substitutions constraint_ t
-            | None -> None
-          )
-        | None -> None in
-      (match List.fold_left2 helper (Some substitutions) es args with
-        | Some(substitutions) -> Some(substitutions, t)
+let rec inferTypeInternal substitutions tExpected = function
+  | Literal v ->
+      let substitutions2, tReturn = literalConstraints substitutions v in
+      unifyInternal substitutions2 tExpected tReturn
+  | Constant c ->
+      let substitutions2, tReturn = inferTypeConstant substitutions c in
+      unifyInternal substitutions2 tExpected tReturn
+  | UnaryOp(o, e1) ->
+      let substitutions2, tReturn, t1 = unaryOpConstratints substitutions o in
+      (match unifyInternal substitutions2 tExpected tReturn with
+        | Some substitutions3 -> inferTypeInternal substitutions3 t1 e1
         | None -> None)
-  | Hole ->
-    let index, substitutions = newFreeVariable substitutions in Some(substitutions, FTV(index))
+  | BinaryOp(o, e1, e2) ->
+      let substitutions2, tReturn, t1, t2 = binaryOpConstratints substitutions o in
+      (match unifyInternal substitutions2 tExpected tReturn with
+        | Some substitutions3 -> (match inferTypeInternal substitutions3 t1 e1 with
+          | Some substitutions4 -> inferTypeInternal substitutions4 t2 e2
+          | None -> None)
+        | None -> None)
+  | NAryOp(o, es, 0, []) -> 
+      let substitutions2, tReturn, ts = nAryOpConstraints substitutions (List.length es) o in
+      let substitutions3 = unifyInternal substitutions2 tExpected tReturn in
+        fold_left2_option_bind inferTypeInternal substitutions3 ts es
+  | NAryOp _ -> raise IntermediateStateError
+  | Hole -> Some substitutions
 
-let inferType e = inferTypeInternal emptySubstitutionList e >>=
-      (fun (substitutions, t) -> Some (applySubstitutions substitutions t))
+let inferType e = 
+  let alpha, substitutions = newFreeVariable emptySubstitutionList in
+  match inferTypeInternal substitutions (FTV alpha) e with
+    | Some substitutions2 -> Some (applySubstitutions substitutions2 (FTV alpha))
+    | None -> None
 
 (* TODO: we can do better *)
 let fitsHole expression position subExpression =
