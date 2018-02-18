@@ -99,7 +99,7 @@ let inferTypeConstant substitutions = function
   | Pi -> substitutions, TNumber
 
 (* Result: state, result, operand *)
-let unaryOpConstratints substitutions = function
+let unaryOpConstraints substitutions = function
   | Ln
   | Floor -> substitutions, TNumber, TNumber
   | StringOfNum -> substitutions, TString, TNumber
@@ -115,7 +115,7 @@ let unaryOpConstratints substitutions = function
       substitutions3, FTV beta, TPair(FTV alpha, FTV beta)
 
 (* Result: state, result, operand1, operand2 *)
-let binaryOpConstratints substitutions = function
+let binaryOpConstraints substitutions = function
   | Add
   | Sub
   | Mul
@@ -148,12 +148,12 @@ let rec inferTypeInternal substitutions tExpected = function
       let substitutions2, tReturn = inferTypeConstant substitutions c in
       unifyInternal substitutions2 tExpected tReturn
   | UnaryOp(o, e1) ->
-      let substitutions2, tReturn, t1 = unaryOpConstratints substitutions o in
+      let substitutions2, tReturn, t1 = unaryOpConstraints substitutions o in
       (match unifyInternal substitutions2 tExpected tReturn with
         | Some substitutions3 -> inferTypeInternal substitutions3 t1 e1
         | None -> None)
   | BinaryOp(o, e1, e2) ->
-      let substitutions2, tReturn, t1, t2 = binaryOpConstratints substitutions o in
+      let substitutions2, tReturn, t1, t2 = binaryOpConstraints substitutions o in
       (match unifyInternal substitutions2 tExpected tReturn with
         | Some substitutions3 -> (match inferTypeInternal substitutions3 t1 e1 with
           | Some substitutions4 -> inferTypeInternal substitutions4 t2 e2
