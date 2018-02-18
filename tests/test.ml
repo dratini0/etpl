@@ -329,7 +329,7 @@ let treeManipulationTests =
     );
 
     test "NextHoleNegative" (fun () ->
-      firstHole treeManipulationExample |> Expect.toEqual None
+      nextHole treeManipulationExample (pos_of_list [0]) |> Expect.toEqual None
     );
 
     test "NextHole" (fun () ->
@@ -341,6 +341,12 @@ let treeManipulationTests =
         |> List.map list_of_pos
         |> Expect.toEqual [[0; 0; 0]; [0; 0; 1]; [0; 1]; [1]]
     );
+
+    test "NextHoleRegression" (fun () ->
+      let program = NAryOp(ArrayForm, [Constant Pi; BinaryOp(Add, Hole, Hole)], 0, []) in
+      nextHole program (pos_of_list [1]) |> resolveOrFail |> list_of_pos |> Expect.toEqual [1;0]
+    );
+
 
 ])
 
