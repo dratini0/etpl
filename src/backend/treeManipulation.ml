@@ -89,7 +89,7 @@ let rec nextHole_ tree position accumulator positionBackup =
       | 1, BinaryOp(_, _, e1) -> nextHole_ e1 rest (posPush accumulator 1) positionBackup
       | _, NAryOp(_, es, 0, []) ->
         let _, element, ess = split_list head es [] positionBackup in
-        (match nextHole_ element rest (posPush accumulator 0) positionBackup with
+        (match nextHole_ element rest (posPush accumulator head) positionBackup with
           | Some position -> Some position
           | None -> firstHoleNAry ess accumulator (head + 1))
       | _, NAryOp _ -> raise IntermediateStateError

@@ -26,6 +26,7 @@ let insertableExpressions = [
   BinaryOp(Pair, Hole, Hole);
   UnaryOp(PairLeft, Hole);
   UnaryOp(PairRight, Hole);
+  NAryOp(ArrayForm, [Hole; Hole], 0, []);
 ]
 
 let rec substituteFTV index substitute = function
