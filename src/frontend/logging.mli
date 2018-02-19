@@ -12,6 +12,8 @@ type clipboardDeleteRecord = {number: int; expression: expression}
 type successfulExecutionRecord = {result: expression}
 type runtimeExceptionRecord = {message: string; expression: expression; location: position}
 type pageChangeRecord = {next: bool; newStart: int}
+type arrayAddRecord = {first: bool; position: position}
+type arrayDeleteRecord = {index: int; position: position}
 type logEvent =
   | ESignin of signinRecord
   | EState of stateRecord
@@ -24,6 +26,8 @@ type logEvent =
   | ESuccessfulExecution of successfulExecutionRecord
   | ERuntimeException of runtimeExceptionRecord
   | EPageChange of pageChangeRecord
+  | EArrayAdd of arrayAddRecord
+  | EArrayDelete of arrayDeleteRecord
 
 val enque: logEvent -> unit
 val logState: unit -> unit

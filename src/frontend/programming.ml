@@ -199,20 +199,22 @@ end
 
 and handleArrayAddTop position () = begin
   resetMode ();
-  match getSubtree !currentProgram position with
+  (match getSubtree !currentProgram position with
     | NAryOp(ArrayForm, l, 0, []) ->
       (* We re-render the whole subtree, so that all the ids change accordingly *)
       replaceSubtreeVisual position (NAryOp(ArrayForm, Hole::l, 0, []))
-    | _ -> raise (Invalid_argument "handleArrayAddTop")
+    | _ -> raise (Invalid_argument "handleArrayAddTop"));
+  enque (EArrayAdd {first=true; position=position})
 end
 
 and handleArrayAddBottom position () = begin
   resetMode ();
-  match getSubtree !currentProgram position with
+  (match getSubtree !currentProgram position with
     | NAryOp(ArrayForm, l, 0, []) ->
       (* Could just add the very last item, theoretically. *)
       replaceSubtreeVisual position (NAryOp(ArrayForm, l@[Hole], 0, []))
-    | _ -> raise (Invalid_argument "handleArrayAddBottom")
+    | _ -> raise (Invalid_argument "handleArrayAddBottom"));
+  enque (EArrayAdd {first=false; position=position})
 end
 
 and handleArrayDeleteButton position () = begin
@@ -223,11 +225,12 @@ end
 
 and handleArrayDeleteItem position item () = begin
   resetMode ();
-  match getSubtree !currentProgram position with
+  (match getSubtree !currentProgram position with
     | NAryOp(ArrayForm, l, 0, []) ->
       (* Could just add the very last item, theoretically. *)
       replaceSubtreeVisual position (NAryOp(ArrayForm, BatList.remove_at item l, 0, []))
-    | _ -> raise (Invalid_argument "handleArrayAddBottom")
+    | _ -> raise (Invalid_argument "handleArrayAddBottom"));
+  enque (EArrayDelete {index=item; position=position})
 end
 
 and holeClickSpecialCasingFunction pos element = begin
