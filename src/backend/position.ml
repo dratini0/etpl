@@ -19,6 +19,8 @@ let rec isInside a b = match front a, front b with
 
 let isEmpty = is_empty
 
+let posEqual a b = BatDeque.eq a b
+
 (* Type annotations are meant o ensure that the compare function is specialized *)
 let rec posCompare (a:position) (b:position) =
   match posPop a, posPop b with

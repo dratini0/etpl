@@ -286,7 +286,7 @@ a#copy_button {
     border-width: 2px;
 }
 
-.cut_control, .copy_control {
+.control {
     display: none;
     color: initial;
     text-decoration: initial;
@@ -311,7 +311,7 @@ a#copy_button {
     background-color: seagreen;
 }
 
-#templates .cut_control, #templates .copy_control,
+#templates .control,
 .cut_mode #codebox .cut_control, .copy_mode #codebox .copy_control {
     display: inline-block;
 }
@@ -339,6 +339,38 @@ a#copy_button {
 .clipboarditem.invalid .clip_paste {
     color: darkgray;
     cursor: auto;
+}
+
+/* Array controls */
+body .array_add_top, body .array_add_bottom, body .array_delete {
+    display: inline-block;
+}
+
+#codebox.cut_mode .array_controls,
+#codebox.copy_mode .array_controls,
+button .array_controls,
+#clipboard .array_controls {
+    display: none;
+}
+
+.array_delete_active > .container > * > .array_delete_item {
+    display: inline-block;
+}
+
+.array_add_top, .array_add_bottom {
+    background-color: green;
+}
+
+.array_delete {
+    background-color: lightcoral;
+}
+
+.array_delete_active .array_delete {
+    background-color: red;
+}
+
+.array_delete_item {
+    background-color: red;
 }
 
 /* Throbber */

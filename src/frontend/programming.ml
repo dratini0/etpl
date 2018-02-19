@@ -19,6 +19,7 @@ type mode =
   | ModeCutLock
   | ModeCopy
   | ModeCopyLock
+  | ModeArrayDelete of position
 
 let currentMode = ref ModeInsert
 
@@ -42,6 +43,9 @@ let setMode mode = begin
     |> Jquery.removeClass (`str "copy_mode")
     |> Jquery.removeClass (`str "lock_mode")
     |> ignore;
+  jqueryMaybe ".array_delete_active"
+    |> Jquery.removeClass (`str "array_delete_active")
+    |> ignore;
   (match mode with
     | ModeInsert -> ()
     | ModeCut
@@ -53,7 +57,12 @@ let setMode mode = begin
     | ModeCopyLock ->
       jquery "body"
         |> Jquery.addClass (`str "copy_mode")
-        |> ignore);
+        |> ignore
+    | ModeArrayDelete p ->
+      jqueryPosition p
+        |> Jquery.addClass (`str "array_delete_active")
+        |> ignore
+  );
   (match mode with
     | ModeCutLock
     | ModeCopyLock ->
@@ -66,7 +75,8 @@ end
 let resetMode () = 
   match !currentMode with
     | ModeCut
-    | ModeCopy -> setMode ModeInsert
+    | ModeCopy
+    | ModeArrayDelete _ -> setMode ModeInsert
     | _ -> ()
 
 let cutButton () = begin
@@ -187,20 +197,87 @@ and handleCopy position () = begin
   enque (EClipboardCutCopy{copy=true; expression=expression; position=position; oldHole=(getCurrentHole()); newHole=(getCurrentHole())})
 end
 
-and holeClickHandlerSpecialCasingFunction expression position element = match expression, position with
-  | Hole, Some(pos) -> begin
-    element |> doSimpleBind "click" (fun () -> begin
-      enque (EHoleSelect {oldHole=(getCurrentHole()); newHole=pos});
-      setCurrentHole (Some pos);
-    end);
+and handleArrayAddTop position () = begin
+  resetMode ();
+  match getSubtree !currentProgram position with
+    | NAryOp(ArrayForm, l, 0, []) ->
+      (* We re-render the whole subtree, so that all the ids change accordingly *)
+      replaceSubtreeVisual position (NAryOp(ArrayForm, Hole::l, 0, []))
+    | _ -> raise (Invalid_argument "handleArrayAddTop")
+end
+
+and handleArrayAddBottom position () = begin
+  resetMode ();
+  match getSubtree !currentProgram position with
+    | NAryOp(ArrayForm, l, 0, []) ->
+      (* Could just add the very last item, theoretically. *)
+      replaceSubtreeVisual position (NAryOp(ArrayForm, l@[Hole], 0, []))
+    | _ -> raise (Invalid_argument "handleArrayAddBottom")
+end
+
+and handleArrayDeleteButton position () = begin
+  match !currentMode with
+    | ModeArrayDelete p when posEqual p position -> setMode ModeInsert
+    | _ -> setMode (ModeArrayDelete position)
+end
+
+and handleArrayDeleteItem position item () = begin
+  resetMode ();
+  match getSubtree !currentProgram position with
+    | NAryOp(ArrayForm, l, 0, []) ->
+      (* Could just add the very last item, theoretically. *)
+      replaceSubtreeVisual position (NAryOp(ArrayForm, BatList.remove_at item l, 0, []))
+    | _ -> raise (Invalid_argument "handleArrayAddBottom")
+end
+
+and holeClickSpecialCasingFunction pos element = begin
+  element |> doSimpleBind "click" (fun () -> begin
+    enque (EHoleSelect {oldHole=(getCurrentHole()); newHole=pos});
+    setCurrentHole (Some pos);
+  end);
+  element
+end
+
+and copyCutControlSpecialCasingFunction pos element = begin
+  let controls = cloneElementFromTemplate "controls" in
+  controls |> Jquery.find ".cut_control" |> doSimpleBind "click" (handleCut pos);
+  controls |> Jquery.find ".copy_control" |> doSimpleBind "click" (handleCopy pos);
+  element |> Jquery.prepend_ controls;
+end
+
+and arrayEditorSpecialCasingFunction pos element = begin
+  let array_controls = element |> Jquery.find ".array_controls" |> Jquery.eq 0 in
+  array_controls |> Jquery.find ".array_add_top" |> doSimpleBind "click" (handleArrayAddTop pos);
+  array_controls |> Jquery.find ".array_add_bottom" |> doSimpleBind "click" (handleArrayAddBottom pos);
+  array_controls |> Jquery.find ".array_delete" |> doSimpleBind "click" (handleArrayDeleteButton pos);
+  element
+    |> Jquery.find ".container"
+    |> Jquery.eq 0
+    |> Jquery.children
+    |> Jquery.toArray
+    |> fun x -> Js.log x; x
+    |> Array.iteri (fun i item -> (
+      Jquery.jquery'' item
+        |> Jquery.find ".array_delete_item"
+        |> Jquery.eq 0
+        |> fun x -> Js.log x; x
+        |> doSimpleBind "click" (handleArrayDeleteItem pos i)
+        |> ignore
+    ));
+  element
+end
+
+and eventHandlerSpecialCasingFunction expression position element = match expression, position with
+  | Hole, Some(pos) -> 
     element
-  end
-  | _, Some(pos) -> begin
-    let controls = cloneElementFromTemplate "controls" in
-    controls |> Jquery.find ".cut_control" |> doSimpleBind "click" (handleCut pos);
-    controls |> Jquery.find ".copy_control" |> doSimpleBind "click" (handleCopy pos);
-    element |> Jquery.prepend_ controls;
-  end
+      |> holeClickSpecialCasingFunction pos
+  | NAryOp(ArrayForm, _, 0, []), Some(pos) ->
+    element
+      |> copyCutControlSpecialCasingFunction pos
+      |> arrayEditorSpecialCasingFunction pos
+  | _, Some(pos) ->
+    element
+      |> copyCutControlSpecialCasingFunction pos 
   | _ -> element
 
 and replaceSubtreeVisual position expression = begin
@@ -209,7 +286,7 @@ and replaceSubtreeVisual position expression = begin
   ignore (jqueryPosition position
     |> Jquery.parent
     |> Jquery.empty
-    |> Jquery.append_ (renderExpression expression (Some position) holeClickHandlerSpecialCasingFunction));
+    |> Jquery.append_ (renderExpression expression (Some position) eventHandlerSpecialCasingFunction));
   currentProgram := replaceSubtree !currentProgram position expression;
   (match !currentHole with
     | Some hole ->
@@ -238,7 +315,7 @@ end
 let redraw () = begin
   ignore (jquery "#codebox"
     |> Jquery.empty
-    |> Jquery.append_ (renderExpression !currentProgram (Some Position.emptyPosition) holeClickHandlerSpecialCasingFunction));
+    |> Jquery.append_ (renderExpression !currentProgram (Some Position.emptyPosition) eventHandlerSpecialCasingFunction));
   setCurrentHole (firstHole !currentProgram);
 end
 
