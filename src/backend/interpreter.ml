@@ -5,6 +5,8 @@ open Types
 
 exception RuntimeException of string * state
 
+module StringMap = Map.Make(String)
+
 let updateState (State(_, loc)) e = State(e, loc)
 
 let evalConstant s c = match c with
@@ -35,26 +37,37 @@ let evalBinary s o e1 e2 = match (o, e1, e2) with
 let evalNAry s o values = match o with
   | ArrayForm -> updateState s (Literal(Array(values |> List.rev |> Array.of_list)))
 
-let rec nextStep (State(e, loc) as s) = match e with
+let rec nextStepInternal (State(e, loc) as s) variables = match e with
   | Literal(_) -> raise (RuntimeException ("already a value", s))
   | Constant(c) -> evalConstant s c
   | UnaryOp(o, Literal(e1)) -> evalUnary s o e1
   | UnaryOp(o, e1) ->
-    (match (nextStep(State(e1, posPush loc 0))) with State(e1_, _) ->
-      State(UnaryOp(o, e1_), loc))
+      let State(e1_, _) = nextStepInternal (State(e1, posPush loc 0)) variables in
+      State(UnaryOp(o, e1_), loc)
   | BinaryOp(o, Literal(e1), Literal(e2)) -> evalBinary s o e1 e2
   | BinaryOp(o, Literal(e1), e2) ->
-    (match (nextStep(State(e2, posPush loc 1))) with State(e2_, _) ->
-      State(BinaryOp(o, Literal(e1), e2_), loc))
+      let State(e2_, _) = nextStepInternal (State(e2, posPush loc 1)) variables in
+      State(BinaryOp(o, Literal(e1), e2_), loc)
   | BinaryOp(o, e1, e2) ->
-    (match (nextStep(State(e1, posPush loc 0))) with State(e1_, _) ->
-      State(BinaryOp(o, e1_, e2), loc))
+      let State(e1_, _) = nextStepInternal (State(e1, posPush loc 0)) variables in
+      State(BinaryOp(o, e1_, e2), loc)
   | NAryOp(o, [], _, values) -> evalNAry s o values
   | NAryOp(o, Literal(v) :: es, n, values) -> State(NAryOp(o, es, n+1, v::values), loc)
   | NAryOp(o, e::es, n, values) ->
-      let State(e_, _) = nextStep(State(e, posPush loc n)) in 
+      let State(e_, _) = nextStepInternal (State(e, posPush loc n)) variables in 
       State(NAryOp(o, e_::es, n, values), loc)
+  | Let(_, Literal(_), Literal(e2)) -> State(Literal e2, loc)
+  | Let(name, Literal v, e2) ->
+      let State(e2_, _) = nextStepInternal (State(e2, posPush loc 1)) (StringMap.add name v variables) in
+      State(Let(name, Literal v, e2_), loc)
+  | Let(name, e1, e2) ->
+      let State(e1_, _) = nextStepInternal (State(e1, posPush loc 0)) variables in
+      State(Let(name, e1_, e2), loc)
+  | Variable name -> (try State(Literal(StringMap.find name variables), loc) with 
+      | Not_found -> raise (RuntimeException("Unbound variable " ^ name, s)))
   | Hole -> raise(RuntimeException ("Programs with holes in them can't be executed.", s))
+
+let nextStep s = nextStepInternal s StringMap.empty
 
 let rec evaluateLoop s = match s with
   | State(Literal(v), _) -> v

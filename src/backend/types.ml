@@ -4,6 +4,7 @@ open TreeManipulation
 open SubstitutionList
 
 module PosMap = Map.Make(Position.Proper)
+module StringMap = Map.Make(String)
 
 (* TODO: add some way of grouping these, because they will not always fit the screen *)
 let insertableExpressions = [
@@ -141,7 +142,7 @@ let pairFormIfSome second = function
   | Some first -> Some(first, second)
   | None -> None
 
-let rec inferTypeInternal substitutions tExpected position holeMap = function
+let rec inferTypeInternal substitutions tExpected position holeMap variableMap = function
   | Literal v ->
       let substitutions2, tReturn = literalConstraints substitutions v in
       unifyInternal substitutions2 tExpected tReturn |> pairFormIfSome holeMap
@@ -151,13 +152,13 @@ let rec inferTypeInternal substitutions tExpected position holeMap = function
   | UnaryOp(o, e1) ->
       let substitutions2, tReturn, t1 = unaryOpConstraints substitutions o in
       (match unifyInternal substitutions2 tExpected tReturn with
-        | Some substitutions3 -> inferTypeInternal substitutions3 t1 (posPush position 0) holeMap e1
+        | Some substitutions3 -> inferTypeInternal substitutions3 t1 (posPush position 0) holeMap variableMap e1
         | None -> None)
   | BinaryOp(o, e1, e2) ->
       let substitutions2, tReturn, t1, t2 = binaryOpConstraints substitutions o in
       (match unifyInternal substitutions2 tExpected tReturn with
-        | Some substitutions3 -> (match inferTypeInternal substitutions3 t1 (posPush position 0) holeMap e1 with
-          | Some(substitutions4, holeMap2) -> inferTypeInternal substitutions4 t2 (posPush position 1) holeMap2 e2
+        | Some substitutions3 -> (match inferTypeInternal substitutions3 t1 (posPush position 0) holeMap variableMap e1 with
+          | Some(substitutions4, holeMap2) -> inferTypeInternal substitutions4 t2 (posPush position 1) holeMap2 variableMap e2
           | None -> None)
         | None -> None)
   | NAryOp(o, es, 0, []) -> 
@@ -165,18 +166,26 @@ let rec inferTypeInternal substitutions tExpected position holeMap = function
         | _, [], [] -> state
         | None, _, _ -> None
         | Some (substitutions, holeMap), tHead::tRest, eHead::eRest ->
-            helper (inferTypeInternal substitutions tHead (posPush position n) holeMap eHead) tRest eRest (n+1)
+            helper (inferTypeInternal substitutions tHead (posPush position n) holeMap variableMap eHead) tRest eRest (n+1)
         | _ -> raise (Invalid_argument "fold_left2_option_map")
       in
       let substitutions2, tReturn, ts = nAryOpConstraints substitutions (List.length es) o in
       let substitutions3 = unifyInternal substitutions2 tExpected tReturn in
         helper (substitutions3 |> pairFormIfSome holeMap) ts es 0
   | NAryOp _ -> raise IntermediateStateError
-  | Hole -> Some (substitutions, PosMap.add position tExpected holeMap)
+  | Let(v, eValue, eEvaluated) ->
+      let alpha, substitutions2 = newFreeVariable substitutions in
+      (match inferTypeInternal substitutions2 (FTV alpha) (posPush position 0) holeMap variableMap eValue with
+        | Some(substitutions3, holeMap2) -> inferTypeInternal substitutions3 tExpected (posPush position 1) holeMap2 (StringMap.add v (FTV alpha) variableMap) eEvaluated
+        | None -> None)
+  | Variable v ->
+      unifyInternal substitutions tExpected (StringMap.find v variableMap)
+      |> pairFormIfSome holeMap
+  | Hole -> Some (substitutions, PosMap.add position (tExpected, variableMap) holeMap)
 
 let inferTypeContinuable e =
   let alpha, substitutions = newFreeVariable emptySubstitutionList in
-  match inferTypeInternal substitutions (FTV alpha) emptyPosition PosMap.empty e with
+  match inferTypeInternal substitutions (FTV alpha) emptyPosition PosMap.empty StringMap.empty e with
     | Some (substitutions2, holeMap) -> Some (applySubstitutions substitutions2 (FTV alpha), substitutions2, holeMap)
     | None -> None
 
@@ -193,6 +202,8 @@ let fitsHole expression position subExpression =
 let whatFits expression position =
   match inferTypeContinuable expression with 
     | Some(_, substitutions, holeMap) ->
-        let tExpected = PosMap.find position holeMap in
-        List.filter (fun expression -> inferTypeInternal substitutions tExpected position holeMap expression |> Option.is_some) insertableExpressions
+        let tExpected, variableMap = PosMap.find position holeMap in
+        let variableCandidates = StringMap.bindings variableMap |> List.map (fun (name, _) -> Variable name) in
+        let candidates = insertableExpressions @ variableCandidates in
+        List.filter (fun expression -> inferTypeInternal substitutions tExpected position holeMap variableMap expression |> Option.is_some) candidates
     | None -> []

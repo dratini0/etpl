@@ -5,9 +5,13 @@ exception DecodingUnderrunError
 
 let separator = ","
 
+let encodeStringPayload s accumulator =
+  (BatString.find_all s separator |> BatEnum.count |> (+) 1 |> string_of_int) ::
+  s :: accumulator
+
 let rec encodeValue = function
   | Number(n) -> ["Number"; Printf.sprintf "%.17g" n]
-  | String(s) -> ["String"; BatString.find_all s separator |> BatEnum.count |> (+) 1 |> string_of_int; s]
+  | String(s) -> "String" :: encodeStringPayload s []
   (* This is lossless, assuming we are dealing with doubles *)
   | Pair(v1, v2) -> "Pair" :: encodeValue v1 @ encodeValue v2
   | Array(a) -> "Array" :: (Array.length a |> string_of_int) :: (Array.to_list a |> List.map encodeValue |> List.concat)
@@ -27,6 +31,13 @@ let rec encode expression accumulator = match expression with
       "NAryOp":: (nAryOperatorName o) :: (string_of_int length) ::
         BatList.fold_right encode es accumulator
   | NAryOp _ -> raise IntermediateStateError
+  | Let(name, e1, e2) ->
+      let accumulator2 = encode e2 accumulator in
+      let accumulator3 = encode e1 accumulator2 in
+      let accumulator4 = encodeStringPayload name accumulator3 in
+      "Let" :: accumulator4
+  | Variable name ->
+      "Variable" :: (encodeStringPayload name accumulator)
   | Hole -> "Hole" :: accumulator
 
 let serialize expression = String.concat separator (encode expression [])

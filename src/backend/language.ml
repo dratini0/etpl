@@ -42,6 +42,8 @@ type expression =
   | UnaryOp of unaryOp * expression
   | BinaryOp of binaryOp * expression * expression
   | NAryOp of nAryOp * expression list * int * value list
+  | Let of string * expression * expression
+  | Variable of string
   | Hole
 
 (* This will eventually hold mutable state *)

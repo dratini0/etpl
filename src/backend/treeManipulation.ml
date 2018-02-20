@@ -27,6 +27,8 @@ let rec replaceSubtree_ tree position replacement positionBackup =
           let element_ = replaceSubtree_ element rest replacement positionBackup in
           NAryOp(o, BatList.rev_append taken (element_::dropped), 0, [])
         | _, NAryOp _ -> raise IntermediateStateError
+        | 0, Let(name, e0, e1) -> Let(name, replaceSubtree_ e0 rest replacement positionBackup, e1)
+        | 1, Let(name, e0, e1) -> Let(name, e0, replaceSubtree_ e1 rest replacement positionBackup)
         | _, _ -> raise (UnknownPositionError positionBackup)
     )
 
@@ -39,7 +41,9 @@ let rec getSubtree_ tree position positionBackup =
   | Some(head, rest) -> (
     match head, tree with
       | 0, UnaryOp(_, e0) -> getSubtree_ e0 rest positionBackup
+      | 0, Let(_, e0, _)
       | 0, BinaryOp(_, e0, _) -> getSubtree_ e0 rest positionBackup
+      | 1, Let(_, _, e1)
       | 1, BinaryOp(_, _, e1) -> getSubtree_ e1 rest positionBackup
       | _, NAryOp(_, es, 0, []) ->
         (try getSubtree_ (List.nth es head) rest positionBackup with
@@ -60,8 +64,10 @@ let rec firstHoleNAry es accumulator count =
 
 and firstHole_ tree accumulator = match tree with
   | Literal _
-  | Constant _ -> None
+  | Constant _
+  | Variable _ -> None
   | UnaryOp(_, e0) -> firstHole_ e0 (posPush accumulator 0)
+  | Let(_, e0, e1)
   | BinaryOp(_, e0, e1) -> (match firstHole_ e0 (posPush accumulator 0) with
     | Some result -> Some result
     | None -> firstHole_ e1 (posPush accumulator 1))
@@ -81,11 +87,13 @@ let rec nextHole_ tree position accumulator positionBackup =
   | Some(head, rest) -> (
     match head, tree with
       | 0, UnaryOp(_, e0) -> nextHole_ e0 rest (posPush accumulator 0) positionBackup
+      | 0, Let(_, e0, e1)
       | 0, BinaryOp(_, e0, e1) -> (
         match nextHole_ e0 rest (posPush accumulator 0) positionBackup with
           | Some result -> Some result
           | None -> firstHole_ e1 (posPush accumulator 1)
       )
+      | 1, Let(_, _, e1)
       | 1, BinaryOp(_, _, e1) -> nextHole_ e1 rest (posPush accumulator 1) positionBackup
       | _, NAryOp(_, es, 0, []) ->
         let _, element, ess = split_list head es [] positionBackup in
