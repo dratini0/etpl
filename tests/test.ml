@@ -185,6 +185,24 @@ let interpreterTestCasesPositive = [
   TArray (TArray TNumber),
   Array[|Array[|Number 5.|]|]
   ;
+  Let("ETPL", Literal(Number 1.), Variable "ETPL"),
+  "Let,1,ETPL,Literal,Number,1,Variable,1,ETPL",
+  "let ETPL = (1.) in (ETPL)",
+  TNumber,
+  Number 1.
+  ;
+  Let("ETPL", Literal(Number 1.), Let("ETPL", Literal(String "test"), Variable "ETPL")),
+  "Let,1,ETPL,Literal,Number,1,Let,1,ETPL,Literal,String,1,test,Variable,1,ETPL",
+  "let ETPL = (1.) in (let ETPL = (\"test\") in (ETPL))",
+  TString,
+  String "test"
+  ;
+  Let("a", Literal(Number 1.), Let("b", Literal(String "test"), BinaryOp(Concat, UnaryOp(StringOfNum, Variable "a"), Variable "b"))),
+  "Let,1,a,Literal,Number,1,Let,1,b,Literal,String,1,test,BinaryOp,Concat,UnaryOp,StringOfNum,Variable,1,a,Variable,1,b",
+  "let a = (1.) in (let b = (\"test\") in (Concat(StringOfNum(a), b)))",
+  TString,
+  String "1test"
+  ;
 ]
 
 let interpreterTestCasesNegative = [
@@ -219,6 +237,14 @@ let interpreterTestCasesNegative = [
   "String is not numeric",
   UnaryOp(NumOfString, Literal(String("ETPL"))),
   []
+  ;
+  Let("ETPL", Literal(Number 1.), Variable "something"),
+  "Let,1,ETPL,Literal,Number,1,Variable,1,something",
+  "let ETPL = (1.) in (something)",
+  None,
+  "Unbound variable something",
+  Variable "something",
+  [1]
   ;
 ]
 
