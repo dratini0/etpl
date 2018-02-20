@@ -40,7 +40,7 @@ let executeButton () =
   try(
     log ("Result: " ^ (getCurrentProgram() |> evaluate |> prettyPrintValue))
   ) with 
-  | RuntimeException(message, _) -> log ("Runtime Exception: " ^ message)
+  | RuntimeException(message, _, _) -> log ("Runtime Exception: " ^ message)
 
 let getNumberButton () =
   getNumber 0. (fun number -> log("Got: " ^ (string_of_float number)))

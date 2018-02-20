@@ -309,7 +309,7 @@ let evaluateTestsNegative =
   describe "Evaluate - runtime exception" (fun () -> interpreterTestCasesNegative |> List.map (fun (tree, _, pretty, _, message, expression, position) ->
     test pretty (fun() ->
       (try let _ = evaluate tree in None
-      with RuntimeException(actualMessage, State(actualExpression, actualPosition))
+      with RuntimeException(actualMessage, State actualExpression, actualPosition)
         -> Some(actualMessage, actualExpression, list_of_pos actualPosition))
        |> Expect.toEqual (Some(message, expression, position)))
     )

@@ -340,7 +340,7 @@ let executeProgram() = begin
       ignore (jquery "#result_close" |> Jquery.focus);
     ) 500);
   with
-    | Interpreter.RuntimeException (message, State(expression, position)) -> begin
+    | Interpreter.RuntimeException (message, State expression, position) -> begin
         enque (ERuntimeException{message=message; expression=expression; location=position});
         jquery1 "#error_msg" |> Jquery.text message |> ignore;
         jquery1 "#error_codebox"

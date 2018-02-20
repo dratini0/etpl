@@ -47,7 +47,7 @@ type expression =
   | Hole
 
 (* This will eventually hold mutable state *)
-type state = State of expression * position
+type state = State of expression
 
 type etplType =
   | TNumber
