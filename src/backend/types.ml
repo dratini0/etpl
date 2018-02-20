@@ -179,8 +179,10 @@ let rec inferTypeInternal substitutions tExpected position holeMap variableMap =
         | Some(substitutions3, holeMap2) -> inferTypeInternal substitutions3 tExpected (posPush position 1) holeMap2 (StringMap.add v (FTV alpha) variableMap) eEvaluated
         | None -> None)
   | Variable v ->
-      unifyInternal substitutions tExpected (StringMap.find v variableMap)
-      |> pairFormIfSome holeMap
+      (try (
+        unifyInternal substitutions tExpected (StringMap.find v variableMap)
+        |> pairFormIfSome holeMap
+      ) with Not_found -> None)
   | Hole -> Some (substitutions, PosMap.add position (tExpected, variableMap) holeMap)
 
 let inferTypeContinuable e =
