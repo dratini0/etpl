@@ -42,6 +42,13 @@ let rec encode expression accumulator = match expression with
 
 let serialize expression = String.concat separator (encode expression [])
 
+let decodeStringPayload = function
+  | lengthIndicator :: rest ->
+      let length = int_of_string lengthIndicator in
+      let components, rest = (try BatList.split_at length rest with | Invalid_argument _ -> raise DecodingUnderrunError) in
+      (String.concat separator components), rest
+  | [] -> raise DecodingUnderrunError
+
 let rec decodeArray count rest accumulator =
   if count = 0 then
     (accumulator, rest)
@@ -52,10 +59,9 @@ let rec decodeArray count rest accumulator =
 (* There is no type by name funtion because it will eventually get quite complicated *)
 and decodeValue code = match code with
   | "Number" :: encoded :: rest -> (Number(float_of_string encoded), rest)
-  | "String" :: encoded :: rest ->
-      let length = int_of_string encoded in
-      let components, rest = (try BatList.split_at length rest with | Invalid_argument _ -> raise DecodingUnderrunError) in
-      (String(String.concat separator components), rest)
+  | "String" :: rest ->
+      let s, rest = decodeStringPayload rest in
+      (String s, rest)
   | "Pair" :: rest ->
       let v1, rest1 = decodeValue rest in
       let v2, rest2 = decodeValue rest1 in
@@ -65,7 +71,6 @@ and decodeValue code = match code with
       let values, rest_ = decodeArray length rest [] in
       (Array (values |> List.rev |> Array.of_list), rest_)
   | "Number" :: _
-  | "String" :: _
   | "Array" :: _
   | [] -> raise DecodingUnderrunError
   | typename :: _ -> raise (UnknownNameException("Type " ^ typename))
@@ -108,6 +113,14 @@ and decode = function
       )
       | _ -> raise DecodingUnderrunError
     )
+    | "Let" ->
+        let name, tail2 = decodeStringPayload tail in
+        let e1, tail3 = decode tail2 in
+        let e2, tail4 = decode tail3 in
+        Let(name, e1, e2), tail4
+    | "Variable" ->
+        let name, tail2 = decodeStringPayload tail in
+        Variable name, tail2
     | "Hole" -> (Hole, tail)
     | _ -> raise (UnknownNameException ("Token type " ^ tokenType)))
   | [] -> raise DecodingUnderrunError
