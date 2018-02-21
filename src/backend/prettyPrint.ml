@@ -6,6 +6,7 @@ let rec prettyPrintValue v = match v with
   | String(s) -> Printf.sprintf "\"%s\"" s
   | Pair(v1, v2) -> "(" ^ (prettyPrintValue v1) ^ ", " ^ (prettyPrintValue v2) ^ ")"
   | Array a -> "[" ^ (a |> Array.map prettyPrintValue |> Array.to_list |> BatString.concat ", ") ^ "]"
+  | Function _ -> "[function]"
 
 let rec prettyPrintExpression e = match e with
   | Literal(l) -> prettyPrintValue l
@@ -16,4 +17,5 @@ let rec prettyPrintExpression e = match e with
   | NAryOp _ -> raise IntermediateStateError
   | Let(name, e1, e2) -> "let " ^ name ^ " = (" ^ (prettyPrintExpression e1) ^ ") in (" ^ (prettyPrintExpression e2) ^ ")"
   | Variable name -> name
+  | Function(name, e) -> "fun " ^ name ^ " -> (" ^ (prettyPrintExpression e) ^ ")"
   | Hole -> "[]"

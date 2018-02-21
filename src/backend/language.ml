@@ -4,6 +4,8 @@ open Position
    attempted *)
 exception IntermediateStateError
 
+module StringMap = Map.Make(String)
+
 type constant =
   | Pi
 
@@ -26,6 +28,7 @@ type binaryOp =
   | STail
   | CharAt
   | Pair
+  | Apply
 
 type nAryOp =
   | ArrayForm
@@ -35,8 +38,9 @@ type value =
   | String of string
   | Array of value array
   | Pair of value * value
+  | Function of position * value StringMap.t * string * expression
 
-type expression =
+and expression =
   | Literal of value
   | Constant of constant
   | UnaryOp of unaryOp * expression
@@ -44,6 +48,7 @@ type expression =
   | NAryOp of nAryOp * expression list * int * value list
   | Let of string * expression * expression
   | Variable of string
+  | Function of string * expression
   | Hole
 
 (* This will eventually hold mutable state *)
@@ -55,3 +60,4 @@ type etplType =
   | FTV of int
   | TArray of etplType
   | TPair of etplType * etplType
+  | TFun of etplType * etplType

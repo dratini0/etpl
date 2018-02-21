@@ -15,6 +15,7 @@ let rec encodeValue = function
   (* This is lossless, assuming we are dealing with doubles *)
   | Pair(v1, v2) -> "Pair" :: encodeValue v1 @ encodeValue v2
   | Array(a) -> "Array" :: (Array.length a |> string_of_int) :: (Array.to_list a |> List.map encodeValue |> List.concat)
+  | Function _ -> ["FunctionValue"] (*Could be done, but would be a hassle*)
 
 let rec encode expression accumulator = match expression with
   | Literal(v) -> "Literal" :: ((encodeValue v) @ accumulator)
@@ -38,7 +39,11 @@ let rec encode expression accumulator = match expression with
       "Let" :: accumulator4
   | Variable name ->
       "Variable" :: (encodeStringPayload name accumulator)
-  | Hole -> "Hole" :: accumulator
+  | Function(name, e) ->
+      let accumulator2 = encode e accumulator in
+      let accumulator3 = encodeStringPayload name accumulator2 in
+      "Function" :: accumulator3
+| Hole -> "Hole" :: accumulator
 
 let serialize expression = String.concat separator (encode expression [])
 
@@ -121,6 +126,10 @@ and decode = function
     | "Variable" ->
         let name, tail2 = decodeStringPayload tail in
         Variable name, tail2
+    | "Function" ->
+        let name, tail2 = decodeStringPayload tail in
+        let e, tail3 = decode tail2 in
+        Function(name, e), tail3
     | "Hole" -> (Hole, tail)
     | _ -> raise (UnknownNameException ("Token type " ^ tokenType)))
   | [] -> raise DecodingUnderrunError

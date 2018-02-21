@@ -29,6 +29,7 @@ let rec replaceSubtree_ tree position replacement positionBackup =
         | _, NAryOp _ -> raise IntermediateStateError
         | 0, Let(name, e0, e1) -> Let(name, replaceSubtree_ e0 rest replacement positionBackup, e1)
         | 1, Let(name, e0, e1) -> Let(name, e0, replaceSubtree_ e1 rest replacement positionBackup)
+        | 0, Function(name, e) -> Function(name, replaceSubtree_ e rest replacement positionBackup)
         | _, _ -> raise (UnknownPositionError positionBackup)
     )
 
@@ -40,7 +41,8 @@ let rec getSubtree_ tree position positionBackup =
   | None -> tree
   | Some(head, rest) -> (
     match head, tree with
-      | 0, UnaryOp(_, e0) -> getSubtree_ e0 rest positionBackup
+      | 0, UnaryOp(_, e0)
+      | 0, Function(_, e0) -> getSubtree_ e0 rest positionBackup
       | 0, Let(_, e0, _)
       | 0, BinaryOp(_, e0, _) -> getSubtree_ e0 rest positionBackup
       | 1, Let(_, _, e1)
@@ -66,7 +68,8 @@ and firstHole_ tree accumulator = match tree with
   | Literal _
   | Constant _
   | Variable _ -> None
-  | UnaryOp(_, e0) -> firstHole_ e0 (posPush accumulator 0)
+  | UnaryOp(_, e0)
+  | Function(_, e0) -> firstHole_ e0 (posPush accumulator 0)
   | Let(_, e0, e1)
   | BinaryOp(_, e0, e1) -> (match firstHole_ e0 (posPush accumulator 0) with
     | Some result -> Some result
@@ -86,7 +89,8 @@ let rec nextHole_ tree position accumulator positionBackup =
       firstHole_ tree accumulator
   | Some(head, rest) -> (
     match head, tree with
-      | 0, UnaryOp(_, e0) -> nextHole_ e0 rest (posPush accumulator 0) positionBackup
+      | 0, UnaryOp(_, e0)
+      | 0, Function(_, e0) -> nextHole_ e0 rest (posPush accumulator 0) positionBackup
       | 0, Let(_, e0, e1)
       | 0, BinaryOp(_, e0, e1) -> (
         match nextHole_ e0 rest (posPush accumulator 0) positionBackup with

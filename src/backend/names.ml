@@ -32,6 +32,7 @@ let binaryOperatorName = function
   | STail -> "STail"
   | CharAt -> "CharAt"
   | Pair -> "Pair"
+  | Apply -> "Apply"
 
 let nAryOperatorName = function
   | ArrayForm -> "ArrayForm"
@@ -63,6 +64,10 @@ let rec typeNameInternal ((nextLetter, normalization) as state) = function
       let state_, result1 = typeNameInternal state t1 in
       let state__, result2 = typeNameInternal state_ t2 in
       (state__, "(" ^ result1 ^ " * " ^ result2 ^ ")")
+  | TFun (t1, t2) ->
+      let state_, result1 = typeNameInternal state t1 in
+      let state__, result2 = typeNameInternal state_ t2 in
+      (state__, "(" ^ result1 ^ " -> " ^ result2 ^ ")")
 
 let typeName t = let _, result = typeNameInternal emptyTypeNormalization t in result
 
@@ -90,6 +95,7 @@ let binaryOperatorByName = function
   | "STail" -> STail
   | "CharAt" -> CharAt
   | "Pair" -> Pair
+  | "Apply" -> Apply
   | name -> raise (UnknownNameException ("Binary operator " ^ name))
 
 let nAryOperatorByName = function
