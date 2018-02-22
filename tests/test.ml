@@ -203,6 +203,24 @@ let interpreterTestCasesPositive = [
   TString,
   String "1test"
   ;
+  BinaryOp(Apply, Function("x", BinaryOp(Add, Variable "x", Literal(Number 1.))), Literal(Number 2.)),
+  "BinaryOp,Apply,Function,1,x,BinaryOp,Add,Variable,1,x,Literal,Number,1,Literal,Number,2",
+  "Apply(fun x -> (Add(x, 1.)), 2.)",
+  TNumber,
+  Number 3.
+  ;
+  Let("f", Let("y", Literal(Number 5.), Function("x", BinaryOp(Add, Variable "x", Variable "y"))), BinaryOp(Apply, Variable "f", Literal(Number 7.))),
+  "Let,1,f,Let,1,y,Literal,Number,5,Function,1,x,BinaryOp,Add,Variable,1,x,Variable,1,y,BinaryOp,Apply,Variable,1,f,Literal,Number,7",
+  "let f = (let y = (5.) in (fun x -> (Add(x, y)))) in (Apply(f, 7.))",
+  TNumber,
+  Number 12.
+  ;
+  Let("f", Let("x", Literal(Number 5.), Function("x", Variable "x")), BinaryOp(Apply, Variable "f", Literal(Number 7.))),
+  "Let,1,f,Let,1,x,Literal,Number,5,Function,1,x,Variable,1,x,BinaryOp,Apply,Variable,1,f,Literal,Number,7",
+  "let f = (let x = (5.) in (fun x -> (x))) in (Apply(f, 7.))",
+  TNumber,
+  Number 7.
+  ;
 ]
 
 let interpreterTestCasesNegative = [
