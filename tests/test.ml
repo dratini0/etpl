@@ -221,6 +221,12 @@ let interpreterTestCasesPositive = [
   TNumber,
   Number 7.
   ;
+  Let("id", Function("x", Variable("x")), BinaryOp(Pair, BinaryOp(Apply, Variable "id", Literal(Number 1.)), BinaryOp(Apply, Variable "id", Literal(String "ETPL")))),
+  "Let,1,id,Function,1,x,Variable,1,x,BinaryOp,Pair,BinaryOp,Apply,Variable,1,id,Literal,Number,1,BinaryOp,Apply,Variable,1,id,Literal,String,1,ETPL",
+  "let id = (fun x -> (x)) in (Pair(Apply(id, 1.), Apply(id, \"ETPL\")))",
+  TPair(TNumber, TString),
+  Pair(Number 1., String "ETPL")
+  ;
 ]
 
 let interpreterTestCasesNegative = [
