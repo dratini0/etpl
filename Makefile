@@ -46,6 +46,16 @@ serve-require: prepare-require
 test: bucklescript
 	node_modules/infinite-jest/node_modules/.bin/jest
 
+buildtest:
+	temp=$$(mktemp -d); \
+	pwd=$$(pwd); \
+	cd $$temp; \
+	git clone $$pwd etpl; \
+	cd etpl; \
+	make; \
+	make test; \
+	rm -rf $$temp
+
 watch-test: revision
 	$(BSB) -make-world -w > /dev/null & \
 	node_modules/infinite-jest/node_modules/.bin/jest --watchAll

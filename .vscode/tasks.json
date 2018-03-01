@@ -4,11 +4,11 @@
     "reveal": "always",
     "tasks": [
         {
-            "taskName": "clean",
+            "label": "clean",
             "problemMatcher": []
         },
         {
-            "taskName": "build",
+            "label": "build",
             "problemMatcher": "$ocamlc",
             "group": {
                 "kind": "build",
@@ -16,15 +16,15 @@
             }
         },
         {
-            "taskName": "serve-require",
+            "label": "serve-require",
             "problemMatcher": []
         },
         {
-            "taskName": "watch-bundle",
+            "label": "watch-bundle",
             "problemMatcher": []
         },
         {
-            "taskName": "test",
+            "label": "test",
             "problemMatcher": [],
             "group": {
                 "kind": "test",
@@ -32,9 +32,14 @@
             }
         },
         {
-            "taskName": "watch-test",
+            "label": "watch-test",
             "problemMatcher": [],
             "group": "test"
-        }
+        },
+        {
+            "label": "buildtest",
+            "problemMatcher": [],
+            "group": "test"
+        },
     ]
 }
