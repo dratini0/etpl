@@ -227,6 +227,18 @@ let interpreterTestCasesPositive = [
   TPair(TNumber, TString),
   Pair(Number 1., String "ETPL")
   ;
+  If(BinaryOp(GTEQ, Constant Pi, Literal(Number 1.)), Literal(String "Kittens"), Hole),
+  "If,BinaryOp,GTEQ,Constant,Pi,Literal,Number,1,Literal,String,1,Kittens,Hole",
+  "if (GTEQ(Pi, 1.)) then (\"Kittens\") else ([])",
+  TString,
+  String "Kittens"
+  ;
+  If(Literal(Bool false), Literal(String "Kittens"), Literal(String "Puppies")),
+  "If,Literal,False,Literal,String,1,Kittens,Literal,String,1,Puppies",
+  "if (False) then (\"Kittens\") else (\"Puppies\")",
+  TString,
+  String "Puppies"
+  ;
 ]
 
 let interpreterTestCasesNegative = [
@@ -270,6 +282,14 @@ let interpreterTestCasesNegative = [
   Variable "something",
   [1]
   ;
+  If(Constant Pi, Hole, Hole),
+  "If,Constant,Pi,Hole,Hole",
+  "if (Pi) then ([]) else ([])",
+  None,
+  "Program is not well-typed: conditional used with argument of type Number",
+  If(Literal(Number 3.1415926535897932384626433832795), Hole, Hole),
+  []
+  ;
 ]
 
 let interpreterTestCasesAll =
@@ -310,7 +330,6 @@ let deserializeTests =
 let inferTypeTests =
   describe "Type inference" (fun () -> interpreterTestCasesAll |> List.map (fun (tree, _, pretty, type_) ->
     test pretty (fun() ->
-      Js.log  pretty;
       let type_String = Option.map typeName type_ in
       inferType tree |> (Option.map typeName) |> Expect.toEqual type_String)
     )

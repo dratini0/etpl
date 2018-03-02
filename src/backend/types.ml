@@ -13,6 +13,8 @@ module IntSet = Set.Make(IntHelper)
 let insertableExpressions = [
   Literal(Number(0.));
   Literal(String "");
+  Literal(Bool false);
+  Literal(Bool true);
   Constant(Pi);
   UnaryOp(Ln, Hole);
   UnaryOp(Floor, Hole);
@@ -28,9 +30,11 @@ let insertableExpressions = [
   BinaryOp(CharAt, Hole, Hole);
   BinaryOp(Concat, Hole, Hole);
   BinaryOp(Pair, Hole, Hole);
+  BinaryOp(GTEQ, Hole, Hole);
   UnaryOp(PairLeft, Hole);
   UnaryOp(PairRight, Hole);
   NAryOp(ArrayForm, [Hole], 0, []);
+  If(Hole, Hole, Hole);
 ]
 
 let rec substituteFTV index substitute = function
@@ -45,6 +49,7 @@ let rec substituteFTV index substitute = function
 let rec occurs index = function
   | TString
   | TNumber
+  | TBool
   | GTV _ -> false
   | TArray t -> occurs index t
   | TPair (t1, t2) 
@@ -54,6 +59,7 @@ let rec occurs index = function
 let rec instantiateGTVs map substitutions gtvs = function
   | TString -> TString, map, substitutions
   | TNumber -> TNumber, map, substitutions
+  | TBool -> TBool, map, substitutions
   | FTV x -> FTV x, map, substitutions
   | TArray t ->
       let t_, map_,  substitutions_ = instantiateGTVs map substitutions gtvs t in
@@ -78,6 +84,7 @@ let rec instantiateGTVs map substitutions gtvs = function
 let rec addGTVs set = function
   | TString
   | TNumber
+  | TBool
   | FTV _ -> set
   | TArray t -> addGTVs set t
   | TPair(t1, t2)
@@ -113,7 +120,8 @@ let rec unifyInternal subtitutions a b =
         )
     | _, FTV bi -> unifyInternal subtitutions (FTV bi) a
     | TString, TString
-    | TNumber, TNumber -> Some(subtitutions)
+    | TNumber, TNumber
+    | TBool, TBool -> Some(subtitutions)
     | GTV a, GTV b when a = b -> Some(subtitutions)
     | TArray a, TArray b -> unifyInternal subtitutions a b
     | TPair (a1, a2), TPair (b1, b2) 
@@ -165,8 +173,9 @@ let binaryOpConstraints substitutions = function
       let alpha, substitutions2 = newFreeVariable substitutions in
       let beta, substitutions3 = newFreeVariable substitutions2 in
       substitutions3, FTV beta, TFun(FTV alpha, FTV beta), FTV alpha
+  | GTEQ -> substitutions, TBool, TNumber, TNumber
 
-  let nAryOpConstraints substitutions n = function
+let nAryOpConstraints substitutions n = function
   | ArrayForm ->
       let alpha, substitutions2 = newFreeVariable substitutions in
       substitutions2, TArray(FTV alpha), BatList.make n (FTV alpha)
@@ -178,6 +187,7 @@ let pairFormIfSome second = function
 let rec literalConstraints substitutions = function
   | Number _ -> substitutions, TNumber
   | String _ -> substitutions, TString
+  | Bool _ -> substitutions, TBool
   | Array a -> if Array.length a = 0 then 
       let i, substitutions_ = newFreeVariable substitutions in
       substitutions_, TArray (FTV i)
@@ -254,6 +264,13 @@ and inferTypeInternal substitutions tExpected position holeMap variableMap gtvs 
       (match unifyInternal substitutions2 tExpected (TFun(alpha, FTV beta)) with
         | Some substitutions3 -> inferTypeInternal substitutions3 (FTV beta) (posPush position 0) holeMap (StringMap.add name (alpha) variableMap) (addGTVs gtvs alpha) e1
         | None -> None)
+  | If(condition, then_, else_) ->
+      (match inferTypeInternal substitutions TBool (posPush position 0) holeMap variableMap gtvs condition with
+        | None -> None
+        | Some(substitutions2, holeMap2) ->
+            (match inferTypeInternal substitutions2 tExpected (posPush position 1) holeMap2 variableMap gtvs then_ with
+              | None -> None
+              | Some(substitutions3, holeMap3) -> inferTypeInternal substitutions3 tExpected (posPush position 2) holeMap3 variableMap gtvs else_))
   | Hole -> Some (substitutions, PosMap.add position (tExpected, variableMap, gtvs) holeMap)
 
 let inferTypeValue v = let _, t = literalConstraints emptySubstitutionList v in t

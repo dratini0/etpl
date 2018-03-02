@@ -30,6 +30,9 @@ let rec replaceSubtree_ tree position replacement positionBackup =
         | 0, Let(name, e0, e1) -> Let(name, replaceSubtree_ e0 rest replacement positionBackup, e1)
         | 1, Let(name, e0, e1) -> Let(name, e0, replaceSubtree_ e1 rest replacement positionBackup)
         | 0, Function(name, t_, e) -> Function(name, t_, replaceSubtree_ e rest replacement positionBackup)
+        | 0, If(condition, then_, else_) -> If(replaceSubtree_ condition rest replacement positionBackup, then_, else_)
+        | 1, If(condition, then_, else_) -> If(condition, replaceSubtree_ then_ rest replacement positionBackup, else_)
+        | 2, If(condition, then_, else_) -> If(condition, then_, replaceSubtree_ else_ rest replacement positionBackup)
         | _, _ -> raise (UnknownPositionError positionBackup)
     )
 
@@ -42,11 +45,14 @@ let rec getSubtree_ tree position positionBackup =
   | Some(head, rest) -> (
     match head, tree with
       | 0, UnaryOp(_, e0)
-      | 0, Function(_, _, e0) -> getSubtree_ e0 rest positionBackup
+      | 0, Function(_, _, e0)
       | 0, Let(_, e0, _)
-      | 0, BinaryOp(_, e0, _) -> getSubtree_ e0 rest positionBackup
+      | 0, BinaryOp(_, e0, _)
+      | 0, If(e0, _, _) -> getSubtree_ e0 rest positionBackup
       | 1, Let(_, _, e1)
-      | 1, BinaryOp(_, _, e1) -> getSubtree_ e1 rest positionBackup
+      | 1, BinaryOp(_, _, e1)
+      | 1, If(_, e1, _) -> getSubtree_ e1 rest positionBackup
+      | 2, If(_, _, e2) -> getSubtree_ e2 rest positionBackup
       | _, NAryOp(_, es, 0, []) ->
         (try getSubtree_ (List.nth es head) rest positionBackup with
         | Invalid_argument "List.nth" -> raise (UnknownPositionError positionBackup))
@@ -76,6 +82,17 @@ and firstHole_ tree accumulator = match tree with
     | None -> firstHole_ e1 (posPush accumulator 1))
   | NAryOp(_, es, 0, []) -> firstHoleNAry es accumulator 0
   | NAryOp _ -> raise IntermediateStateError
+  | If(condition, then_, else_) ->
+    let candidate1 = firstHole_ condition (posPush accumulator 0) in
+    let candidate2 =
+      if Option.is_some candidate1 then
+        candidate1
+      else
+        firstHole_ then_ (posPush accumulator 1) in
+    if Option.is_some candidate2 then
+      candidate2
+    else
+      firstHole_ else_ (posPush accumulator 2)
   | Hole -> Some(accumulator)
 
 let firstHole tree = firstHole_ tree emptyPosition
@@ -104,6 +121,14 @@ let rec nextHole_ tree position accumulator positionBackup =
         (match nextHole_ element rest (posPush accumulator head) positionBackup with
           | Some position -> Some position
           | None -> firstHoleNAry ess accumulator (head + 1))
+      | 0, If(condition, then_, else_) ->
+        let candidate1 = nextHole_ condition rest (posPush accumulator 0) positionBackup in
+        let candidate2 = if Option.is_some candidate1 then candidate1 else firstHole_ then_ (posPush accumulator 1) in
+        if Option.is_some candidate2 then candidate2 else firstHole_ else_ (posPush accumulator 2)
+      | 1, If(_, then_, else_) ->
+        let candidate1 = nextHole_ then_ rest (posPush accumulator 1) positionBackup in
+        if Option.is_some candidate1 then candidate1 else firstHole_ else_ (posPush accumulator 2)
+      | 2, If(_, _, else_) -> nextHole_ else_ rest (posPush accumulator 2) positionBackup
       | _, NAryOp _ -> raise IntermediateStateError
       | _, _ -> raise (UnknownPositionError positionBackup)
   )

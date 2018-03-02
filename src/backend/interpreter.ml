@@ -37,6 +37,7 @@ let evalBinary s p o e1 e2 = match (o, e1, e2) with
     let replacement1 = Let(name, Literal e2, e1) in
     let replacement2 = StringMap.fold (fun name value e -> Let(name, Literal value, e)) variables replacement1 in
     updateState s replacement2
+  | (GTEQ, Number e1, Number e2) -> updateState s (Literal(Bool (e1 >= e2)))
   | (o, v1, v2) -> raise (RuntimeException(Printf.sprintf "Program is not well-typed: %s is not defined for an arguments of type %s and %s" (binaryOperatorName o) (v1 |> inferTypeValue |> typeName) (v2 |> inferTypeValue |> typeName), s, p))
 
 let evalNAry s (_:position) o values = match o with
@@ -71,6 +72,16 @@ let rec nextStepInternal (State e as s) loc variables = match e with
   | Variable name -> (try State(Literal(StringMap.find name variables)) with 
       | Not_found -> raise (RuntimeException("Unbound variable " ^ name, s, loc)))
   | Function(name, _, e1) -> State(Literal(Function(posPush loc 0, variables, name, e1)))
+  | If(Literal(Bool condition), then_, else_) ->
+      if condition then
+        State then_
+      else
+        State else_
+  | If(Literal condition, _, _) ->
+      raise (RuntimeException(Printf.sprintf "Program is not well-typed: conditional used with argument of type %s" (condition |> inferTypeValue |> typeName), s, loc))
+  | If(condition, then_, else_) ->
+      let State condition_ = nextStepInternal (State condition) (posPush loc 0) variables in
+      State(If(condition_, then_, else_))
   | Hole -> raise(RuntimeException ("Programs with holes in them can't be executed.", s, loc))
 
 let nextStep s = nextStepInternal s emptyPosition StringMap.empty

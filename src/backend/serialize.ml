@@ -11,8 +11,10 @@ let encodeStringPayload s accumulator =
 
 let rec encodeValue = function
   | Number(n) -> ["Number"; Printf.sprintf "%.17g" n]
-  | String(s) -> "String" :: encodeStringPayload s []
   (* This is lossless, assuming we are dealing with doubles *)
+  | String(s) -> "String" :: encodeStringPayload s []
+  | Bool(true) -> ["True"]
+  | Bool(false) -> ["False"]
   | Pair(v1, v2) -> "Pair" :: encodeValue v1 @ encodeValue v2
   | Array(a) -> "Array" :: (Array.length a |> string_of_int) :: (Array.to_list a |> List.map encodeValue |> List.concat)
   | Function _ -> ["FunctionValue"] (*Could be done, but would be a hassle*)
@@ -43,7 +45,12 @@ let rec encode expression accumulator = match expression with
       let accumulator2 = encode e accumulator in
       let accumulator3 = encodeStringPayload name accumulator2 in
       "Function" :: accumulator3
-| Hole -> "Hole" :: accumulator
+  | If(condition, then_, else_) ->
+      let accumulator2 = encode else_ accumulator in
+      let accumulator3 = encode then_ accumulator2 in
+      let accumulator4 = encode condition accumulator3 in
+      "If" :: accumulator4
+  | Hole -> "Hole" :: accumulator
 
 let serialize expression = String.concat separator (encode expression [])
 
@@ -67,6 +74,8 @@ and decodeValue code = match code with
   | "String" :: rest ->
       let s, rest = decodeStringPayload rest in
       (String s, rest)
+  | "True" :: rest -> Bool true, rest
+  | "False" :: rest -> Bool false, rest
   | "Pair" :: rest ->
       let v1, rest1 = decodeValue rest in
       let v2, rest2 = decodeValue rest1 in
@@ -130,6 +139,11 @@ and decode = function
         let name, tail2 = decodeStringPayload tail in
         let e, tail3 = decode tail2 in
         Function(name, None, e), tail3 (* TODO *)
+    | "If" ->
+        let condition, tail2 = decode tail in
+        let then_, tail3 = decode tail2 in
+        let else_, tail4 = decode tail3 in
+        If(condition, then_, else_), tail4
     | "Hole" -> (Hole, tail)
     | _ -> raise (UnknownNameException ("Token type " ^ tokenType)))
   | [] -> raise DecodingUnderrunError

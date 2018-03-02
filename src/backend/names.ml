@@ -33,6 +33,7 @@ let binaryOperatorName = function
   | CharAt -> "CharAt"
   | Pair -> "Pair"
   | Apply -> "Apply"
+  | GTEQ -> "GTEQ"
 
 let nAryOperatorName = function
   | ArrayForm -> "ArrayForm"
@@ -49,6 +50,7 @@ let base26 number = base26Internal number ""
 let rec typeNameInternal ((nextLetter, normalization) as state) = function
   | TNumber -> (state, "Number")
   | TString -> (state, "String")
+  | TBool -> (state, "Bool")
   | FTV i ->
       if IntMap.mem i normalization then 
         ((nextLetter,
@@ -96,6 +98,7 @@ let binaryOperatorByName = function
   | "CharAt" -> CharAt
   | "Pair" -> Pair
   | "Apply" -> Apply
+  | "GTEQ" -> GTEQ
   | name -> raise (UnknownNameException ("Binary operator " ^ name))
 
 let nAryOperatorByName = function

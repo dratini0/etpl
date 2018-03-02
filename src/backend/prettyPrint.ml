@@ -4,6 +4,8 @@ open Names
 let rec prettyPrintValue v = match v with
   | Number(n) -> string_of_float(n)
   | String(s) -> Printf.sprintf "\"%s\"" s
+  | Bool true -> "True"
+  | Bool false -> "False"
   | Pair(v1, v2) -> "(" ^ (prettyPrintValue v1) ^ ", " ^ (prettyPrintValue v2) ^ ")"
   | Array a -> "[" ^ (a |> Array.map prettyPrintValue |> Array.to_list |> BatString.concat ", ") ^ "]"
   | Function _ -> "[function]"
@@ -18,4 +20,5 @@ let rec prettyPrintExpression e = match e with
   | Let(name, e1, e2) -> "let " ^ name ^ " = (" ^ (prettyPrintExpression e1) ^ ") in (" ^ (prettyPrintExpression e2) ^ ")"
   | Variable name -> name
   | Function(name, _, e) -> "fun " ^ name ^ " -> (" ^ (prettyPrintExpression e) ^ ")" (* TODO *)
+  | If(condition, then_, else_) -> Printf.sprintf "if (%s) then (%s) else (%s)" (prettyPrintExpression condition) (prettyPrintExpression then_) (prettyPrintExpression else_)
   | Hole -> "[]"

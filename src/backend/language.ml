@@ -9,6 +9,7 @@ module StringMap = Map.Make(String)
 type etplType =
   | TNumber
   | TString
+  | TBool
   | FTV of int
   | TArray of etplType
   | TPair of etplType * etplType
@@ -38,6 +39,7 @@ type binaryOp =
   | CharAt
   | Pair
   | Apply
+  | GTEQ
 
 type nAryOp =
   | ArrayForm
@@ -45,6 +47,7 @@ type nAryOp =
 type value =
   | Number of float
   | String of string
+  | Bool of bool
   | Array of value array
   | Pair of value * value
   | Function of position * value StringMap.t * string * expression
@@ -58,6 +61,7 @@ and expression =
   | Let of string * expression * expression
   | Variable of string
   | Function of string * etplType option * expression
+  | If of expression * expression * expression
   | Hole
 
 (* This will eventually hold mutable state *)
