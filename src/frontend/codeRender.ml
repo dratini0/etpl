@@ -26,6 +26,8 @@ let rec renderValue = function
   | String(s) ->
       cloneElementFromTemplate "literal_String"
         |> setChild 0 (Jquery.jquery'' (createTextNode s))
+  | Bool true -> cloneElementFromTemplate "literal_True"
+  | Bool false -> cloneElementFromTemplate "literal_False"
   | Pair(v1, v2) ->
       cloneElementFromTemplate "literal_Pair"
         |> setChild 0 (renderValue v1)
@@ -39,6 +41,7 @@ let rec renderValue = function
         container |> Jquery.append_ item |> ignore;
       ) a;
       protoElement
+  | Function _ -> cloneElementFromTemplate "literal_Function"
 
 
 let rec renderExpression expression position specialCasingFunction = begin
@@ -63,6 +66,11 @@ let rec renderExpression expression position specialCasingFunction = begin
       ) es;
       protoElement
     | NAryOp _ -> raise IntermediateStateError
+    | If (condition, then_, else_) ->
+      cloneElementFromTemplate "other_If"
+        |> setChild 0 (renderExpression condition (Option.map (fun x -> posPush x 0) position) specialCasingFunction)
+        |> setChild 1 (renderExpression then_ (Option.map (fun x -> posPush x 1) position) specialCasingFunction)
+        |> setChild 2 (renderExpression else_ (Option.map (fun x -> posPush x 2) position) specialCasingFunction)
     | Hole ->
       cloneElementFromTemplate "hole"
   ) in
