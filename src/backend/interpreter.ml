@@ -70,7 +70,7 @@ let rec nextStepInternal (State e as s) loc variables = match e with
       State(Let(name, e1_, e2))
   | Variable name -> (try State(Literal(StringMap.find name variables)) with 
       | Not_found -> raise (RuntimeException("Unbound variable " ^ name, s, loc)))
-  | Function(name, e1) -> State(Literal(Function(posPush loc 0, variables, name, e1)))
+  | Function(name, _, e1) -> State(Literal(Function(posPush loc 0, variables, name, e1)))
   | Hole -> raise(RuntimeException ("Programs with holes in them can't be executed.", s, loc))
 
 let nextStep s = nextStepInternal s emptyPosition StringMap.empty

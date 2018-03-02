@@ -5,6 +5,9 @@ open SubstitutionList
 
 module PosMap = Map.Make(Position.Proper)
 module StringMap = Map.Make(String)
+module IntHelper = struct type t = int let compare: int -> int -> int = compare end
+module IntMap = Map.Make(IntHelper)
+module IntSet = Set.Make(IntHelper)
 
 (* TODO: add some way of grouping these, because they will not always fit the screen *)
 let insertableExpressions = [
@@ -41,11 +44,47 @@ let rec substituteFTV index substitute = function
 
 let rec occurs index = function
   | TString
-  | TNumber -> false
+  | TNumber
+  | GTV _ -> false
   | TArray t -> occurs index t
   | TPair (t1, t2) 
   | TFun (t1, t2) -> occurs index t1 || occurs index t2
   | FTV i -> i = index
+
+let rec instantiateGTVs map substitutions gtvs = function
+  | TString -> TString, map, substitutions
+  | TNumber -> TNumber, map, substitutions
+  | FTV x -> FTV x, map, substitutions
+  | TArray t ->
+      let t_, map_,  substitutions_ = instantiateGTVs map substitutions gtvs t in
+      TArray t_, map_, substitutions_
+  | TPair(t1, t2) ->
+      let t1_, map_, substitutions_ = instantiateGTVs map substitutions gtvs t1 in
+      let t2_, map__, substitutions__ = instantiateGTVs map_ substitutions_ gtvs t2 in
+      TPair(t1_, t2_), map__, substitutions__
+  | TFun(t1, t2) ->
+      let t1_, map_, substitutions_ = instantiateGTVs map substitutions gtvs t1 in
+      let t2_, map__, substitutions__ = instantiateGTVs map_ substitutions_ gtvs t2 in
+      TFun(t1_, t2_), map__, substitutions__
+  | GTV x ->
+      if IntSet.mem x gtvs then
+        GTV x, map, substitutions
+      else if IntMap.mem x map then
+        FTV(IntMap.find x map), map, substitutions
+      else
+        let alpha, substitutions_ = newFreeVariable substitutions in
+        FTV alpha, IntMap.add x alpha map, substitutions_
+
+let rec addGTVs set = function
+  | TString
+  | TNumber
+  | FTV _ -> set
+  | TArray t -> addGTVs set t
+  | TPair(t1, t2)
+  | TFun(t1, t2) ->
+      let set_ = addGTVs set t1 in
+      addGTVs set_ t2
+  | GTV x -> IntSet.add x set
 
 let rec applySubstitutions substitutions = function
   (* The substitution map should have everything consistent *)
@@ -75,6 +114,7 @@ let rec unifyInternal subtitutions a b =
     | _, FTV bi -> unifyInternal subtitutions (FTV bi) a
     | TString, TString
     | TNumber, TNumber -> Some(subtitutions)
+    | GTV a, GTV b when a = b -> Some(subtitutions)
     | TArray a, TArray b -> unifyInternal subtitutions a b
     | TPair (a1, a2), TPair (b1, b2) 
     | TFun (a1, a2), TFun (b1, b2) ->(match unifyInternal subtitutions a1 b1 with
@@ -156,11 +196,11 @@ let rec literalConstraints substitutions = function
       let alpha, substitutions3 = newFreeVariable substitutions2 in
       let beta, substitutions4 = newFreeVariable substitutions3 in
       let types2 = StringMap.add name (FTV alpha) types in
-      (match inferTypeInternal substitutions4 (FTV beta) emptyPosition PosMap.empty types2 expression with
+      (match inferTypeInternal substitutions4 (FTV beta) emptyPosition PosMap.empty types2 IntSet.empty expression with
         | Some (substitutions5, _) -> substitutions5, TFun(FTV alpha, FTV beta)
         | None -> raise IntermediateStateError) (* Todo: refactor so that it is an option...*)
 
-and inferTypeInternal substitutions tExpected position holeMap variableMap = function
+and inferTypeInternal substitutions tExpected position holeMap variableMap gtvs = function
   | Literal v ->
       let substitutions2, tReturn = literalConstraints substitutions v in
       unifyInternal substitutions2 tExpected tReturn |> pairFormIfSome holeMap
@@ -170,13 +210,13 @@ and inferTypeInternal substitutions tExpected position holeMap variableMap = fun
   | UnaryOp(o, e1) ->
       let substitutions2, tReturn, t1 = unaryOpConstraints substitutions o in
       (match unifyInternal substitutions2 tExpected tReturn with
-        | Some substitutions3 -> inferTypeInternal substitutions3 t1 (posPush position 0) holeMap variableMap e1
+        | Some substitutions3 -> inferTypeInternal substitutions3 t1 (posPush position 0) holeMap variableMap gtvs e1
         | None -> None)
   | BinaryOp(o, e1, e2) ->
       let substitutions2, tReturn, t1, t2 = binaryOpConstraints substitutions o in
       (match unifyInternal substitutions2 tExpected tReturn with
-        | Some substitutions3 -> (match inferTypeInternal substitutions3 t1 (posPush position 0) holeMap variableMap e1 with
-          | Some(substitutions4, holeMap2) -> inferTypeInternal substitutions4 t2 (posPush position 1) holeMap2 variableMap e2
+        | Some substitutions3 -> (match inferTypeInternal substitutions3 t1 (posPush position 0) holeMap variableMap gtvs e1 with
+          | Some(substitutions4, holeMap2) -> inferTypeInternal substitutions4 t2 (posPush position 1) holeMap2 variableMap gtvs e2
           | None -> None)
         | None -> None)
   | NAryOp(o, es, 0, []) -> 
@@ -184,7 +224,7 @@ and inferTypeInternal substitutions tExpected position holeMap variableMap = fun
         | _, [], [] -> state
         | None, _, _ -> None
         | Some (substitutions, holeMap), tHead::tRest, eHead::eRest ->
-            helper (inferTypeInternal substitutions tHead (posPush position n) holeMap variableMap eHead) tRest eRest (n+1)
+            helper (inferTypeInternal substitutions tHead (posPush position n) holeMap variableMap gtvs eHead) tRest eRest (n+1)
         | _ -> raise (Invalid_argument "fold_left2_option_map")
       in
       let substitutions2, tReturn, ts = nAryOpConstraints substitutions (List.length es) o in
@@ -193,27 +233,34 @@ and inferTypeInternal substitutions tExpected position holeMap variableMap = fun
   | NAryOp _ -> raise IntermediateStateError
   | Let(v, eValue, eEvaluated) ->
       let alpha, substitutions2 = newFreeVariable substitutions in
-      (match inferTypeInternal substitutions2 (FTV alpha) (posPush position 0) holeMap variableMap eValue with
-        | Some(substitutions3, holeMap2) -> inferTypeInternal substitutions3 tExpected (posPush position 1) holeMap2 (StringMap.add v (FTV alpha) variableMap) eEvaluated
+      (match inferTypeInternal substitutions2 (FTV alpha) (posPush position 0) holeMap variableMap gtvs eValue with
+        | Some(substitutions3, holeMap2) -> inferTypeInternal substitutions3 tExpected (posPush position 1) holeMap2 (StringMap.add v (FTV alpha) variableMap) gtvs eEvaluated
         | None -> None)
   | Variable v ->
       (try (
-        unifyInternal substitutions tExpected (StringMap.find v variableMap)
+        let t = StringMap.find v variableMap |> applySubstitutions substitutions in
+        let t_, _, substitutions_ = instantiateGTVs IntMap.empty substitutions gtvs t in
+        unifyInternal substitutions_ tExpected t_
         |> pairFormIfSome holeMap
       ) with Not_found -> None)
-  | Function (name, e1) ->
+  | Function (name, None, e1) ->
       let alpha, substitutions2 = newFreeVariable substitutions in
       let beta, substitutions3 = newFreeVariable substitutions2 in
       (match unifyInternal substitutions3 tExpected (TFun(FTV alpha, FTV beta)) with
-        | Some substitutions4 -> inferTypeInternal substitutions4 (FTV beta) (posPush position 0) holeMap (StringMap.add name (FTV alpha) variableMap) e1
+        | Some substitutions4 -> inferTypeInternal substitutions4 (FTV beta) (posPush position 0) holeMap (StringMap.add name (FTV alpha) variableMap) gtvs e1
         | None -> None)
-  | Hole -> Some (substitutions, PosMap.add position (tExpected, variableMap) holeMap)
+  | Function (name, Some alpha, e1) ->
+      let beta, substitutions2 = newFreeVariable substitutions in
+      (match unifyInternal substitutions2 tExpected (TFun(alpha, FTV beta)) with
+        | Some substitutions3 -> inferTypeInternal substitutions3 (FTV beta) (posPush position 0) holeMap (StringMap.add name (alpha) variableMap) (addGTVs gtvs alpha) e1
+        | None -> None)
+  | Hole -> Some (substitutions, PosMap.add position (tExpected, variableMap, gtvs) holeMap)
 
 let inferTypeValue v = let _, t = literalConstraints emptySubstitutionList v in t
 
 let inferTypeContinuable e =
   let alpha, substitutions = newFreeVariable emptySubstitutionList in
-  match inferTypeInternal substitutions (FTV alpha) emptyPosition PosMap.empty StringMap.empty e with
+  match inferTypeInternal substitutions (FTV alpha) emptyPosition PosMap.empty StringMap.empty IntSet.empty e with
     | Some (substitutions2, holeMap) -> Some (applySubstitutions substitutions2 (FTV alpha), substitutions2, holeMap)
     | None -> None
 
@@ -230,8 +277,8 @@ let fitsHole expression position subExpression =
 let whatFits expression position =
   match inferTypeContinuable expression with 
     | Some(_, substitutions, holeMap) ->
-        let tExpected, variableMap = PosMap.find position holeMap in
+        let tExpected, variableMap, gtvs = PosMap.find position holeMap in
         let variableCandidates = StringMap.bindings variableMap |> List.map (fun (name, _) -> Variable name) in
         let candidates = insertableExpressions @ variableCandidates in
-        List.filter (fun expression -> inferTypeInternal substitutions tExpected position holeMap variableMap expression |> Option.is_some) candidates
+        List.filter (fun expression -> inferTypeInternal substitutions tExpected position holeMap variableMap gtvs expression |> Option.is_some) candidates
     | None -> []

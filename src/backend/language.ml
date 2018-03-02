@@ -6,6 +6,15 @@ exception IntermediateStateError
 
 module StringMap = Map.Make(String)
 
+type etplType =
+  | TNumber
+  | TString
+  | FTV of int
+  | TArray of etplType
+  | TPair of etplType * etplType
+  | TFun of etplType * etplType
+  | GTV of int (* generalized type variable *)
+
 type constant =
   | Pi
 
@@ -48,16 +57,8 @@ and expression =
   | NAryOp of nAryOp * expression list * int * value list
   | Let of string * expression * expression
   | Variable of string
-  | Function of string * expression
+  | Function of string * etplType option * expression
   | Hole
 
 (* This will eventually hold mutable state *)
 type state = State of expression
-
-type etplType =
-  | TNumber
-  | TString
-  | FTV of int
-  | TArray of etplType
-  | TPair of etplType * etplType
-  | TFun of etplType * etplType

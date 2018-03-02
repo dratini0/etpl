@@ -17,5 +17,5 @@ let rec prettyPrintExpression e = match e with
   | NAryOp _ -> raise IntermediateStateError
   | Let(name, e1, e2) -> "let " ^ name ^ " = (" ^ (prettyPrintExpression e1) ^ ") in (" ^ (prettyPrintExpression e2) ^ ")"
   | Variable name -> name
-  | Function(name, e) -> "fun " ^ name ^ " -> (" ^ (prettyPrintExpression e) ^ ")"
+  | Function(name, _, e) -> "fun " ^ name ^ " -> (" ^ (prettyPrintExpression e) ^ ")" (* TODO *)
   | Hole -> "[]"

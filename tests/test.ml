@@ -203,25 +203,25 @@ let interpreterTestCasesPositive = [
   TString,
   String "1test"
   ;
-  BinaryOp(Apply, Function("x", BinaryOp(Add, Variable "x", Literal(Number 1.))), Literal(Number 2.)),
+  BinaryOp(Apply, Function("x", None, BinaryOp(Add, Variable "x", Literal(Number 1.))), Literal(Number 2.)),
   "BinaryOp,Apply,Function,1,x,BinaryOp,Add,Variable,1,x,Literal,Number,1,Literal,Number,2",
   "Apply(fun x -> (Add(x, 1.)), 2.)",
   TNumber,
   Number 3.
   ;
-  Let("f", Let("y", Literal(Number 5.), Function("x", BinaryOp(Add, Variable "x", Variable "y"))), BinaryOp(Apply, Variable "f", Literal(Number 7.))),
+  Let("f", Let("y", Literal(Number 5.), Function("x", None, BinaryOp(Add, Variable "x", Variable "y"))), BinaryOp(Apply, Variable "f", Literal(Number 7.))),
   "Let,1,f,Let,1,y,Literal,Number,5,Function,1,x,BinaryOp,Add,Variable,1,x,Variable,1,y,BinaryOp,Apply,Variable,1,f,Literal,Number,7",
   "let f = (let y = (5.) in (fun x -> (Add(x, y)))) in (Apply(f, 7.))",
   TNumber,
   Number 12.
   ;
-  Let("f", Let("x", Literal(Number 5.), Function("x", Variable "x")), BinaryOp(Apply, Variable "f", Literal(Number 7.))),
+  Let("f", Let("x", Literal(Number 5.), Function("x", None, Variable "x")), BinaryOp(Apply, Variable "f", Literal(Number 7.))),
   "Let,1,f,Let,1,x,Literal,Number,5,Function,1,x,Variable,1,x,BinaryOp,Apply,Variable,1,f,Literal,Number,7",
   "let f = (let x = (5.) in (fun x -> (x))) in (Apply(f, 7.))",
   TNumber,
   Number 7.
   ;
-  Let("id", Function("x", Variable("x")), BinaryOp(Pair, BinaryOp(Apply, Variable "id", Literal(Number 1.)), BinaryOp(Apply, Variable "id", Literal(String "ETPL")))),
+  Let("id", Function("x", Some(GTV 0), Variable("x")), BinaryOp(Pair, BinaryOp(Apply, Variable "id", Literal(Number 1.)), BinaryOp(Apply, Variable "id", Literal(String "ETPL")))),
   "Let,1,id,Function,1,x,Variable,1,x,BinaryOp,Pair,BinaryOp,Apply,Variable,1,id,Literal,Number,1,BinaryOp,Apply,Variable,1,id,Literal,String,1,ETPL",
   "let id = (fun x -> (x)) in (Pair(Apply(id, 1.), Apply(id, \"ETPL\")))",
   TPair(TNumber, TString),
@@ -310,6 +310,7 @@ let deserializeTests =
 let inferTypeTests =
   describe "Type inference" (fun () -> interpreterTestCasesAll |> List.map (fun (tree, _, pretty, type_) ->
     test pretty (fun() ->
+      Js.log  pretty;
       let type_String = Option.map typeName type_ in
       inferType tree |> (Option.map typeName) |> Expect.toEqual type_String)
     )

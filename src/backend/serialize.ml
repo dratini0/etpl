@@ -39,7 +39,7 @@ let rec encode expression accumulator = match expression with
       "Let" :: accumulator4
   | Variable name ->
       "Variable" :: (encodeStringPayload name accumulator)
-  | Function(name, e) ->
+  | Function(name, _, e) -> (* TODO *)
       let accumulator2 = encode e accumulator in
       let accumulator3 = encodeStringPayload name accumulator2 in
       "Function" :: accumulator3
@@ -129,7 +129,7 @@ and decode = function
     | "Function" ->
         let name, tail2 = decodeStringPayload tail in
         let e, tail3 = decode tail2 in
-        Function(name, e), tail3
+        Function(name, None, e), tail3 (* TODO *)
     | "Hole" -> (Hole, tail)
     | _ -> raise (UnknownNameException ("Token type " ^ tokenType)))
   | [] -> raise DecodingUnderrunError
