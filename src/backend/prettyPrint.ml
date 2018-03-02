@@ -19,6 +19,7 @@ let rec prettyPrintExpression e = match e with
   | NAryOp _ -> raise IntermediateStateError
   | Let(name, e1, e2) -> "let " ^ name ^ " = (" ^ (prettyPrintExpression e1) ^ ") in (" ^ (prettyPrintExpression e2) ^ ")"
   | Variable name -> name
-  | Function(name, _, e) -> "fun " ^ name ^ " -> (" ^ (prettyPrintExpression e) ^ ")" (* TODO *)
+  | Function(None, argumentName, _, e) -> Printf.sprintf "fun %s -> (%s)" argumentName (prettyPrintExpression e) (* TODO: deal with annotations *)
+  | Function(Some recursiveName, argumentName, _, e) -> Printf.sprintf "fun (rec: %s) %s -> (%s)" recursiveName argumentName (prettyPrintExpression e)
   | If(condition, then_, else_) -> Printf.sprintf "if (%s) then (%s) else (%s)" (prettyPrintExpression condition) (prettyPrintExpression then_) (prettyPrintExpression else_)
   | Hole -> "[]"

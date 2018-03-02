@@ -29,7 +29,7 @@ let rec replaceSubtree_ tree position replacement positionBackup =
         | _, NAryOp _ -> raise IntermediateStateError
         | 0, Let(name, e0, e1) -> Let(name, replaceSubtree_ e0 rest replacement positionBackup, e1)
         | 1, Let(name, e0, e1) -> Let(name, e0, replaceSubtree_ e1 rest replacement positionBackup)
-        | 0, Function(name, t_, e) -> Function(name, t_, replaceSubtree_ e rest replacement positionBackup)
+        | 0, Function(recursiveName, argumentName, t_, e) -> Function(recursiveName, argumentName, t_, replaceSubtree_ e rest replacement positionBackup)
         | 0, If(condition, then_, else_) -> If(replaceSubtree_ condition rest replacement positionBackup, then_, else_)
         | 1, If(condition, then_, else_) -> If(condition, replaceSubtree_ then_ rest replacement positionBackup, else_)
         | 2, If(condition, then_, else_) -> If(condition, then_, replaceSubtree_ else_ rest replacement positionBackup)
@@ -45,7 +45,7 @@ let rec getSubtree_ tree position positionBackup =
   | Some(head, rest) -> (
     match head, tree with
       | 0, UnaryOp(_, e0)
-      | 0, Function(_, _, e0)
+      | 0, Function(_, _, _, e0)
       | 0, Let(_, e0, _)
       | 0, BinaryOp(_, e0, _)
       | 0, If(e0, _, _) -> getSubtree_ e0 rest positionBackup
@@ -75,7 +75,7 @@ and firstHole_ tree accumulator = match tree with
   | Constant _
   | Variable _ -> None
   | UnaryOp(_, e0)
-  | Function(_, _, e0) -> firstHole_ e0 (posPush accumulator 0)
+  | Function(_, _, _, e0) -> firstHole_ e0 (posPush accumulator 0)
   | Let(_, e0, e1)
   | BinaryOp(_, e0, e1) -> (match firstHole_ e0 (posPush accumulator 0) with
     | Some result -> Some result
@@ -107,7 +107,7 @@ let rec nextHole_ tree position accumulator positionBackup =
   | Some(head, rest) -> (
     match head, tree with
       | 0, UnaryOp(_, e0)
-      | 0, Function(_, _, e0) -> nextHole_ e0 rest (posPush accumulator 0) positionBackup
+      | 0, Function(_, _, _, e0) -> nextHole_ e0 rest (posPush accumulator 0) positionBackup
       | 0, Let(_, e0, e1)
       | 0, BinaryOp(_, e0, e1) -> (
         match nextHole_ e0 rest (posPush accumulator 0) positionBackup with

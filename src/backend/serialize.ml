@@ -41,10 +41,15 @@ let rec encode expression accumulator = match expression with
       "Let" :: accumulator4
   | Variable name ->
       "Variable" :: (encodeStringPayload name accumulator)
-  | Function(name, _, e) -> (* TODO *)
+  | Function(None, argumentName, _, e) -> (* TODO *)
       let accumulator2 = encode e accumulator in
-      let accumulator3 = encodeStringPayload name accumulator2 in
+      let accumulator3 = encodeStringPayload argumentName accumulator2 in
       "Function" :: accumulator3
+  | Function(Some recursiveName, argumentName, _, e) -> (* TODO *)
+      let accumulator2 = encode e accumulator in
+      let accumulator3 = encodeStringPayload argumentName accumulator2 in
+      let accumulator4 = encodeStringPayload recursiveName accumulator3 in
+      "RecFun" :: accumulator4
   | If(condition, then_, else_) ->
       let accumulator2 = encode else_ accumulator in
       let accumulator3 = encode then_ accumulator2 in
@@ -136,9 +141,14 @@ and decode = function
         let name, tail2 = decodeStringPayload tail in
         Variable name, tail2
     | "Function" ->
-        let name, tail2 = decodeStringPayload tail in
+        let argumentName, tail2 = decodeStringPayload tail in
         let e, tail3 = decode tail2 in
-        Function(name, None, e), tail3 (* TODO *)
+        Function(None, argumentName, None, e), tail3 (* TODO *)
+    | "RecFun" ->
+        let recursiveName, tail2 = decodeStringPayload tail in
+        let argumentName, tail3 = decodeStringPayload tail2 in
+        let e, tail4 = decode tail3 in
+        Function(Some recursiveName, argumentName, None, e), tail4 (* TODO *)
     | "If" ->
         let condition, tail2 = decode tail in
         let then_, tail3 = decode tail2 in

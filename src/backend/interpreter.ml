@@ -33,10 +33,13 @@ let evalBinary s p o e1 e2 = match (o, e1, e2) with
   | (STail, String(e1), Number(e2)) -> (try let len = String.length e1 in updateState s (Literal(String(String.sub e1 (len - (int_of_float e2)) (int_of_float e2)))) with Invalid_argument _ -> raise (RuntimeException("Index out of range for STail", s, p)))
   | (CharAt, String(e1), Number(e2)) -> (try updateState s (Literal(String(String.make 1 (String.get e1 (int_of_float e2))))) with Invalid_argument _ -> raise (RuntimeException("Index out of range for CharAt", s, p)))
   | (Pair, e1, e2) -> updateState s (Literal(Pair(e1, e2)))
-  | (Apply, Function(_, variables, name, e1), e2) ->
-    let replacement1 = Let(name, Literal e2, e1) in
-    let replacement2 = StringMap.fold (fun name value e -> Let(name, Literal value, e)) variables replacement1 in
-    updateState s replacement2
+  | (Apply, Function(_, variables, recursiveName, argumentName, body), e2) ->
+    let replacement1 = Let(argumentName, Literal e2, body) in
+    let replacement2 = (match recursiveName with 
+      | Some name -> Let(name, Literal e1, replacement1)
+      | None -> replacement1) in
+    let replacement3 = StringMap.fold (fun name value e -> Let(name, Literal value, e)) variables replacement2 in
+    updateState s replacement3
   | (GTEQ, Number e1, Number e2) -> updateState s (Literal(Bool (e1 >= e2)))
   | (o, v1, v2) -> raise (RuntimeException(Printf.sprintf "Program is not well-typed: %s is not defined for an arguments of type %s and %s" (binaryOperatorName o) (v1 |> inferTypeValue |> typeName) (v2 |> inferTypeValue |> typeName), s, p))
 
@@ -71,7 +74,7 @@ let rec nextStepInternal (State e as s) loc variables = match e with
       State(Let(name, e1_, e2))
   | Variable name -> (try State(Literal(StringMap.find name variables)) with 
       | Not_found -> raise (RuntimeException("Unbound variable " ^ name, s, loc)))
-  | Function(name, _, e1) -> State(Literal(Function(posPush loc 0, variables, name, e1)))
+  | Function(recursiveName, argumentName, _, e1) -> State(Literal(Function(posPush loc 0, variables, recursiveName, argumentName, e1)))
   | If(Literal(Bool condition), then_, else_) ->
       if condition then
         State then_

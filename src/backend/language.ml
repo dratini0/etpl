@@ -50,7 +50,7 @@ type value =
   | Bool of bool
   | Array of value array
   | Pair of value * value
-  | Function of position * value StringMap.t * string * expression
+  | Function of position * value StringMap.t * string option * string * expression
 
 and expression =
   | Literal of value
@@ -60,7 +60,7 @@ and expression =
   | NAryOp of nAryOp * expression list * int * value list
   | Let of string * expression * expression
   | Variable of string
-  | Function of string * etplType option * expression
+  | Function of string option * string * etplType option * expression
   | If of expression * expression * expression
   | Hole
 
