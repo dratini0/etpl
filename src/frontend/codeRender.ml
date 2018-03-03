@@ -53,11 +53,11 @@ let rec renderExpression expression position specialCasingFunction = begin
       cloneElementFromTemplate ("constant_" ^ (constantName c))
     | UnaryOp(o, e0) ->
       cloneElementFromTemplate ("unary_" ^ (unaryOperatorName o))
-        |> setChild 0 (renderExpression e0 (Option.map (fun x -> posPush x 0) position) specialCasingFunction)
+        |> recurse 0 e0
     | BinaryOp(o, e0, e1) ->
       cloneElementFromTemplate ("binary_" ^ (binaryOperatorName o))
-        |> setChild 0 (renderExpression e0 (Option.map (fun x -> posPush x 0) position) specialCasingFunction)
-        |> setChild 1 (renderExpression e1 (Option.map (fun x -> posPush x 1) position) specialCasingFunction)
+        |> recurse 0 e0
+        |> recurse 1 e1
     | NAryOp(o, es, 0, []) ->
       let protoElement = cloneElementFromTemplate ("nary_" ^ (nAryOperatorName o)) in
       let container = protoElement |> Jquery.find ".container" in
@@ -86,9 +86,9 @@ let rec renderExpression expression position specialCasingFunction = begin
       element
     | If (condition, then_, else_) ->
       cloneElementFromTemplate "other_If"
-        |> setChild 0 (renderExpression condition (Option.map (fun x -> posPush x 0) position) specialCasingFunction)
-        |> setChild 1 (renderExpression then_ (Option.map (fun x -> posPush x 1) position) specialCasingFunction)
-        |> setChild 2 (renderExpression else_ (Option.map (fun x -> posPush x 2) position) specialCasingFunction)
+        |> recurse 0 condition
+        |> recurse 1 then_
+        |> recurse 2 else_
     | Hole ->
       cloneElementFromTemplate "hole"
   ) in
