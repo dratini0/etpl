@@ -328,6 +328,13 @@ and replaceCurrentHoleWrapper number expression () = begin
     | Literal(Number(_)) -> getNumber 0. (fun x -> replaceCurrentHole(Literal(Number(x))))
     | Literal(String(_)) -> getText "" (fun x -> replaceCurrentHole(Literal(String(x))))
     | Let(_, Hole, Hole) -> getLine "Variable name" "" (fun name -> replaceCurrentHole(Let(name, Hole, Hole)))
+    | Function(None, _, None, Hole) ->
+        getLine "Argument name" "" (fun argumentName ->
+          replaceCurrentHole(Function(None, argumentName, None, Hole)))
+    | Function(Some _, _, None, Hole) ->
+        getLine "Argument name" "" (fun argumentName ->
+          getLine "Recursive variable name" "" (fun recursiveVariableName ->
+            replaceCurrentHole(Function(Some recursiveVariableName, argumentName, None, Hole))))
     | _ -> replaceCurrentHole expression;
 end
 

@@ -84,6 +84,26 @@ let rec renderExpression expression position specialCasingFunction = begin
         |> Jquery.text name
         |> ignore;
       element
+    | Function(None, argumentName, None, body) ->
+      let element = cloneElementFromTemplate "other_Function" in
+      element
+        |> Jquery.find ".argument_name"
+        |> Jquery.text argumentName
+        |> ignore;
+      element
+        |> recurse 0 body
+    | Function(Some recursiveName, argumentName, None, body) ->
+      let element = cloneElementFromTemplate "other_RecFunction" in
+      element
+        |> Jquery.find ".argument_name"
+        |> Jquery.text argumentName
+        |> ignore;
+      element
+        |> Jquery.find ".recursive_name"
+        |> Jquery.text recursiveName
+        |> ignore;
+      element
+        |> recurse 0 body
     | If (condition, then_, else_) ->
       cloneElementFromTemplate "other_If"
         |> recurse 0 condition
