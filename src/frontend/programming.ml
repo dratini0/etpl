@@ -106,36 +106,50 @@ let rec updateButtons () =
                                     - (if renderPrevButton then 1 else 0) in
   let renderNextButton = possiblyRenderedSuggestions < suggestionCount in begin
     ignore (buttons
-      |> Jquery.empty
       |> Jquery.attr (`kv ("disabled", "disabled"))
-      |> Jquery.off "click");
+      |> Jquery.off "click"
+      |> Jquery.find ".button_liner"
+      |> Jquery.empty
+      );
     let rec fillButtons index suggestions = (
       if index >= buttonCount then () else
       if renderPrevButton && index = prevPageButtonIndex then (
         buttons
           |> Jquery.eq index
           |> Jquery.removeAttr "disabled"
-          |> Jquery.append_ (cloneElementFromTemplate "label_prev")
           |> doSimpleBind "click" prevPage;
+        buttons
+          |> Jquery.eq index
+          |> Jquery.find ".button_liner"
+          |> Jquery.append_ (cloneElementFromTemplate "label_prev")
+          |> ignore;
         fillButtons (index + 1) suggestions
       ) else
       if renderNextButton && index = nextPageButtonIndex then (
         buttons
           |> Jquery.eq index
           |> Jquery.removeAttr "disabled"
-          |> Jquery.append_ (cloneElementFromTemplate "label_next")
           |> doSimpleBind "click" nextPage;
+        buttons
+          |> Jquery.eq index
+          |> Jquery.find ".button_liner"
+          |> Jquery.append_ (cloneElementFromTemplate "label_next")
+          |> ignore;
         fillButtons (index + 1) suggestions
       ) else 
         match suggestions with
           | [] -> fillButtons (index + 1) []
           | suggestion::otherSuggestions -> (
-            ignore (buttons
+            buttons
               |> Jquery.eq index
               |> Jquery.removeAttr "disabled"
-              |> Jquery.append_ (renderExpression suggestion None emptySpecialCasingFunction)
               |> doSimpleBind "click" (replaceCurrentHoleWrapper index suggestion)
-            );
+              |> ignore;
+            buttons
+              |> Jquery.eq index
+              |> Jquery.find ".button_liner"
+              |> Jquery.append_ (renderExpression suggestion None emptySpecialCasingFunction)
+              |> ignore;
             fillButtons (index + 1) otherSuggestions
           )
     ) in
