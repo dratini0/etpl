@@ -7,6 +7,7 @@ open DomManipulation
 open Programming
 open ModalGetNumber
 open ModalGetText
+open ModalGetLine
 include PanelDebugLog
 
 open JquerySafe
@@ -48,6 +49,9 @@ let getNumberButton () =
 let getTextButton () =
   getText "" (fun str -> log("Got string: \"" ^ str ^ "\""))
 
+let getLineButton () =
+  getLine "Test" "" (fun str -> log("Got line: \"" ^ str ^ "\""))
+  
 let openPanel () = begin
   ignore (jquery "#prettyview" |> Jquery.text (prettyPrintExpression (getCurrentProgram())));
   encodeButton();
@@ -64,6 +68,7 @@ let init () = if getQueryString = "?dev" then begin
   jquery "#execute" |> doSimpleBind "click" executeButton;
   jquery "#get_number" |> doSimpleBind "click" getNumberButton;
   jquery "#get_text" |> doSimpleBind "click" getTextButton;
+  jquery "#get_line" |> doSimpleBind "click" getLineButton;
   jquery "#redraw" |> doSimpleBind "click" redraw;
   jquery "#debugpanel_button" |> doSimpleBind "click" openPanel;
   jquery "body" |> Jquery.addClass (`str "dev") |> ignore;

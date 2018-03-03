@@ -259,6 +259,16 @@ a#copy_button {
     box-sizing: border-box;
 }
 
+/* Line input modal */
+#lineinput_form {
+    text-align: center;
+}
+
+#lineinput_field {
+    width: 100%;
+    box-sizing: border-box;
+}
+
 /* Error modal */
 #error_msg {
     font-weight: bold;
