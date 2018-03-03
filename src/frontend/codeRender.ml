@@ -45,6 +45,8 @@ let rec renderValue = function
 
 
 let rec renderExpression expression position specialCasingFunction = begin
+  let recurse index expression element = 
+    setChild index (renderExpression expression (Option.map (fun x -> posPush x index) position) specialCasingFunction) element in
   let element = (match expression with
     | Literal value -> renderValue value
     | Constant(c) ->
@@ -66,6 +68,22 @@ let rec renderExpression expression position specialCasingFunction = begin
       ) es;
       protoElement
     | NAryOp _ -> raise IntermediateStateError
+    | Let(name, e0, e1) ->
+      let element = cloneElementFromTemplate "other_Let" in
+      element
+        |> Jquery.find ".name"
+        |> Jquery.text name
+        |> ignore;
+      element
+        |> recurse 0 e0
+        |> recurse 1 e1
+    | Variable name ->
+      let element = cloneElementFromTemplate "other_Variable" in
+      element
+        |> Jquery.find ".name"
+        |> Jquery.text name
+        |> ignore;
+      element
     | If (condition, then_, else_) ->
       cloneElementFromTemplate "other_If"
         |> setChild 0 (renderExpression condition (Option.map (fun x -> posPush x 0) position) specialCasingFunction)

@@ -6,6 +6,7 @@ open Types
 open DomManipulation
 open ModalGetNumber
 open ModalGetText
+open ModalGetLine
 open Logging
 
 open JquerySafe
@@ -326,6 +327,7 @@ and replaceCurrentHoleWrapper number expression () = begin
   match expression with 
     | Literal(Number(_)) -> getNumber 0. (fun x -> replaceCurrentHole(Literal(Number(x))))
     | Literal(String(_)) -> getText "" (fun x -> replaceCurrentHole(Literal(String(x))))
+    | Let(_, Hole, Hole) -> getLine "Variable name" "" (fun name -> replaceCurrentHole(Let(name, Hole, Hole)))
     | _ -> replaceCurrentHole expression;
 end
 

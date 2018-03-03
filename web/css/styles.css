@@ -299,7 +299,13 @@ a#copy_button {
     text-indent: -0.6em;
 }
 
-.hole, #templates .child0, #templates .child1 {
+.hole,
+#templates .child0,
+#templates .child1,
+#templates .child2,
+#templates .child3,
+#templates .child4,
+#templates .name {
     box-sizing: border-box;
     width: 1em;
     height: 1em;

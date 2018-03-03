@@ -35,6 +35,7 @@ let insertableExpressions = [
   UnaryOp(PairRight, Hole);
   NAryOp(ArrayForm, [Hole], 0, []);
   If(Hole, Hole, Hole);
+  Let("var", Hole, Hole);
 ]
 
 let rec substituteFTV index substitute = function
