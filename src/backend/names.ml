@@ -48,6 +48,7 @@ let rec base26Internal number accumulator =
 let base26 number = base26Internal number ""
 
 let rec typeNameInternal ((nextLetter, normalization) as state) = function
+  | TUnit -> (state, "Unit")
   | TNumber -> (state, "Number")
   | TString -> (state, "String")
   | TBool -> (state, "Bool")

@@ -2,6 +2,7 @@ open Language
 open Names
 
 let rec prettyPrintValue v = match v with
+  | Unit -> "Unit"
   | Number(n) -> string_of_float(n)
   | String(s) -> Printf.sprintf "\"%s\"" s
   | Bool true -> "True"

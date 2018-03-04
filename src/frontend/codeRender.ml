@@ -20,6 +20,7 @@ let posToId position = "node" ^ (position
                                   |> String.concat "_")
 
 let rec renderValue = function
+  | Unit -> cloneElementFromTemplate "literal_Unit"
   | Number(n) ->
       cloneElementFromTemplate "literal_Number"
         |> setChild 0 (Jquery.jquery'' (createTextNode (string_of_float n)))

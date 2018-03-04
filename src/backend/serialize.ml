@@ -10,6 +10,7 @@ let encodeStringPayload s accumulator =
   s :: accumulator
 
 let rec encodeValue = function
+  | Unit -> ["Unit"]
   | Number(n) -> ["Number"; Printf.sprintf "%.17g" n]
   (* This is lossless, assuming we are dealing with doubles *)
   | String(s) -> "String" :: encodeStringPayload s []
@@ -75,6 +76,7 @@ let rec decodeArray count rest accumulator =
 
 (* There is no type by name funtion because it will eventually get quite complicated *)
 and decodeValue code = match code with
+  | "Unit" :: rest -> Unit, rest
   | "Number" :: encoded :: rest -> (Number(float_of_string encoded), rest)
   | "String" :: rest ->
       let s, rest = decodeStringPayload rest in

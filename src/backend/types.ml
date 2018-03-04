@@ -39,6 +39,7 @@ let insertableExpressions = [
   Function(None, "arg", None, Hole);
   Function(Some "_", "arg", None, Hole);
   BinaryOp(Apply, Hole, Hole);
+  Literal Unit;
 ]
 
 let rec substituteFTV index substitute = function
@@ -51,6 +52,7 @@ let rec substituteFTV index substitute = function
   | t -> t
 
 let rec occurs index = function
+  | TUnit
   | TString
   | TNumber
   | TBool
@@ -61,10 +63,7 @@ let rec occurs index = function
   | FTV i -> i = index
 
 let rec instantiateGTVs map substitutions gtvs = function
-  | TString -> TString, map, substitutions
-  | TNumber -> TNumber, map, substitutions
-  | TBool -> TBool, map, substitutions
-  | FTV x -> FTV x, map, substitutions
+  | (TUnit | TString | TNumber | TBool | FTV _) as t -> t, map, substitutions
   | TArray t ->
       let t_, map_,  substitutions_ = instantiateGTVs map substitutions gtvs t in
       TArray t_, map_, substitutions_
@@ -86,6 +85,7 @@ let rec instantiateGTVs map substitutions gtvs = function
         FTV alpha, IntMap.add x alpha map, substitutions_
 
 let rec addGTVs set = function
+  | TUnit
   | TString
   | TNumber
   | TBool
@@ -123,6 +123,7 @@ let rec unifyInternal subtitutions a b =
           Some(subtitutions3)
         )
     | _, FTV bi -> unifyInternal subtitutions (FTV bi) a
+    | TUnit, TUnit
     | TString, TString
     | TNumber, TNumber
     | TBool, TBool -> Some(subtitutions)
@@ -140,6 +141,7 @@ let unify substitutions a b = match unifyInternal substitutions a b with
   | None -> None
 
 let rec literalConstraints substitutions = function
+  | Unit -> substitutions, TUnit
   | Number _ -> substitutions, TNumber
   | String _ -> substitutions, TString
   | Bool _ -> substitutions, TBool

@@ -7,6 +7,7 @@ exception IntermediateStateError
 module StringMap = Map.Make(String)
 
 type etplType =
+  | TUnit
   | TNumber
   | TString
   | TBool
@@ -45,6 +46,7 @@ type nAryOp =
   | ArrayForm
 
 type value =
+  | Unit
   | Number of float
   | String of string
   | Bool of bool
