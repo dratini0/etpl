@@ -30,6 +30,11 @@ let rec encode expression accumulator = match expression with
     let accumulator2 = encode e2 accumulator in
     let accumulator3 = encode e1 accumulator2 in
       "BinaryOp" :: binaryOperatorName o :: accumulator3
+  | TernaryOp(o, e1, e2, e3) ->
+    let accumulator2 = encode e3 accumulator in
+    let accumulator3 = encode e2 accumulator2 in
+    let accumulator4 = encode e1 accumulator3 in
+      "TernaryOp" :: ternaryOperatorName o :: accumulator4    
   | NAryOp(o, es, 0, []) ->
     let length = List.length es in
       "NAryOp":: (nAryOperatorName o) :: (string_of_int length) ::
@@ -122,6 +127,15 @@ and decode = function
         let e1, tail3 = decode tail2 in
         let e2, tail4 = decode tail3 in
         (BinaryOp((binaryOperatorByName o), e1, e2), tail4)
+      )
+      | _ -> raise DecodingUnderrunError
+    )
+    | "TernaryOp" -> (match tail with
+      | o :: tail2 -> (
+        let e1, tail3 = decode tail2 in
+        let e2, tail4 = decode tail3 in
+        let e3, tail5 = decode tail4 in
+        (TernaryOp((ternaryOperatorByName o), e1, e2, e3), tail5)
       )
       | _ -> raise DecodingUnderrunError
     )

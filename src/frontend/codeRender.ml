@@ -59,7 +59,12 @@ let rec renderExpression expression position specialCasingFunction = begin
       cloneElementFromTemplate ("binary_" ^ (binaryOperatorName o))
         |> recurse 0 e0
         |> recurse 1 e1
-    | NAryOp(o, es, 0, []) ->
+    | TernaryOp(o, e0, e1, e2) ->
+      cloneElementFromTemplate ("ternary_" ^ (ternaryOperatorName o))
+        |> recurse 0 e0
+        |> recurse 1 e1
+        |> recurse 2 e2
+| NAryOp(o, es, 0, []) ->
       let protoElement = cloneElementFromTemplate ("nary_" ^ (nAryOperatorName o)) in
       let container = protoElement |> Jquery.find ".container" in
       List.iteri (fun n e -> 

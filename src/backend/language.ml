@@ -28,6 +28,8 @@ type unaryOp =
   | Strlen
   | PairLeft
   | PairRight
+  | ArrayClone
+  | ArrayLen
 
 type binaryOp =
   | Add
@@ -41,6 +43,12 @@ type binaryOp =
   | Pair
   | Apply
   | GTEQ
+  | ArrayIndex
+  | Seq
+
+type ternaryOp =
+  | ArraySet
+  | ArraySlice
 
 type nAryOp =
   | ArrayForm
@@ -59,6 +67,7 @@ and expression =
   | Constant of constant
   | UnaryOp of unaryOp * expression
   | BinaryOp of binaryOp * expression * expression
+  | TernaryOp of ternaryOp * expression * expression * expression
   | NAryOp of nAryOp * expression list * int * value list
   | Let of string * expression * expression
   | Variable of string

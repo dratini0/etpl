@@ -26,6 +26,9 @@ let rec replaceSubtree_ tree position replacement positionBackup =
         | 0, UnaryOp(o, e0) -> UnaryOp(o, replaceSubtree_ e0 rest replacement positionBackup)
         | 0, BinaryOp(o, e0, e1) -> BinaryOp(o, replaceSubtree_ e0 rest replacement positionBackup, e1)
         | 1, BinaryOp(o, e0, e1) -> BinaryOp(o, e0, replaceSubtree_ e1 rest replacement positionBackup)
+        | 0, TernaryOp(o, e1, e2, e3) -> TernaryOp(o, replaceSubtree_ e1 rest replacement positionBackup, e2, e3)
+        | 1, TernaryOp(o, e1, e2, e3) -> TernaryOp(o, e1, replaceSubtree_ e2 rest replacement positionBackup, e3)
+        | 2, TernaryOp(o, e1, e2, e3) -> TernaryOp(o, e1, e2, replaceSubtree_ e3 rest replacement positionBackup)
         | _, NAryOp(o, es, 0, []) ->
           let taken, element, dropped = split_list head es [] positionBackup in
           let element_ = replaceSubtree_ element rest replacement positionBackup in
@@ -52,10 +55,13 @@ let rec getSubtree_ tree position positionBackup =
       | 0, Function(_, _, _, e0)
       | 0, Let(_, e0, _)
       | 0, BinaryOp(_, e0, _)
+      | 0, TernaryOp(_, e0, _, _)
       | 0, If(e0, _, _) -> getSubtree_ e0 rest positionBackup
       | 1, Let(_, _, e1)
       | 1, BinaryOp(_, _, e1)
+      | 1, TernaryOp(_, _, e1, _)
       | 1, If(_, e1, _) -> getSubtree_ e1 rest positionBackup
+      | 2, TernaryOp(_, _, _, e2)
       | 2, If(_, _, e2) -> getSubtree_ e2 rest positionBackup
       | _, NAryOp(_, es, 0, []) ->
         (try getSubtree_ (List.nth es head) rest positionBackup with
@@ -86,17 +92,18 @@ and firstHole_ tree accumulator = match tree with
     | None -> firstHole_ e1 (posPush accumulator 1))
   | NAryOp(_, es, 0, []) -> firstHoleNAry es accumulator 0
   | NAryOp _ -> raise IntermediateStateError
-  | If(condition, then_, else_) ->
-    let candidate1 = firstHole_ condition (posPush accumulator 0) in
+  | TernaryOp(_, e0, e1, e2)
+  | If(e0, e1, e2) ->
+    let candidate1 = firstHole_ e0 (posPush accumulator 0) in
     let candidate2 =
       if Option.is_some candidate1 then
         candidate1
       else
-        firstHole_ then_ (posPush accumulator 1) in
+        firstHole_ e1 (posPush accumulator 1) in
     if Option.is_some candidate2 then
       candidate2
     else
-      firstHole_ else_ (posPush accumulator 2)
+      firstHole_ e2 (posPush accumulator 2)
   | Hole -> Some(accumulator)
 
 let firstHole tree = firstHole_ tree emptyPosition
@@ -125,14 +132,17 @@ let rec nextHole_ tree position accumulator positionBackup =
         (match nextHole_ element rest (posPush accumulator head) positionBackup with
           | Some position -> Some position
           | None -> firstHoleNAry ess accumulator (head + 1))
-      | 0, If(condition, then_, else_) ->
-        let candidate1 = nextHole_ condition rest (posPush accumulator 0) positionBackup in
-        let candidate2 = if Option.is_some candidate1 then candidate1 else firstHole_ then_ (posPush accumulator 1) in
-        if Option.is_some candidate2 then candidate2 else firstHole_ else_ (posPush accumulator 2)
-      | 1, If(_, then_, else_) ->
-        let candidate1 = nextHole_ then_ rest (posPush accumulator 1) positionBackup in
-        if Option.is_some candidate1 then candidate1 else firstHole_ else_ (posPush accumulator 2)
-      | 2, If(_, _, else_) -> nextHole_ else_ rest (posPush accumulator 2) positionBackup
+      | 0, TernaryOp(_, e0, e1, e2)
+      | 0, If(e0, e1, e2) ->
+        let candidate1 = nextHole_ e0 rest (posPush accumulator 0) positionBackup in
+        let candidate2 = if Option.is_some candidate1 then candidate1 else firstHole_ e1 (posPush accumulator 1) in
+        if Option.is_some candidate2 then candidate2 else firstHole_ e2 (posPush accumulator 2)
+      | 1, TernaryOp(_, _, e1, e2)
+      | 1, If(_, e1, e2) ->
+        let candidate1 = nextHole_ e1 rest (posPush accumulator 1) positionBackup in
+        if Option.is_some candidate1 then candidate1 else firstHole_ e2 (posPush accumulator 2)
+      | 2, TernaryOp(_, _, _, e2)
+      | 2, If(_, _, e2) -> nextHole_ e2 rest (posPush accumulator 2) positionBackup
       | _, NAryOp _ -> raise IntermediateStateError
       | _, _ -> raise (UnknownPositionError positionBackup)
   )
@@ -163,10 +173,11 @@ let rec freeVariablesInternal bound acc = function
   | Function(Some recursiveName, argumentName, _, body) ->
       let bound2 = bound |> StringSet.add argumentName |> StringSet.add recursiveName in
       freeVariablesInternal bound2 acc body
-  | If(condition, then_, else_) ->
-      let acc2 = freeVariablesInternal bound acc condition in
-      let acc3 = freeVariablesInternal bound acc2 then_ in
-      freeVariablesInternal bound acc3 else_
+  | TernaryOp(_, e0, e1, e2)
+  | If(e0, e1, e2) ->
+      let acc2 = freeVariablesInternal bound acc e0 in
+      let acc3 = freeVariablesInternal bound acc2 e1 in
+      freeVariablesInternal bound acc3 e2
 
 let freeVariables = freeVariablesInternal StringSet.empty StringSet.empty
 
@@ -181,6 +192,8 @@ let rec renameVariableInternal pos from to_ e =
         UnaryOp(o, recurse 0 e0)
     | BinaryOp(o, e0, e1) ->
         BinaryOp(o, recurse 0 e0, recurse 1 e1)
+    | TernaryOp(o, e0, e1, e2) ->
+        TernaryOp(o, recurse 0 e0, recurse 1 e1, recurse 2 e2)
     | NAryOp(o, es, 0, []) ->
         NAryOp(o, List.mapi recurse es, 0, [])
     | NAryOp _ -> raise IntermediateStateError
@@ -203,7 +216,7 @@ let rec renameVariableInternal pos from to_ e =
         else
           e
     | Function(Some recursiveName, _, _, _) when recursiveName = from -> e
-    | Function(Some recursiveName, argumentName, _, body) when recursiveName = to_ or argumentName = to_ ->
+    | Function(Some recursiveName, argumentName, _, body) when recursiveName = to_ || argumentName = to_ ->
         if StringSet.mem from (freeVariables body) then
           raise_notrace (RefactorRenameShadowedError pos)
         else

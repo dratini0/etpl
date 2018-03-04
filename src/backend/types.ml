@@ -21,6 +21,8 @@ let insertableExpressions = [
   UnaryOp(StringOfNum, Hole);
   UnaryOp(NumOfString, Hole);
   UnaryOp(Strlen, Hole);
+  UnaryOp(ArrayClone, Hole);
+  UnaryOp(ArrayLen, Hole);
   BinaryOp(Add, Hole, Hole);
   BinaryOp(Sub, Hole, Hole);
   BinaryOp(Mul, Hole, Hole);
@@ -31,6 +33,10 @@ let insertableExpressions = [
   BinaryOp(Concat, Hole, Hole);
   BinaryOp(Pair, Hole, Hole);
   BinaryOp(GTEQ, Hole, Hole);
+  BinaryOp(ArrayIndex, Hole, Hole);
+  BinaryOp(Seq, Hole, Hole);
+  TernaryOp(ArraySet, Hole, Hole, Hole);
+  TernaryOp(ArraySlice, Hole, Hole, Hole);
   UnaryOp(PairLeft, Hole);
   UnaryOp(PairRight, Hole);
   NAryOp(ArrayForm, [Hole], 0, []);
@@ -179,6 +185,12 @@ let unaryOpConstraints substitutions = function
       let alpha, substitutions2 = newFreeVariable substitutions in
       let beta, substitutions3 = newFreeVariable substitutions2 in
       substitutions3, FTV beta, TPair(FTV alpha, FTV beta)
+  | ArrayClone ->
+      let alpha, substitutions2 = newFreeVariable substitutions in
+      substitutions2, TArray(FTV alpha), TArray(FTV alpha)
+  | ArrayLen ->
+      let alpha, substitutions2 = newFreeVariable substitutions in
+      substitutions2, TNumber, TArray(FTV alpha)
 
 (* Result: state, result, operand1, operand2 *)
 let binaryOpConstraints substitutions = function
@@ -200,6 +212,21 @@ let binaryOpConstraints substitutions = function
       let beta, substitutions3 = newFreeVariable substitutions2 in
       substitutions3, FTV beta, TFun(FTV alpha, FTV beta), FTV alpha
   | GTEQ -> substitutions, TBool, TNumber, TNumber
+  | ArrayIndex ->
+      let alpha, substitutions2 = newFreeVariable substitutions in
+      substitutions2, FTV alpha, TArray(FTV alpha), TNumber
+  | Seq ->
+      let alpha, substitutions2 = newFreeVariable substitutions in
+      substitutions2, FTV alpha, TUnit, FTV alpha
+
+(* Result: state, result, operand1, operand2, operand3 *)
+let ternaryOpConstraints substitutions = function
+  | ArraySet ->
+      let alpha, substitutions2 = newFreeVariable substitutions in
+      substitutions2, TUnit, TArray(FTV alpha), TNumber, FTV alpha
+  | ArraySlice ->
+      let alpha, substitutions2 = newFreeVariable substitutions in
+      substitutions2, TArray(FTV alpha), TArray(FTV alpha), TNumber, TNumber
 
 let nAryOpConstraints substitutions n = function
   | ArrayForm ->
@@ -227,6 +254,15 @@ let rec inferTypeInternal substitutions tExpected position holeMap variableMap g
       (match unifyInternal substitutions2 tExpected tReturn with
         | Some substitutions3 -> (match inferTypeInternal substitutions3 t1 (posPush position 0) holeMap variableMap gtvs e1 with
           | Some(substitutions4, holeMap2) -> inferTypeInternal substitutions4 t2 (posPush position 1) holeMap2 variableMap gtvs e2
+          | None -> None)
+        | None -> None)
+  | TernaryOp(o, e1, e2, e3) ->
+      let substitutions2, tReturn, t1, t2, t3 = ternaryOpConstraints substitutions o in
+      (match unifyInternal substitutions2 tExpected tReturn with
+        | Some substitutions3 -> (match inferTypeInternal substitutions3 t1 (posPush position 0) holeMap variableMap gtvs e1 with
+          | Some(substitutions4, holeMap2) -> (match inferTypeInternal substitutions4 t2 (posPush position 1) holeMap2 variableMap gtvs e2 with
+            | Some(substitutions5, holeMap3) -> inferTypeInternal substitutions5 t3 (posPush position 2) holeMap3 variableMap gtvs e3
+            | None -> None)
           | None -> None)
         | None -> None)
   | NAryOp(o, es, 0, []) -> 
