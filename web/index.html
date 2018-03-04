@@ -43,6 +43,7 @@
       <a href="#" id="cut_button" title="Cut"><i class="fa fa-cut" aria-hidden="true"></i></a>
       <a href="#" id="copy_button" title="Copy"><i class="fa fa-copy" aria-hidden="true"></i></a>
       <a href="#" id="clipboard_button" title="Clipboard"><i class="fa fa-clipboard" aria-hidden="true"></i></a>
+      <a href="#" id="file_button" title="File"><i class="fa fa-folder-open" aria-hidden="true"></i></a>
     </div>
     <div id="debugpanel" class="panel">
       <div>
@@ -235,6 +236,13 @@
       <p>The following would have been executed:</p>
       <div id="error_codebox" class="codebox"></div>
       <p><button id="error_close">Close</button></p>
+    </div>
+    <div id="about_modal" class="modal">
+      <h1>About</h1>
+      <iframe class="stretchy" src="license.txt" sandbox=""></iframe>
+      <p>
+        <button id="about_ok">OK</button>
+      </p>
     </div>
   </div>
   <div id="throbber_bg">

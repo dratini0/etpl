@@ -1,5 +1,5 @@
 (*
- * frontend.ml
+ * modalFile.mli
  * Copyright 2017-2018 Balint Kovacs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,16 +15,4 @@
  * limitations under the License.
  *)
 
-let () = begin
-  DomManipulation.init();
-  Programming.init();
-  PanelDebug.init();
-  PanelTemplate.init();
-  ModalGetNumber.init();
-  ModalGetText.init();
-  ModalGetLine.init();
-  ModalFile.init();
-  Zoom.init();
-  Logging.init();
-  DomManipulation.hideThrobber();
-end
+val init: unit -> unit

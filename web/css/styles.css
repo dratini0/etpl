@@ -292,6 +292,23 @@ a#copy_button {
     font-weight: bold;
 }
 
+/* About modal */
+#about_modal {
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+}
+
+#about_modal .stretchy {
+    flex: 1;
+}
+
+#about_modal iframe {
+    width: 100%;
+    height: 50%;
+    border: none;
+}
+
 /* Program elements */
 .codebox {
     font-size: 2em;

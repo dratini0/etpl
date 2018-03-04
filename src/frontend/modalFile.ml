@@ -1,5 +1,5 @@
 (*
- * frontend.ml
+ * modalFile.ml
  * Copyright 2017-2018 Balint Kovacs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,16 +15,12 @@
  * limitations under the License.
  *)
 
-let () = begin
-  DomManipulation.init();
-  Programming.init();
-  PanelDebug.init();
-  PanelTemplate.init();
-  ModalGetNumber.init();
-  ModalGetText.init();
-  ModalGetLine.init();
-  ModalFile.init();
-  Zoom.init();
-  Logging.init();
-  DomManipulation.hideThrobber();
+open JquerySafe
+open DomManipulation
+
+let init () = begin
+  jquery1 "#file_button"
+    |> doSimpleBind "click" (showModal "about_modal");
+  jquery1 "#about_ok"
+    |> doSimpleBind "click" hideModals;
 end
