@@ -47,6 +47,7 @@ let setMode mode = begin
   jqueryMaybe ".array_delete_active"
     |> Jquery.removeClass (`str "array_delete_active")
     |> ignore;
+  jqueryMaybe ".errormarker" |> Jquery.removeClass (`str "errormarker") |> ignore;
   (match mode with
     | ModeInsert -> ()
     | ModeCut
@@ -97,6 +98,25 @@ let copyButton () = begin
 end
 
 let addToClipboard expression = clipboard := expression::!clipboard
+
+let displayError message expression position = begin
+  jquery1 "#error_msg" |> Jquery.text message |> ignore;
+  jquery1 "#error_codebox"
+    |> Jquery.empty
+    |> Jquery.append_ (renderExpression expression None emptySpecialCasingFunction)
+    |> ignore;
+  jqueryPosition position |> Jquery.addClass (`str "errormarker") |> ignore;
+  showModal "error_modal" ();
+end
+
+let displayShadowedError name position =
+  let expression = getSubtree (getCurrentProgram ()) position in
+  let message = Printf.sprintf "%s would be shadowed by this definition:" name in
+  displayError message expression position
+
+let displayWouldShadowError position =
+  let expression = getSubtree (getCurrentProgram ()) position in
+  displayError "A variable of the same name would get shadowed" expression position
 
 let rec updateButtons () =
   let buttons = jquerySome "#keypad button" in
@@ -285,6 +305,63 @@ and arrayEditorSpecialCasingFunction pos element = begin
   element
 end
 
+and letVariableRenameSpecialCasingFunction pos name element = begin
+  element
+    |> Jquery.find ".name"
+    |> Jquery.eq 0
+    |> doSimpleBind "click" (fun () ->
+      resetMode ();
+      getLine "Rename variable" name (fun newName ->
+        let e = (getSubtree (getCurrentProgram()) pos) in
+        try
+          replaceSubtreeVisual pos (renameVariable pos 0 newName e);
+          enque (ERenameVariable{position=pos; index=0; newName=newName});
+        with
+          | RefactorRenameShadowedError errorPos -> displayShadowedError newName errorPos
+          | RefactorRenameWouldShadowError errorPos -> displayWouldShadowError errorPos
+      )
+    );
+  element
+end
+
+and functionVariableRenameSpecialCasingFunction pos recursiveName argumentName element = begin
+  element
+    |> Jquery.find ".argument_name"
+    |> Jquery.eq 0
+    |> doSimpleBind "click" (fun () ->
+      resetMode ();
+      getLine "Rename argument" argumentName (fun newName ->
+        let e = (getSubtree (getCurrentProgram()) pos) in
+        try
+          replaceSubtreeVisual pos (renameVariable pos 0 newName e);
+          enque (ERenameVariable{position=pos; index=1; newName=newName});
+        with
+          | RefactorRenameShadowedError errorPos -> displayShadowedError newName errorPos
+          | RefactorRenameWouldShadowError errorPos -> displayWouldShadowError errorPos
+      )
+    );
+  (match recursiveName with
+    | None -> ()
+    | Some recursiveName_ -> (
+      element
+        |> Jquery.find ".recursive_name_wrapper"
+        |> Jquery.eq 0
+        |> doSimpleBind "click" (fun () ->
+          resetMode ();
+          getLine "Rename recursive variable" recursiveName_ (fun newName ->
+            let e = (getSubtree (getCurrentProgram()) pos) in
+            try
+              replaceSubtreeVisual pos (renameVariable pos 1 newName e);
+              enque (ERenameVariable{position=pos; index=2; newName=newName});
+            with
+              | RefactorRenameShadowedError errorPos -> displayShadowedError newName errorPos
+              | RefactorRenameWouldShadowError errorPos -> displayWouldShadowError errorPos
+          )
+        );
+    )); 
+  element
+end
+
 and eventHandlerSpecialCasingFunction expression position element = match expression, position with
   | Hole, Some(pos) -> 
     element
@@ -293,6 +370,14 @@ and eventHandlerSpecialCasingFunction expression position element = match expres
     element
       |> copyCutControlSpecialCasingFunction pos
       |> arrayEditorSpecialCasingFunction pos
+  | Let(name, _, _), Some pos ->
+    element
+      |> copyCutControlSpecialCasingFunction pos
+      |> letVariableRenameSpecialCasingFunction pos name
+  | Function(recursiveName, argumentName, _, _), Some pos ->
+    element
+      |> copyCutControlSpecialCasingFunction pos
+      |> functionVariableRenameSpecialCasingFunction pos recursiveName argumentName
   | _, Some(pos) ->
     element
       |> copyCutControlSpecialCasingFunction pos 
@@ -300,7 +385,6 @@ and eventHandlerSpecialCasingFunction expression position element = match expres
 
 and replaceSubtreeVisual position expression = begin
   resetMode ();
-  jqueryMaybe ".errormarker" |> Jquery.removeClass (`str "errormarker") |> ignore;
   ignore (jqueryPosition position
     |> Jquery.parent
     |> Jquery.empty
@@ -365,13 +449,7 @@ let executeProgram() = begin
   with
     | Interpreter.RuntimeException (message, State expression, position) -> begin
         enque (ERuntimeException{message=message; expression=expression; location=position});
-        jquery1 "#error_msg" |> Jquery.text message |> ignore;
-        jquery1 "#error_codebox"
-          |> Jquery.empty
-          |> Jquery.append_ (renderExpression expression None emptySpecialCasingFunction)
-          |> ignore;
-        jqueryPosition position |> Jquery.addClass (`str "errormarker") |> ignore;
-        showModal "error_modal" ();
+        displayError message expression position;
       end
 end
 

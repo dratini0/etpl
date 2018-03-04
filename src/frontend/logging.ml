@@ -24,6 +24,7 @@ type runtimeExceptionRecord = {message: string; expression: expression; location
 type pageChangeRecord = {next: bool; newStart: int}
 type arrayAddRecord = {first: bool; position: position}
 type arrayDeleteRecord = {index: int; position: position}
+type renameVariableRecord = {position: position; index: int; newName: string}
 type logEvent =
   | ESignin of signinRecord
   | EState of stateRecord
@@ -38,6 +39,7 @@ type logEvent =
   | EPageChange of pageChangeRecord
   | EArrayAdd of arrayAddRecord
   | EArrayDelete of arrayDeleteRecord
+  | ERenameVariable of renameVariableRecord
 type logRecord = {timestamp: float; seq: int; event: logEvent}
 
 external makeAjaxConfig : 
@@ -208,12 +210,22 @@ let arrayAddCodec = let open JsonCodec in
 
 let arrayDeleteCodec = let open JsonCodec in
   wrap
-    (fun {index=i; position=p} -> ((), i, p))
+    (fun ({index=i; position=p}:arrayDeleteRecord) -> ((), i, p))
     (fun ((), i, p) -> {index=i; position=p})
     (object3
       (field "tagArrayDelete" null)
       (field "index" int)
       (field "position" positionCodec))    
+
+let renameVariableCodec = let open JsonCodec in
+  wrap
+    (fun {position=p; index=i; newName=n} -> ((), p, i, n))
+    (fun ((), p, i, n) -> {position=p; index=i; newName=n})
+    (object4
+      (field "tagRenameVariable" null)
+      (field "position" positionCodec)
+      (field "index" int)
+      (field "newName" string))
 
 let logEventCodec = let open JsonCodec in let open JsonCodec.Xor in
   wrap
@@ -230,7 +242,8 @@ let logEventCodec = let open JsonCodec in let open JsonCodec.Xor in
     | ERuntimeException x -> Right(Right(Right(Right(Right(Right(Right(Right(Right(Left(x))))))))))
     | EPageChange x -> Right(Right(Right(Right(Right(Right(Right(Right(Right(Right(Left(x)))))))))))
     | EArrayAdd x -> Right(Right(Right(Right(Right(Right(Right(Right(Right(Right(Right(Left(x))))))))))))
-    | EArrayDelete x -> Right(Right(Right(Right(Right(Right(Right(Right(Right(Right(Right(Right(x))))))))))))
+    | EArrayDelete x -> Right(Right(Right(Right(Right(Right(Right(Right(Right(Right(Right(Right(Left(x)))))))))))))
+    | ERenameVariable x -> Right(Right(Right(Right(Right(Right(Right(Right(Right(Right(Right(Right(Right(x)))))))))))))
     )
   (function
     | Left(x) -> ESignin x
@@ -245,7 +258,8 @@ let logEventCodec = let open JsonCodec in let open JsonCodec.Xor in
     | Right(Right(Right(Right(Right(Right(Right(Right(Right(Left(x)))))))))) -> ERuntimeException x
     | Right(Right(Right(Right(Right(Right(Right(Right(Right(Right(Left(x))))))))))) -> EPageChange x
     | Right(Right(Right(Right(Right(Right(Right(Right(Right(Right(Right(Left(x)))))))))))) -> EArrayAdd x
-    | Right(Right(Right(Right(Right(Right(Right(Right(Right(Right(Right(Right(x)))))))))))) -> EArrayDelete x
+    | Right(Right(Right(Right(Right(Right(Right(Right(Right(Right(Right(Right(Left(x))))))))))))) -> EArrayDelete x
+    | Right(Right(Right(Right(Right(Right(Right(Right(Right(Right(Right(Right(Right(x))))))))))))) -> ERenameVariable x
     )
   (xor signinCodec
   (xor stateCodec
@@ -258,7 +272,8 @@ let logEventCodec = let open JsonCodec in let open JsonCodec.Xor in
   (xor successfulExecutionCodec
   (xor runtimeExceptionCodec
   (xor pageChangeCodec
-  (xor arrayAddCodec arrayDeleteCodec))))))))))))
+  (xor arrayAddCodec
+  (xor arrayDeleteCodec renameVariableCodec)))))))))))))
 
 let logRecordCodec = let open JsonCodec in
   wrap

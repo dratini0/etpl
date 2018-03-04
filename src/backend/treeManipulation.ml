@@ -3,7 +3,11 @@ open Position
 
 type t = Language.expression
 
+module StringSet = Set.Make(String)
+
 exception UnknownPositionError of position
+exception RefactorRenameShadowedError of position
+exception RefactorRenameWouldShadowError of position
 
 let rec split_list n l acc positionBackup =
   match l with
@@ -134,3 +138,92 @@ let rec nextHole_ tree position accumulator positionBackup =
   )
 
 let nextHole tree position = nextHole_ tree position emptyPosition position
+
+let rec freeVariablesInternal bound acc = function
+  | Literal _
+  | Constant _
+  | Hole -> acc
+  | UnaryOp(_, e) -> freeVariablesInternal bound acc e
+  | BinaryOp(_, e0, e1) ->
+      let acc2 = freeVariablesInternal bound acc e0 in
+      freeVariablesInternal bound acc2 e1
+  | NAryOp(_, es, 0, []) ->
+      List.fold_left (freeVariablesInternal bound) acc es
+  | NAryOp _ -> raise IntermediateStateError
+  | Let(name, e0, e1) ->
+      let acc2 = freeVariablesInternal bound acc e0 in
+      freeVariablesInternal (StringSet.add name bound) acc2 e1
+  | Variable name ->
+      if StringSet.mem name bound then
+        acc
+      else
+        StringSet.add name acc
+  | Function(None, argumentName, _, body) ->
+      freeVariablesInternal (StringSet.add argumentName bound) acc body 
+  | Function(Some recursiveName, argumentName, _, body) ->
+      let bound2 = bound |> StringSet.add argumentName |> StringSet.add recursiveName in
+      freeVariablesInternal bound2 acc body
+  | If(condition, then_, else_) ->
+      let acc2 = freeVariablesInternal bound acc condition in
+      let acc3 = freeVariablesInternal bound acc2 then_ in
+      freeVariablesInternal bound acc3 else_
+
+let freeVariables = freeVariablesInternal StringSet.empty StringSet.empty
+
+let rec renameVariableInternal pos from to_ e =
+  let recurse index expression =
+    renameVariableInternal (posPush pos index) from to_ expression in
+  match e with
+    | Literal _
+    | Constant _
+    | Hole -> e
+    | UnaryOp(o, e0) ->
+        UnaryOp(o, recurse 0 e0)
+    | BinaryOp(o, e0, e1) ->
+        BinaryOp(o, recurse 0 e0, recurse 1 e1)
+    | NAryOp(o, es, 0, []) ->
+        NAryOp(o, List.mapi recurse es, 0, [])
+    | NAryOp _ -> raise IntermediateStateError
+    | Let(name, e0, e1) when name = from ->
+        Let(name, recurse 0 e0, e1)
+    | Let(name, e0, e1) when name = to_ ->
+        if StringSet.mem from (freeVariables e1) then
+          raise_notrace (RefactorRenameShadowedError pos)
+        else
+          Let(name, recurse 0 e0, e1)
+    | Let(name, e0, e1) ->
+        Let(name, recurse 0 e0, recurse 1 e1)
+    | Variable name when name = from -> Variable to_
+    | Variable name when name = to_ -> raise_notrace(RefactorRenameWouldShadowError pos)
+    | Variable _ -> e
+    | Function(_, argumentName, _, _) when argumentName = from -> e
+    | Function(None, argumentName, _, body) when argumentName = to_ ->
+        if StringSet.mem from (freeVariables body) then
+          raise_notrace (RefactorRenameShadowedError pos)
+        else
+          e
+    | Function(Some recursiveName, _, _, _) when recursiveName = from -> e
+    | Function(Some recursiveName, argumentName, _, body) when recursiveName = to_ or argumentName = to_ ->
+        if StringSet.mem from (freeVariables body) then
+          raise_notrace (RefactorRenameShadowedError pos)
+        else
+          e
+    | Function(recursiveName, argumentName, annot, body) ->
+        Function(recursiveName, argumentName, annot, recurse 0 body)
+    | If(condition, then_, else_) ->
+        If(recurse 0 condition, recurse 1 then_, recurse 2 else_)
+
+let renameVariable pos labelNumber newName expression = match labelNumber, expression with
+  | 0, Let(name, e0, e1) ->
+      Let(newName, e0, renameVariableInternal (posPush pos 1) name newName e1)
+  | 0, Function(recursiveName, argumentName, annot, body) ->
+      Function(recursiveName, newName, annot, renameVariableInternal (posPush pos 0) argumentName newName body)
+  | 1, Function(Some recursiveName, argumentName, annot, body) when recursiveName = argumentName ->
+      Function(Some newName, argumentName, annot, body)
+  | 1, Function(Some recursiveName, argumentName, annot, body) when newName = argumentName ->
+      if StringSet.mem recursiveName (freeVariables body) then
+        raise_notrace (RefactorRenameShadowedError pos)
+      else Function(Some newName, argumentName, annot, body)
+  | 1, Function(Some recursiveName, argumentName, annot, body) ->
+      Function(Some newName, argumentName, annot, renameVariableInternal (posPush pos 0) recursiveName newName body)
+  | _ -> raise (UnknownPositionError pos)

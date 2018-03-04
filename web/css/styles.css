@@ -336,6 +336,11 @@ a#copy_button {
     color: red;
 }
 
+.renamable {
+    color: inherit;
+    text-decoration: underline dotted;
+}
+
 /* Clipboard controls */
 .cut_control {
     background-color: #ff6666;
