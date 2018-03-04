@@ -61,6 +61,10 @@ let rec encode expression accumulator = match expression with
       let accumulator3 = encode then_ accumulator2 in
       let accumulator4 = encode condition accumulator3 in
       "If" :: accumulator4
+  | While(condition, body) ->
+      let accumulator2 = encode body accumulator in
+      let accumulator3 = encode condition accumulator2 in
+      "While" :: accumulator3
   | Hole -> "Hole" :: accumulator
 
 let serialize expression = String.concat separator (encode expression [])
@@ -170,6 +174,10 @@ and decode = function
         let then_, tail3 = decode tail2 in
         let else_, tail4 = decode tail3 in
         If(condition, then_, else_), tail4
+    | "While" ->
+        let condition, tail2 = decode tail in
+        let body, tail3 = decode tail2 in
+        While(condition, body), tail3
     | "Hole" -> (Hole, tail)
     | _ -> raise (UnknownNameException ("Token type " ^ tokenType)))
   | [] -> raise DecodingUnderrunError

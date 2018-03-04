@@ -41,6 +41,7 @@ let insertableExpressions = [
   UnaryOp(PairRight, Hole);
   NAryOp(ArrayForm, [Hole], 0, []);
   If(Hole, Hole, Hole);
+  While(Hole, Hole);
   Let("var", Hole, Hole);
   Function(None, "arg", None, Hole);
   Function(Some "_", "arg", None, Hole);
@@ -315,6 +316,12 @@ let rec inferTypeInternal substitutions tExpected position holeMap variableMap g
             (match inferTypeInternal substitutions2 tExpected (posPush position 1) holeMap2 variableMap gtvs then_ with
               | None -> None
               | Some(substitutions3, holeMap3) -> inferTypeInternal substitutions3 tExpected (posPush position 2) holeMap3 variableMap gtvs else_))
+  | While(condition, body) ->
+      (match unifyInternal substitutions tExpected TUnit with
+        | Some substitutions2 -> (match inferTypeInternal substitutions2 TBool (posPush position 0) holeMap variableMap gtvs condition with
+          | Some(substitutions3, holeMap2) -> inferTypeInternal substitutions3 TUnit (posPush position 1) holeMap2 variableMap gtvs body
+          | None -> None)
+        | None -> None)
   | Hole -> Some (substitutions, PosMap.add position (tExpected, variableMap, gtvs) holeMap)
 
 let inferTypeValue v = let _, t = literalConstraints emptySubstitutionList v in t

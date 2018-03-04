@@ -40,6 +40,8 @@ let rec replaceSubtree_ tree position replacement positionBackup =
         | 0, If(condition, then_, else_) -> If(replaceSubtree_ condition rest replacement positionBackup, then_, else_)
         | 1, If(condition, then_, else_) -> If(condition, replaceSubtree_ then_ rest replacement positionBackup, else_)
         | 2, If(condition, then_, else_) -> If(condition, then_, replaceSubtree_ else_ rest replacement positionBackup)
+        | 0, While(condition, body) -> While(replaceSubtree_ condition rest replacement positionBackup, body)
+        | 1, While(condition, body) -> While(condition, replaceSubtree_ body rest replacement positionBackup)
         | _, _ -> raise (UnknownPositionError positionBackup)
     )
 
@@ -56,11 +58,13 @@ let rec getSubtree_ tree position positionBackup =
       | 0, Let(_, e0, _)
       | 0, BinaryOp(_, e0, _)
       | 0, TernaryOp(_, e0, _, _)
-      | 0, If(e0, _, _) -> getSubtree_ e0 rest positionBackup
+      | 0, If(e0, _, _)
+      | 0, While(e0, _) -> getSubtree_ e0 rest positionBackup
       | 1, Let(_, _, e1)
       | 1, BinaryOp(_, _, e1)
       | 1, TernaryOp(_, _, e1, _)
-      | 1, If(_, e1, _) -> getSubtree_ e1 rest positionBackup
+      | 1, If(_, e1, _) 
+      | 1, While(_, e1) -> getSubtree_ e1 rest positionBackup
       | 2, TernaryOp(_, _, _, e2)
       | 2, If(_, _, e2) -> getSubtree_ e2 rest positionBackup
       | _, NAryOp(_, es, 0, []) ->
@@ -87,7 +91,8 @@ and firstHole_ tree accumulator = match tree with
   | UnaryOp(_, e0)
   | Function(_, _, _, e0) -> firstHole_ e0 (posPush accumulator 0)
   | Let(_, e0, e1)
-  | BinaryOp(_, e0, e1) -> (match firstHole_ e0 (posPush accumulator 0) with
+  | BinaryOp(_, e0, e1)
+  | While(e0, e1) -> (match firstHole_ e0 (posPush accumulator 0) with
     | Some result -> Some result
     | None -> firstHole_ e1 (posPush accumulator 1))
   | NAryOp(_, es, 0, []) -> firstHoleNAry es accumulator 0
@@ -120,13 +125,15 @@ let rec nextHole_ tree position accumulator positionBackup =
       | 0, UnaryOp(_, e0)
       | 0, Function(_, _, _, e0) -> nextHole_ e0 rest (posPush accumulator 0) positionBackup
       | 0, Let(_, e0, e1)
-      | 0, BinaryOp(_, e0, e1) -> (
+      | 0, BinaryOp(_, e0, e1)
+      | 0, While(e0, e1) -> (
         match nextHole_ e0 rest (posPush accumulator 0) positionBackup with
           | Some result -> Some result
           | None -> firstHole_ e1 (posPush accumulator 1)
       )
       | 1, Let(_, _, e1)
-      | 1, BinaryOp(_, _, e1) -> nextHole_ e1 rest (posPush accumulator 1) positionBackup
+      | 1, BinaryOp(_, _, e1)
+      | 1, While(_, e1) -> nextHole_ e1 rest (posPush accumulator 1) positionBackup
       | _, NAryOp(_, es, 0, []) ->
         let _, element, ess = split_list head es [] positionBackup in
         (match nextHole_ element rest (posPush accumulator head) positionBackup with
@@ -154,7 +161,8 @@ let rec freeVariablesInternal bound acc = function
   | Constant _
   | Hole -> acc
   | UnaryOp(_, e) -> freeVariablesInternal bound acc e
-  | BinaryOp(_, e0, e1) ->
+  | BinaryOp(_, e0, e1)
+  | While (e0, e1) ->
       let acc2 = freeVariablesInternal bound acc e0 in
       freeVariablesInternal bound acc2 e1
   | NAryOp(_, es, 0, []) ->
@@ -225,6 +233,8 @@ let rec renameVariableInternal pos from to_ e =
         Function(recursiveName, argumentName, annot, recurse 0 body)
     | If(condition, then_, else_) ->
         If(recurse 0 condition, recurse 1 then_, recurse 2 else_)
+    | While(e0, e1) ->
+        While(recurse 0 e0, recurse 1 e1)
 
 let renameVariable pos labelNumber newName expression = match labelNumber, expression with
   | 0, Let(name, e0, e1) ->

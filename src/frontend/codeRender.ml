@@ -64,7 +64,7 @@ let rec renderExpression expression position specialCasingFunction = begin
         |> recurse 0 e0
         |> recurse 1 e1
         |> recurse 2 e2
-| NAryOp(o, es, 0, []) ->
+    | NAryOp(o, es, 0, []) ->
       let protoElement = cloneElementFromTemplate ("nary_" ^ (nAryOperatorName o)) in
       let container = protoElement |> Jquery.find ".container" in
       List.iteri (fun n e -> 
@@ -115,6 +115,10 @@ let rec renderExpression expression position specialCasingFunction = begin
         |> recurse 0 condition
         |> recurse 1 then_
         |> recurse 2 else_
+    | While (condition, body) ->
+        cloneElementFromTemplate "other_While"
+          |> recurse 0 condition
+          |> recurse 1 body
     | Hole ->
       cloneElementFromTemplate "hole"
   ) in

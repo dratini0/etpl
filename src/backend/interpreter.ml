@@ -114,6 +114,8 @@ let rec nextStepInternal (State e as s) loc variables = match e with
         State else_
   | If(Literal condition, _, _) ->
       raise (RuntimeException(Printf.sprintf "Program is not well-typed: conditional used with argument of type %s" (condition |> inferTypeValue |> typeName), s, loc))
+  | While(condition, body) ->
+      State(If(condition, BinaryOp(Seq, body, e), Literal Unit))
   | If(condition, then_, else_) ->
       let State condition_ = nextStepInternal (State condition) (posPush loc 0) variables in
       State(If(condition_, then_, else_))

@@ -73,6 +73,7 @@ and expression =
   | Variable of string
   | Function of string option * string * etplType option * expression
   | If of expression * expression * expression
+  | While of expression * expression
   | Hole
 
 (* This will eventually hold mutable state *)
