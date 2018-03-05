@@ -1,0 +1,439 @@
+body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+    font-family: sans-serif;
+    font-size: 14px;
+}
+
+input, textarea, button {
+    font-size: inherit;
+}
+
+/* Main panel */
+#mainpanel {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
+
+#codebox {
+    box-sizing: border-box;
+    width: 100%;
+    height: 40%;
+    padding-right: 1.5em;
+    overflow-y: auto;
+}
+
+#keypad {
+    width: 100%;
+    height: 60%;
+}
+
+#keypad > * {
+    box-sizing: border-box;
+    width: 25%;
+    height: 25%;
+    float: left;
+    padding: .15em;
+}
+
+#keypad button {
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
+}
+
+/* Menu */
+#panelbuttons {
+    box-sizing: border-box;
+    position: absolute;
+    width: 3em;
+    height: 40%;
+    top: 0;
+    right: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    transition: right .5s;
+}
+
+#panelmeta.shown #panelbuttons {
+    right: 80%;
+}
+    
+#panelbuttons > a {
+    display: block;
+    color: initial;
+    font-size: 1.5em;
+    text-decoration: initial;
+    width: 100%;
+    height: 2em;
+    margin: 0.333333333333em 0;
+    background: yellow;
+    text-align: center;
+    line-height: 2em;
+}
+
+#panelbuttons > a.dev_only {
+    display: none;
+}
+
+body.dev #panelbuttons > a.dev_only {
+    display: block;
+}
+
+a#debugpanel_button { /* needs more specificity than the general rule */
+    background: darkgray;
+}
+
+a#cut_button {
+    background-color: lightcoral;
+}
+
+.cut_mode a#cut_button {
+    background-color: #ff3333;
+}
+
+.cut_mode.lock_mode a#cut_button {
+    background-color: red;
+}
+
+a#copy_button {
+    background-color: lightgreen;
+}
+
+.copy_mode a#copy_button {
+    background-color: seagreen;
+}
+
+.copy_mode.lock_mode a#copy_button {
+    background-color: green;
+}
+
+/* Panel system */
+.panel {
+    position: absolute;
+    box-sizing: border-box;
+    width: 80%;
+    right: -80%;
+    top: 0;
+    bottom: 0;
+    padding: 0.5em;
+    visibility: hidden;
+    transition: right .5s, visibility .5s;
+    background: white; /* will be overridden, hopefully */
+    overflow-y: auto;
+}
+
+.panel.shown {
+    right: 0;
+    visibility: visible;
+}
+
+#panelshade {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: black;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .5s;
+}
+
+#panelmeta.shown #panelshade {
+    opacity: 0.5;
+    pointer-events: all;
+}
+
+/* Debug panel */
+#debugpanel {
+    background: darkgray;
+    display: flex;
+    flex-direction: column;
+}
+
+#debugpanel > div {
+    margin: 0.5em 0;
+}
+
+#encodedview {
+    box-sizing: border-box;
+    width: 100%;
+}
+
+#logbox {
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
+}
+
+#logbox-parent {
+    flex: 1;
+}
+
+/* Modal system */
+.modal {
+    position: absolute;
+    box-sizing: border-box;
+    width: 80%;
+    height: 80%;
+    left: 10%;
+    bottom: -80%;
+    padding: 0.5em;
+    visibility: hidden;
+    transition: bottom .5s, visibility .5s;;
+    background: white;
+    overflow-y: auto;
+}
+
+.modal.shown {
+    bottom: 10%;
+    visibility: visible;
+}
+
+#modalshade {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: black;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .5s;
+}
+
+#modalmeta.shown #modalshade {
+    opacity: 0.5;
+    pointer-events: all;
+}
+
+/* Number input modal */
+#numberinput_modal {
+    text-align: center;
+    padding-top: 5%;
+}
+
+#numberinput_normal_flexbox {
+    display: flex;
+}
+
+#numberinput_normal_flexbox .stretchy {
+    width: 30%;
+    flex: 1;
+    display: inline-block;
+}
+
+#numberinput_normal_flexbox .stretchy input {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+#numberinput_error {
+    display: none;
+    color: red;
+}
+
+#numberinput_modal.error #numberinput_error {
+    display: block;
+}
+
+#numberinput_modal label {
+    white-space: nowrap;
+}
+
+/* Text input modal */
+#textinput_form {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+}
+
+#textinput_form .stretchy {
+    flex: 1;
+}
+
+#textinput_form textarea {
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+}
+
+/* Line input modal */
+#lineinput_form {
+    text-align: center;
+}
+
+#lineinput_field {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Error modal */
+#error_msg {
+    font-weight: bold;
+}
+
+/* Program elements */
+.codebox {
+    font-size: 2em;
+    padding: 0.1em;
+    padding-left: 0.7em;
+    text-indent: -0.6em;
+}
+
+.subcodebox {
+    display: inline-block;
+    vertical-align: text-top;
+}
+
+.codebox .subcodebox,
+#keypad button .button_liner .subcodebox {
+    margin-left: 0.6em;
+}
+
+#keypad button .button_liner{
+    display: inline-block;
+    text-align: left;
+    padding-left: 0.6em;
+    text-indent: -0.6em;
+}
+
+.hole,
+#templates .child0,
+#templates .child1,
+#templates .child2,
+#templates .child3,
+#templates .child4,
+#templates .name {
+    box-sizing: border-box;
+    width: 1em;
+    height: 1em;
+    background: salmon;
+    border: 1px dashed maroon;
+    display: inline-block;
+}
+
+.focus.hole {
+    background: goldenrod;
+    border-width: 2px;
+}
+
+.control {
+    display: none;
+    color: initial;
+    text-decoration: initial;
+    font-size: 0.5em;
+    width: 2em;
+    height: 2em;
+    text-align: center;
+    line-height: 2em;
+    text-indent: 0;
+}
+
+.errormarker {
+    color: red;
+}
+
+.renamable {
+    color: inherit;
+    text-decoration: underline dotted;
+}
+
+/* Clipboard controls */
+.cut_control {
+    background-color: #ff6666;
+}
+
+.copy_control {
+    background-color: seagreen;
+}
+
+#templates .control,
+.cut_mode #codebox .cut_control, .copy_mode #codebox .copy_control {
+    display: inline-block;
+}
+
+.clipboarditem {
+    font-size: 2em;
+    margin: 0.5em 0;
+}
+
+.clipboarditem a {
+    color: initial;
+    text-decoration: initial;
+}
+
+.clipboarditem .clip_delete {
+    display: inline-block;
+    background-color: red;
+    font-size: 0.5em;
+    width: 2em;
+    height: 2em;
+    text-align: center;
+    line-height: 2em;
+}
+
+.clipboarditem.invalid .clip_paste {
+    color: darkgray;
+    cursor: auto;
+}
+
+/* Array controls */
+body .array_add_top, body .array_add_bottom, body .array_delete {
+    display: inline-block;
+}
+
+#codebox.cut_mode .array_controls,
+#codebox.copy_mode .array_controls,
+button .array_controls,
+#clipboard .array_controls {
+    display: none;
+}
+
+.array_delete_active > .container > * > .array_delete_item {
+    display: inline-block;
+}
+
+.array_add_top, .array_add_bottom {
+    background-color: green;
+}
+
+.array_delete {
+    background-color: lightcoral;
+}
+
+.array_delete_active .array_delete {
+    background-color: red;
+}
+
+.array_delete_item {
+    background-color: red;
+}
+
+/* Throbber */
+#throbber_bg {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+}
+
+#throbber_helper {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+}
+
+#throbber {
+    box-sizing: border-box;
+    width: 2em;
+    height: 2em;
+    top: -1em;
+    left: -1em;
+    line-height: 2em;
+    font-size: 5em;
+    text-align: center;
+    position: relative;
+}
