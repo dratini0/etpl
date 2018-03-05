@@ -20,5 +20,6 @@
         "bucklescript-jquery",
         "infinite-jest",
         "json-codec"
-    ]
+    ],
+    "refmt": 3
 }

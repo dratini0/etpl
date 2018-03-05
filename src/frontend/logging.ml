@@ -337,7 +337,7 @@ let getToken success failure =
         | Js.Result.Error error -> failure error
     )
     ~error: (fun _ message httpMessage ->
-      match Js.Undefined.to_opt httpMessage with
+      match Js.Undefined.toOption httpMessage with
         | Some httpMessage -> failure (message ^ " " ^ httpMessage)
         | None -> failure message
     )
