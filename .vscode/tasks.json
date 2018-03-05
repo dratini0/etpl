@@ -16,6 +16,11 @@
             }
         },
         {
+            "label": "release",
+            "problemMatcher": [],
+            "group": "build",
+        },
+        {
             "label": "serve-require",
             "problemMatcher": []
         },

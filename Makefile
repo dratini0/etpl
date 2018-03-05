@@ -78,9 +78,17 @@ watch-test: revision
 build: build-bundle build-require
 all: npm build
 
+build/bundle.zip: build-bundle
+	zip build/bundle.zip build/bundle
+
+release: build/bundle.zip
+	cp -rT build/bundle ../etpl-pages/demo/$(shell git describe --dirty | tr -d "\n")
+	cp -T build/bundle.zip ../etpl-releases/$(shell git describe --dirty | tr -d "\n").zip
+
+
 clean:
 	$(BSB) -clean-world
 	rm -vrf lib build
 
-.PHONY: npm bucklescript prepare-bundle build-bundle watch-bundle serve-bundle prepare-require build-require watch-require serve-require test watch-test build all clean
+.PHONY: npm bucklescript prepare-bundle build-bundle watch-bundle serve-bundle prepare-require build-require watch-require serve-require test watch-test build all release clean
 .DEFAULT_GOAL := all
