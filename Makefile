@@ -79,7 +79,8 @@ build: build-bundle build-require
 all: npm build
 
 build/bundle.zip: build-bundle
-	cd build && rm bundle.zip && zip -r bundle.zip bundle
+	rm -f build/bundle.zip
+	cd build && zip -r bundle.zip bundle
 
 release: build/bundle.zip
 	cp -rT build/bundle ../etpl-pages/demo/$(shell git describe --dirty | tr -d "\n")
