@@ -22,4 +22,4 @@ val unify : SubstitutionList.t -> etplType -> etplType -> (SubstitutionList.t * 
 val inferTypeValue : value -> etplType
 val inferType : expression -> etplType option
 val fitsHole : expression -> position -> expression -> bool
-val whatFits : expression -> position -> expression list
+val whatFits : expression -> position -> (expression * string) list

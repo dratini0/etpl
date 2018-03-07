@@ -62,6 +62,18 @@ input, textarea, button {
     height: 100%;
 }
 
+#keypad button .button_text {
+    display: none;
+}
+
+#keypad.text_mode button .button_text {
+    display: inline;
+}
+
+#keypad.text_mode button .button_liner {
+    display: none;
+}
+
 /* Menu */
 #panelbuttons {
     box-sizing: border-box;

@@ -28,42 +28,42 @@ module IntSet = Set.Make(IntHelper)
 
 (* TODO: add some way of grouping these, because they will not always fit the screen *)
 let insertableExpressions = [
-  Literal(Number(0.));
-  Literal(String "");
-  Literal(Bool false);
-  Literal(Bool true);
-  Constant(Pi);
-  UnaryOp(Ln, Hole);
-  UnaryOp(Floor, Hole);
-  UnaryOp(StringOfNum, Hole);
-  UnaryOp(NumOfString, Hole);
-  UnaryOp(Strlen, Hole);
-  UnaryOp(ArrayClone, Hole);
-  UnaryOp(ArrayLen, Hole);
-  BinaryOp(Add, Hole, Hole);
-  BinaryOp(Sub, Hole, Hole);
-  BinaryOp(Mul, Hole, Hole);
-  BinaryOp(Div, Hole, Hole);
-  BinaryOp(SHead, Hole, Hole);
-  BinaryOp(STail, Hole, Hole);
-  BinaryOp(CharAt, Hole, Hole);
-  BinaryOp(Concat, Hole, Hole);
-  BinaryOp(Pair, Hole, Hole);
-  BinaryOp(GTEQ, Hole, Hole);
-  BinaryOp(ArrayIndex, Hole, Hole);
-  BinaryOp(Seq, Hole, Hole);
-  TernaryOp(ArraySet, Hole, Hole, Hole);
-  TernaryOp(ArraySlice, Hole, Hole, Hole);
-  UnaryOp(PairLeft, Hole);
-  UnaryOp(PairRight, Hole);
-  NAryOp(ArrayForm, [Hole], 0, []);
-  If(Hole, Hole, Hole);
-  While(Hole, Hole);
-  Let("var", Hole, Hole);
-  Function(None, "arg", None, Hole);
-  Function(Some "_", "arg", None, Hole);
-  BinaryOp(Apply, Hole, Hole);
-  Literal Unit;
+  Literal(Number(0.)), "Number";
+  Literal(String ""), "String";
+  Literal(Bool false), "False";
+  Literal(Bool true), "True";
+  Constant(Pi), {js|\u03C0|js};
+  UnaryOp(Ln, Hole), "Ln";
+  UnaryOp(Floor, Hole), "Floor";
+  UnaryOp(StringOfNum, Hole), "Number to string";
+  UnaryOp(NumOfString, Hole), "String to number";
+  UnaryOp(Strlen, Hole), "Strlen";
+  UnaryOp(ArrayClone, Hole), "Array clone";
+  UnaryOp(ArrayLen, Hole), "Array length";
+  BinaryOp(Add, Hole, Hole), "Add";
+  BinaryOp(Sub, Hole, Hole), "Subtract";
+  BinaryOp(Mul, Hole, Hole), "Multiply";
+  BinaryOp(Div, Hole, Hole), "Divide";
+  BinaryOp(SHead, Hole, Hole), "String head";
+  BinaryOp(STail, Hole, Hole), "String tail";
+  BinaryOp(CharAt, Hole, Hole), "Char at";
+  BinaryOp(Concat, Hole, Hole), "Concatenate";
+  BinaryOp(Pair, Hole, Hole), "Form pair";
+  BinaryOp(GTEQ, Hole, Hole), "Greater than or equal to";
+  BinaryOp(ArrayIndex, Hole, Hole), "Index Array";
+  BinaryOp(Seq, Hole, Hole), "Sequence";
+  TernaryOp(ArraySet, Hole, Hole, Hole), "Set element of array";
+  TernaryOp(ArraySlice, Hole, Hole, Hole), "Slice array";
+  UnaryOp(PairLeft, Hole), "Project left";
+  UnaryOp(PairRight, Hole), "Project right";
+  NAryOp(ArrayForm, [Hole], 0, []), "Form array";
+  If(Hole, Hole, Hole), "Conditional";
+  While(Hole, Hole), "While loop";
+  Let("var", Hole, Hole), "Declare local";
+  Function(None, "arg", None, Hole), "Function definition";
+  Function(Some "_", "arg", None, Hole), "Recursive function definition";
+  BinaryOp(Apply, Hole, Hole), "Function application";
+  Literal Unit, "Unit";
 ]
 
 let rec substituteFTV index substitute = function
@@ -363,7 +363,7 @@ let whatFits expression position =
   match inferTypeContinuable expression with 
     | Some(_, substitutions, holeMap) ->
         let tExpected, variableMap, gtvs = PosMap.find position holeMap in
-        let variableCandidates = StringMap.bindings variableMap |> List.map (fun (name, _) -> Variable name) in
+        let variableCandidates = StringMap.bindings variableMap |> List.map (fun (name, _) -> (Variable name, name)) in
         let candidates = insertableExpressions @ variableCandidates in
-        List.filter (fun expression -> inferTypeInternal substitutions tExpected position holeMap variableMap gtvs expression |> Option.is_some) candidates
+        List.filter (fun (expression, _) -> inferTypeInternal substitutions tExpected position holeMap variableMap gtvs expression |> Option.is_some) candidates
     | None -> []

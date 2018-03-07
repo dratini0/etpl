@@ -143,50 +143,54 @@ let rec updateButtons () =
                                     + buttonCount
                                     - (if renderPrevButton then 1 else 0) in
   let renderNextButton = possiblyRenderedSuggestions < suggestionCount in begin
-    ignore (buttons
+    buttons
       |> Jquery.attr (`kv ("disabled", "disabled"))
+      |> Jquery.removeAttr "title"
       |> Jquery.off "click"
       |> Jquery.find ".button_liner"
       |> Jquery.empty
-      );
+      |> ignore;
+    buttons
+      |> Jquery.find ".button_text"
+      |> Jquery.empty
+      |> ignore;
     let rec fillButtons index suggestions = (
+      let button = Jquery.eq index buttons in
       if index >= buttonCount then () else
       if renderPrevButton && index = prevPageButtonIndex then (
-        buttons
-          |> Jquery.eq index
+        button
           |> Jquery.removeAttr "disabled"
           |> doSimpleBind "click" prevPage;
-        buttons
-          |> Jquery.eq index
-          |> Jquery.find ".button_liner"
+        button
+          |> Jquery.find ".button_liner, .button_text"
           |> Jquery.append_ (cloneElementFromTemplate "label_prev")
           |> ignore;
         fillButtons (index + 1) suggestions
       ) else
       if renderNextButton && index = nextPageButtonIndex then (
-        buttons
-          |> Jquery.eq index
+        button
           |> Jquery.removeAttr "disabled"
           |> doSimpleBind "click" nextPage;
-        buttons
-          |> Jquery.eq index
-          |> Jquery.find ".button_liner"
+        button
+          |> Jquery.find ".button_liner, .button_text"
           |> Jquery.append_ (cloneElementFromTemplate "label_next")
           |> ignore;
         fillButtons (index + 1) suggestions
       ) else 
         match suggestions with
           | [] -> fillButtons (index + 1) []
-          | suggestion::otherSuggestions -> (
-            buttons
-              |> Jquery.eq index
+          | (suggestion, label)::otherSuggestions -> (
+            button
               |> Jquery.removeAttr "disabled"
-              |> doSimpleBind "click" (replaceCurrentHoleWrapper index suggestion)
-              |> ignore;
-            buttons
-              |> Jquery.eq index
+              |> doSimpleBind "click" (replaceCurrentHoleWrapper index suggestion);
+            button
+              |> Jquery.prop (`kv ("title", label))
               |> Jquery.find ".button_liner"
               |> Jquery.append_ (renderExpression suggestion None emptySpecialCasingFunction)
+              |> ignore;
+            button
+              |> Jquery.find ".button_text"
+              |> Jquery.text label
               |> ignore;
             fillButtons (index + 1) otherSuggestions
           )

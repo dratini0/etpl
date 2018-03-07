@@ -50,7 +50,7 @@ let inferButton () =
 let fillHoleButton () = match getCurrentHole() with
   | Some hole -> begin
       log "The following fragments fit in the hole:";
-      List.iter (fun fragment -> log (prettyPrintExpression fragment)) (whatFits (getCurrentProgram()) hole)
+      List.iter (fun (fragment, label) -> log ((prettyPrintExpression fragment) ^  label)) (whatFits (getCurrentProgram()) hole)
     end
   | None -> log "No hole to fill"
 

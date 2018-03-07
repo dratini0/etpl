@@ -1,5 +1,5 @@
 (*
- * frontend.ml
+ * textMode.ml
  * Copyright 2017-2018 Balint Kovacs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,17 +15,24 @@
  * limitations under the License.
  *)
 
-let () = begin
-  DomManipulation.init();
-  Programming.init();
-  PanelDebug.init();
-  PanelTemplate.init();
-  ModalGetNumber.init();
-  ModalGetText.init();
-  ModalGetLine.init();
-  ModalFile.init();
-  Zoom.init();
-  Logging.init();
-  TextMode.init();
-  DomManipulation.hideThrobber();
+open JquerySafe
+open DomManipulation
+
+let textMode = ref false
+
+let toggleTextMode () =
+  if !textMode then begin
+    jquery "#keypad"
+      |> Jquery.removeClass (`str "text_mode")
+      |> ignore;
+    textMode := false
+  end else begin
+    jquery "#keypad"
+      |> Jquery.addClass (`str "text_mode")
+      |> ignore;
+    textMode := true
+  end
+
+let init () = begin
+  jquery "#textmode_button" |> doSimpleBind "click" toggleTextMode;
 end
