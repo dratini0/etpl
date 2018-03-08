@@ -50,8 +50,9 @@ let insertableExpressions = [
   BinaryOp(Concat, Hole, Hole), "Concatenate";
   BinaryOp(Pair, Hole, Hole), "Form pair";
   BinaryOp(GTEQ, Hole, Hole), "Greater than or equal to";
-  BinaryOp(ArrayIndex, Hole, Hole), "Index Array";
+  BinaryOp(ArrayIndex, Hole, Hole), "Index array";
   BinaryOp(Seq, Hole, Hole), "Sequence";
+  BinaryOp(ArrayMake, Hole, Hole), "Make array";
   TernaryOp(ArraySet, Hole, Hole, Hole), "Set element of array";
   TernaryOp(ArraySlice, Hole, Hole, Hole), "Slice array";
   UnaryOp(PairLeft, Hole), "Project left";
@@ -236,6 +237,9 @@ let binaryOpConstraints substitutions = function
   | Seq ->
       let alpha, substitutions2 = newFreeVariable substitutions in
       substitutions2, FTV alpha, TUnit, FTV alpha
+  | ArrayMake ->
+      let alpha, substitutions2 = newFreeVariable substitutions in
+      substitutions2, TArray (FTV alpha), TNumber, FTV alpha
 
 (* Result: state, result, operand1, operand2, operand3 *)
 let ternaryOpConstraints substitutions = function

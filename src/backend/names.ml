@@ -55,6 +55,7 @@ let binaryOperatorName = function
   | GTEQ -> "GTEQ"
   | Seq -> "Seq"
   | ArrayIndex -> "ArrayIndex"
+  | ArrayMake -> "ArrayMake"
 
 let ternaryOperatorName = function
   | ArraySet -> "ArraySet"
@@ -128,6 +129,7 @@ let binaryOperatorByName = function
   | "Apply" -> Apply
   | "GTEQ" -> GTEQ
   | "Seq" -> Seq
+  | "ArrayMake" -> ArrayMake
   | name -> raise (UnknownNameException ("Binary operator " ^ name))
 
 let ternaryOperatorByName = function

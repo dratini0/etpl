@@ -60,6 +60,7 @@ let evalBinary s p o e1 e2 = match (o, e1, e2) with
   | (GTEQ, Number e1, Number e2) -> updateState s (Literal(Bool (e1 >= e2)))
   | (ArrayIndex, Array a, Number i) -> (try updateState s (Literal(Array.get a (int_of_float i))) with Invalid_argument "index out of bounds" -> raise (RuntimeException ("Index out of range for ArrayIndex", s, p)))
   | (Seq, _, _) -> updateState s (Literal e2)
+  | (ArrayMake, Number e1, _) -> updateState s (Literal(Array (Array.make (int_of_float e1) e2)))
   | (o, v1, v2) -> raise (RuntimeException(Printf.sprintf "Program is not well-typed: %s is not defined for an arguments of type %s and %s" (binaryOperatorName o) (v1 |> inferTypeValue |> typeName) (v2 |> inferTypeValue |> typeName), s, p))
 
 let evalTernary s p o e1 e2 e3 = match o, e1, e2, e3 with

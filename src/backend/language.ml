@@ -62,6 +62,7 @@ type binaryOp =
   | GTEQ
   | ArrayIndex
   | Seq
+  | ArrayMake
 
 type ternaryOp =
   | ArraySet
