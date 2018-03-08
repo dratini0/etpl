@@ -311,6 +311,16 @@ input.setting {
     box-sizing: border-box;
 }
 
+/* Result modal */
+#result {
+    -webkit-touch-callout: text;
+    -webkit-user-select: text;
+    -khtml-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
+}
+
 /* Error modal */
 #error_msg {
     font-weight: bold;
