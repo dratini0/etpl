@@ -315,12 +315,10 @@ and arrayEditorSpecialCasingFunction pos element = begin
     |> Jquery.eq 0
     |> Jquery.children
     |> Jquery.toArray
-    |> fun x -> Js.log x; x
     |> Array.iteri (fun i item -> (
       Jquery.jquery'' item
         |> Jquery.find ".array_delete_item"
         |> Jquery.eq 0
-        |> fun x -> Js.log x; x
         |> doSimpleBind "click" (handleArrayDeleteItem pos i)
         |> ignore
     ));

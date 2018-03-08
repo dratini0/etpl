@@ -129,6 +129,7 @@ let binaryOperatorByName = function
   | "Apply" -> Apply
   | "GTEQ" -> GTEQ
   | "Seq" -> Seq
+  | "ArrayIndex" -> ArrayIndex
   | "ArrayMake" -> ArrayMake
   | name -> raise (UnknownNameException ("Binary operator " ^ name))
 

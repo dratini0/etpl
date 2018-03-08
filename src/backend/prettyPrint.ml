@@ -35,7 +35,7 @@ let rec prettyPrintExpression e = match e with
   | BinaryOp(o, e1, e2) -> (binaryOperatorName o) ^ "(" ^ (prettyPrintExpression e1) ^ ", " ^ (prettyPrintExpression e2) ^ ")"
   | TernaryOp(o, e1, e2, e3) -> Printf.sprintf "%s(%s, %s, %s)" (ternaryOperatorName o) (prettyPrintExpression e1) (prettyPrintExpression e2) (prettyPrintExpression e3)
   | NAryOp(o, es, 0, []) -> (nAryOperatorName o) ^ "(" ^ (es |> List.map prettyPrintExpression |> String.concat ", ") ^ ")"
-  | NAryOp _ -> raise IntermediateStateError
+  | NAryOp _ -> "[Intermediate state]"
   | Let(name, e1, e2) -> "let " ^ name ^ " = (" ^ (prettyPrintExpression e1) ^ ") in (" ^ (prettyPrintExpression e2) ^ ")"
   | Variable name -> name
   | Function(None, argumentName, _, e) -> Printf.sprintf "fun %s -> (%s)" argumentName (prettyPrintExpression e) (* TODO: deal with annotations *)

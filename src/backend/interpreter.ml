@@ -67,7 +67,7 @@ let evalTernary s p o e1 e2 e3 = match o, e1, e2, e3 with
   | ArraySet, Array a, Number i, v -> (
     try
       Array.set a (int_of_float i) v;
-      updateState s (Literal e1)
+      updateState s (Literal Unit)
     with
       | Invalid_argument "index out of bounds" -> raise (RuntimeException ("Index out of range for ArraySet", s, p))
     )
@@ -91,6 +91,7 @@ let rec nextStepInternal (State e as s) loc variables = match e with
   | UnaryOp(o, e1) ->
       let State e1_ = nextStepInternal (State e1) (posPush loc 0) variables in
       State(UnaryOp(o, e1_))
+  | BinaryOp(Seq, Literal _, e2) -> nextStepInternal (State e2) loc variables
   | BinaryOp(o, Literal(e1), Literal(e2)) -> evalBinary s loc o e1 e2
   | BinaryOp(o, (Literal _ as e1), e2) ->
       let State e2_ = nextStepInternal (State e2) (posPush loc 1) variables in
