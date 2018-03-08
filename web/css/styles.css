@@ -201,6 +201,11 @@ a#copy_button {
     flex: 1;
 }
 
+/* File and settings panel */
+input.setting {
+    float: right;
+}
+
 /* Modal system */
 .modal {
     position: absolute;

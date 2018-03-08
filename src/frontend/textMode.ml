@@ -18,21 +18,17 @@
 open JquerySafe
 open DomManipulation
 
-let textMode = ref false
-
 let toggleTextMode () =
-  if !textMode then begin
-    jquery "#keypad"
-      |> Jquery.removeClass (`str "text_mode")
-      |> ignore;
-    textMode := false
-  end else begin
+  if jquery "#textmode_check" |> Jquery.is ":checked" then begin
     jquery "#keypad"
       |> Jquery.addClass (`str "text_mode")
       |> ignore;
-    textMode := true
+  end else begin
+    jquery "#keypad"
+      |> Jquery.removeClass (`str "text_mode")
+      |> ignore;
   end
 
 let init () = begin
-  jquery "#textmode_button" |> doSimpleBind "click" toggleTextMode;
+  jquery "#textmode_check" |> doSimpleBind "change" toggleTextMode;
 end
