@@ -148,6 +148,22 @@
       <h1>Clipboard</h1>
       <div id="clipboard"></div>
     </div>
+    <div id="filepanel" class="panel">
+      <h1>Input</h1>
+      <p>
+        The file you select here will be presented to your program in the
+        variable input, as an array of lines, where each line is an array of
+        space-separated fields.
+      </p>
+      <p>
+        <input type="file" id="inputfile" />
+        <span id="file_spinner" title="Loading" style="display: none"><i class="fa fa-spinner fa-pulse"></i></span>
+        <span id="file_ok" title="Done" style="display: none"><i class="fa fa-check"></i></span>
+        <span id="file_error" title="Error" style="display: none"><i class="fa fa-times"></i></span>
+      </p>
+      <p id="file_linecount_paragraph" style="display: none"><span id="file_linecount"></span> line(s) loaded.</p>
+      <p><a href="#" id="about_button">About</a></p>
+    </div>
   </div>
   <div id="modalmeta">
     <div id="modalshade"></div>

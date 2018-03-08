@@ -24,6 +24,7 @@ open DomManipulation
 open ModalGetNumber
 open ModalGetText
 open ModalGetLine
+open PanelFile
 open Logging
 
 open JquerySafe
@@ -232,7 +233,7 @@ and setCurrentHole hole =
       | None -> ());
     currentHole := hole;
     (match hole with
-      | Some hole -> setSuggestions (whatFits !currentProgram hole) 
+      | Some hole -> setSuggestions (whatFits ~vars:(StringMap.singleton "input" inputFileType) !currentProgram hole) 
       | None -> setSuggestions [];
     )
   end
@@ -458,7 +459,7 @@ end
 let executeProgram() = begin
   logState();
   try
-    let result = Interpreter.evaluate !currentProgram in
+    let result = Interpreter.evaluate ~vars:(StringMap.singleton "input" !inputFile) !currentProgram in
     enque (ESuccessfulExecution {result=Literal(result)});
     ignore (jquery "#result"
       |> Jquery.empty
@@ -489,7 +490,7 @@ let clipboardPasteHandler expression = fun [@bs.this] node _ -> begin
   (match getCurrentHole() with
     | None -> ()
     | Some hole ->
-        if fitsHole !currentProgram hole expression then begin
+        if fitsHole ~vars:(StringMap.singleton "input" inputFileType) !currentProgram hole expression then begin
           replaceCurrentHole expression;
           hidePanels();
         end);
@@ -510,7 +511,7 @@ let showClipboard () =
         |> Jquery.on "click" clipboardDeleteHandler
         |> ignore;
       if match getCurrentHole() with
-        | Some hole -> fitsHole !currentProgram hole expression
+        | Some hole -> fitsHole ~vars:(StringMap.singleton "input" inputFileType) !currentProgram hole expression
         | None -> false
       then begin
         item

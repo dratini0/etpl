@@ -22,8 +22,6 @@ open Types
 
 exception RuntimeException of string * state * position
 
-module StringMap = Map.Make(String)
-
 (* I promise that this wil make sense once we have mutable state *)
 let updateState (State(_)) e = State(e)
 
@@ -138,12 +136,12 @@ let rec nextStepInternal (State e as s) loc variables = match e with
       State(If(condition_, then_, else_))
   | Hole -> raise(RuntimeException ("Programs with holes in them can't be executed.", s, loc))
 
-let nextStep s = nextStepInternal s emptyPosition StringMap.empty
+let nextStep ?vars:(variables=StringMap.empty) s = nextStepInternal s emptyPosition variables
 
-let rec evaluateLoop s = match s with
+let rec evaluateLoop ?vars:(variables=StringMap.empty) s = match s with
   | State(Literal v) -> v
-  | _ -> evaluateLoop (nextStep s)
+  | _ -> evaluateLoop ~vars:variables (nextStep ~vars:variables s)
 
 
-let evaluate e = evaluateLoop (State e)
+let evaluate ?vars:(variables=StringMap.empty) e = evaluateLoop ~vars:variables (State e)
 

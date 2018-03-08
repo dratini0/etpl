@@ -20,10 +20,10 @@ let () = begin
   Programming.init();
   PanelDebug.init();
   PanelTemplate.init();
+  PanelFile.init();
   ModalGetNumber.init();
   ModalGetText.init();
   ModalGetLine.init();
-  ModalFile.init();
   Zoom.init();
   Logging.init();
   TextMode.init();

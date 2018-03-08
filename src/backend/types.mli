@@ -20,6 +20,6 @@ open Position
 
 val unify : SubstitutionList.t -> etplType -> etplType -> (SubstitutionList.t * etplType) option
 val inferTypeValue : value -> etplType
-val inferType : expression -> etplType option
-val fitsHole : expression -> position -> expression -> bool
-val whatFits : expression -> position -> (expression * string) list
+val inferType : ?vars:etplType StringMap.t -> expression -> etplType option
+val fitsHole : ?vars:etplType StringMap.t -> expression -> position -> expression -> bool
+val whatFits : ?vars:etplType StringMap.t -> expression -> position -> (expression * string) list

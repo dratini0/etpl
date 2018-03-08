@@ -1,5 +1,5 @@
 (*
- * modalFile.ml
+ * panelFile.mli
  * Copyright 2017-2018 Balint Kovacs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,12 +15,8 @@
  * limitations under the License.
  *)
 
-open JquerySafe
-open DomManipulation
+open Language
 
-let init () = begin
-  jquery1 "#file_button"
-    |> doSimpleBind "click" (showModal "about_modal");
-  jquery1 "#about_ok"
-    |> doSimpleBind "click" hideModals;
-end
+val inputFile: value ref
+val inputFileType: etplType
+val init: unit -> unit

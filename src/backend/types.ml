@@ -343,24 +343,24 @@ let rec inferTypeInternal substitutions tExpected position holeMap variableMap g
 
 let inferTypeValue v = let _, t = literalConstraints emptySubstitutionList v in t
 
-let inferTypeContinuable e =
+let inferTypeContinuable ?vars:(variables=StringMap.empty) e =
   let alpha, substitutions = newFreeVariable emptySubstitutionList in
-  match inferTypeInternal substitutions (FTV alpha) emptyPosition PosMap.empty StringMap.empty IntSet.empty e with
+  match inferTypeInternal substitutions (FTV alpha) emptyPosition PosMap.empty variables IntSet.empty e with
     | Some (substitutions2, holeMap) -> Some (applySubstitutions substitutions2 (FTV alpha), substitutions2, holeMap)
     | None -> None
 
-let inferType e =
-  match inferTypeContinuable e with
+let inferType ?vars:(variables=StringMap.empty) e =
+  match inferTypeContinuable ~vars:variables e with
     | Some(t, _, _) -> Some t
     | None -> None
 
-let fitsHole expression position subExpression =
+let fitsHole ?vars:(variables=StringMap.empty) expression position subExpression =
   replaceSubtree expression position subExpression
-  |> inferType
+  |> inferType ~vars:variables
   |> Option.is_some
 
-let whatFits expression position =
-  match inferTypeContinuable expression with 
+let whatFits ?vars:(variables=StringMap.empty) expression position =
+  match inferTypeContinuable ~vars:variables expression with 
     | Some(_, substitutions, holeMap) ->
         let tExpected, variableMap, gtvs = PosMap.find position holeMap in
         let variableCandidates = StringMap.bindings variableMap |> List.map (fun (name, _) -> (Variable name, name)) in

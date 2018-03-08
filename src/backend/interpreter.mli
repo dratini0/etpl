@@ -19,6 +19,6 @@ open Language
 open Position
 
 exception RuntimeException of string * state *  position
-val nextStep: state -> state
-val evaluateLoop: state -> value
-val evaluate: expression -> value
+val nextStep: ?vars: value StringMap.t -> state -> state
+val evaluateLoop: ?vars: value StringMap.t -> state -> value
+val evaluate: ?vars: value StringMap.t -> expression -> value
