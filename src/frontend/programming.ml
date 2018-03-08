@@ -457,6 +457,7 @@ let setCurrentProgram expression = begin
 end
 
 let executeProgram() = begin
+  hidePanels();
   logState();
   try
     let result = Interpreter.evaluate ~vars:(StringMap.singleton "input" !inputFile) !currentProgram in
@@ -531,6 +532,7 @@ let showClipboard () =
 let init () = begin
   redraw ();
   jquery "#codebox" |> doSimpleBind "dblclick" executeProgram;
+  jquery "#execute_button" |> doSimpleBind "click" executeProgram;
   jquery "#result_close" |> doSimpleBind "click" hideModals;
   jquery "#error_close" |> doSimpleBind "click" hideModals;
   jquery "#cut_button" |> doSimpleBind "click" cutButton;
