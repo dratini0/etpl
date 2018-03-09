@@ -81,7 +81,7 @@ external userAgent: string = "" [@@bs.val] [@@bs.scope "navigator"]
 external innerWidth: float = "" [@@bs.val] [@@bs.scope "window"]
 external innerHeight: float = "" [@@bs.val] [@@bs.scope "window"]
 
-let api = "http://bk372.user.srcf.net/etplLog"
+let api = "https://bk372.user.srcf.net/etplLog"
 let timeout = 10000.
 let cooldown = 10000.
 
