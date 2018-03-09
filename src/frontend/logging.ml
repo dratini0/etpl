@@ -42,6 +42,7 @@ type pageChangeRecord = {next: bool; newStart: int}
 type arrayAddRecord = {first: bool; position: position}
 type arrayDeleteRecord = {index: int; position: position}
 type renameVariableRecord = {position: position; index: int; newName: string}
+type loadProgramRecord = {expression: expression; wellTyped: bool}
 type logEvent =
   | ESignin of signinRecord
   | EState of stateRecord
@@ -57,6 +58,7 @@ type logEvent =
   | EArrayAdd of arrayAddRecord
   | EArrayDelete of arrayDeleteRecord
   | ERenameVariable of renameVariableRecord
+  | ELoadProgram of loadProgramRecord
 type logRecord = {timestamp: float; seq: int; event: logEvent}
 
 external makeAjaxConfig : 
@@ -244,6 +246,15 @@ let renameVariableCodec = let open JsonCodec in
       (field "index" int)
       (field "newName" string))
 
+let loadProgramCodec = let open JsonCodec in
+  wrap
+    (fun {expression=e; wellTyped=w} -> ((), e, w))
+    (fun ((), e, w) -> {expression=e; wellTyped=w})
+    (object3
+      (field "tagLoadProgram" null)
+      (field "expression" expressionCodec)
+      (field "wellTyped" bool))    
+
 let logEventCodec = let open JsonCodec in let open JsonCodec.Xor in
   wrap
   (function
@@ -260,7 +271,8 @@ let logEventCodec = let open JsonCodec in let open JsonCodec.Xor in
     | EPageChange x -> Right(Right(Right(Right(Right(Right(Right(Right(Right(Right(Left(x)))))))))))
     | EArrayAdd x -> Right(Right(Right(Right(Right(Right(Right(Right(Right(Right(Right(Left(x))))))))))))
     | EArrayDelete x -> Right(Right(Right(Right(Right(Right(Right(Right(Right(Right(Right(Right(Left(x)))))))))))))
-    | ERenameVariable x -> Right(Right(Right(Right(Right(Right(Right(Right(Right(Right(Right(Right(Right(x)))))))))))))
+    | ERenameVariable x -> Right(Right(Right(Right(Right(Right(Right(Right(Right(Right(Right(Right(Right(Left(x))))))))))))))
+    | ELoadProgram x -> Right(Right(Right(Right(Right(Right(Right(Right(Right(Right(Right(Right(Right(Right(x))))))))))))))
     )
   (function
     | Left(x) -> ESignin x
@@ -276,7 +288,8 @@ let logEventCodec = let open JsonCodec in let open JsonCodec.Xor in
     | Right(Right(Right(Right(Right(Right(Right(Right(Right(Right(Left(x))))))))))) -> EPageChange x
     | Right(Right(Right(Right(Right(Right(Right(Right(Right(Right(Right(Left(x)))))))))))) -> EArrayAdd x
     | Right(Right(Right(Right(Right(Right(Right(Right(Right(Right(Right(Right(Left(x))))))))))))) -> EArrayDelete x
-    | Right(Right(Right(Right(Right(Right(Right(Right(Right(Right(Right(Right(Right(x))))))))))))) -> ERenameVariable x
+    | Right(Right(Right(Right(Right(Right(Right(Right(Right(Right(Right(Right(Right(Left(x)))))))))))))) -> ERenameVariable x
+    | Right(Right(Right(Right(Right(Right(Right(Right(Right(Right(Right(Right(Right(Right(x)))))))))))))) -> ELoadProgram x
     )
   (xor signinCodec
   (xor stateCodec
@@ -290,7 +303,8 @@ let logEventCodec = let open JsonCodec in let open JsonCodec.Xor in
   (xor runtimeExceptionCodec
   (xor pageChangeCodec
   (xor arrayAddCodec
-  (xor arrayDeleteCodec renameVariableCodec)))))))))))))
+  (xor arrayDeleteCodec
+  (xor renameVariableCodec loadProgramCodec))))))))))))))
 
 let logRecordCodec = let open JsonCodec in
   wrap

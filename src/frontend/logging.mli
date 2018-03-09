@@ -32,6 +32,7 @@ type pageChangeRecord = {next: bool; newStart: int}
 type arrayAddRecord = {first: bool; position: position}
 type arrayDeleteRecord = {index: int; position: position}
 type renameVariableRecord = {position: position; index: int; newName: string}
+type loadProgramRecord = {expression: expression; wellTyped: bool}
 type logEvent =
   | ESignin of signinRecord
   | EState of stateRecord
@@ -47,6 +48,7 @@ type logEvent =
   | EArrayAdd of arrayAddRecord
   | EArrayDelete of arrayDeleteRecord
   | ERenameVariable of renameVariableRecord
+  | ELoadProgram of loadProgramRecord
 
 val enque: logEvent -> unit
 val logState: unit -> unit

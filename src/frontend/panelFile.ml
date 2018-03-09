@@ -22,6 +22,7 @@ open Language
 open Serialize
 open Types
 open Programming
+open Logging
 
 include PanelFileState
 open PanelFileState.Private
@@ -88,8 +89,13 @@ let loadProgramSuccess string = begin
   try (
     let expression = deserialize string in
     match inferType ~vars:(StringMap.singleton "input" inputFileType) expression with
-      | None -> false
-      | Some _ -> setCurrentProgram expression; true
+      | None -> 
+          enque (ELoadProgram{expression=expression; wellTyped=false});
+          false
+      | Some _ ->
+          setCurrentProgram expression;
+          enque (ELoadProgram{expression=expression; wellTyped=true});
+          true
   ) with
     | _ -> false
 end
