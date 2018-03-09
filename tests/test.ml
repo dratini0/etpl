@@ -27,6 +27,7 @@ open TreeManipulation
 open Types
 open Names
 open SubstitutionList
+open Revision
 
 let (>>=) = Option.bind
 
@@ -346,14 +347,14 @@ let prettyPrintTests =
 let serializeTests =
   describe "Serialize" (fun () -> interpreterTestCasesAll |> List.map (fun (tree, serialized, pretty, _) ->
     test pretty (fun() ->
-      serialize tree |> Expect.toEqual serialized)
+      serialize tree |> Expect.toEqual (gitRevision ^ "," ^ serialized))
     )
   )
 
 let deserializeTests =
   describe "Deserialize" (fun () -> interpreterTestCasesAll |> List.map (fun (tree, serialized, pretty, _) ->
     test pretty (fun() ->
-      deserialize serialized |> Expect.toEqual tree)
+      deserialize (gitRevision ^ "," ^ serialized) |> Expect.toEqual tree)
     )
   )
 

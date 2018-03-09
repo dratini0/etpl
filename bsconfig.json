@@ -12,6 +12,7 @@
         }
     ],
     "package-specs": [
+        "commonjs",
         "es6"
     ],
     "bs-dependencies": [

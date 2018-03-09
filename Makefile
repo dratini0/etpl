@@ -35,7 +35,8 @@ serve: revision
 	$(WEBPACK-DEV-SERVER) --config webpack.config.dev.js & \
 	$(BSB) -make-world -w
 
-test: bucklescript
+test:
+	$(BSB) -make-world
 	node_modules/infinite-jest/node_modules/.bin/jest
 
 buildtest:
