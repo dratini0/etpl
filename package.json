@@ -4,6 +4,7 @@
     "bs-platform": "^2.2.2",
     "bucklescript-jquery": "git://github.com/dratini0/bucklescript-jquery",
     "chokidar-cli": "^1.2.0",
+    "file-saver": "^1.3.3",
     "infinite-jest": "git://github.com/glennsl/infinite-jest",
     "jquery": "^3.3.1",
     "json-codec": "git://github.com/dratini0/JsonCodec",

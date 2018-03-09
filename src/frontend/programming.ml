@@ -24,7 +24,7 @@ open DomManipulation
 open ModalGetNumber
 open ModalGetText
 open ModalGetLine
-open PanelFile
+open PanelFileState
 open Logging
 
 open JquerySafe
@@ -458,7 +458,7 @@ let executeProgram() = begin
   hidePanels();
   logState();
   try
-    let result = Interpreter.evaluate ~vars:(StringMap.singleton "input" !inputFile) !currentProgram in
+    let result = Interpreter.evaluate ~vars:(StringMap.singleton "input" (getInputFile ())) !currentProgram in
     enque (ESuccessfulExecution {result=Literal(result)});
     ignore (jquery "#result"
       |> Jquery.empty

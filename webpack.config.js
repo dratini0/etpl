@@ -25,4 +25,9 @@ module.exports = {
         sourceMapFilename: 'bundle.js.map',
     },
     devtool: "source-map",
+    resolve: {
+        alias: {
+            "FileSaver": path.resolve(__dirname, "node_modules/file-saver/FileSaver.js")
+        },
+    },
 };

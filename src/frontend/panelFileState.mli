@@ -1,5 +1,5 @@
 (*
- * panelFile.mli
+ * panelFileState.mli
  * Copyright 2017-2018 Balint Kovacs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,6 +17,9 @@
 
 open Language
 
+module Private: sig
+  val inputFile: value ref
+end
+
 val getInputFile: unit -> value
 val inputFileType: etplType
-val init: unit -> unit

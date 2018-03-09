@@ -209,7 +209,7 @@ a#copy_button {
 }
 
 /* File and settings panel */
-input.setting {
+.setting {
     float: right;
 }
 

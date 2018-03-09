@@ -17,6 +17,7 @@
 
 open Language
 open Names
+open Revision
 
 exception DecodingUnderrunError
 
@@ -84,7 +85,7 @@ let rec encode expression accumulator = match expression with
       "While" :: accumulator3
   | Hole -> "Hole" :: accumulator
 
-let serialize expression = String.concat separator (encode expression [])
+let serialize expression = String.concat separator (gitRevision::(encode expression []))
 
 let decodeStringPayload = function
   | lengthIndicator :: rest ->
@@ -200,5 +201,6 @@ and decode = function
   | [] -> raise DecodingUnderrunError
 
 let deserialize code =
-  let e, _ = decode (BatString.nsplit ~by:separator code) in
-    e
+  match BatString.nsplit ~by:separator code with
+    | [] -> raise DecodingUnderrunError
+    | _ :: encoded -> fst (decode encoded)

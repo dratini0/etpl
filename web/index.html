@@ -149,6 +149,19 @@
       <div id="clipboard"></div>
     </div>
     <div id="filepanel" class="panel">
+      <h1>Program</h1>
+      <p>
+        <label>
+          Load:
+          <span class="setting">
+            <input type="file" id="load_program" />
+            <span id="program_spinner" title="Loading" style="display: none"><i class="fa fa-spinner fa-pulse"></i></span>
+            <span id="program_ok" title="Done" style="display: none"><i class="fa fa-check"></i></span>
+            <span id="program_error" title="Error" style="display: none"><i class="fa fa-times"></i></span>
+          </span>
+        </label>
+      </p>
+      <p>Save:<button id="save_program" class="setting">Save to file</button></p>
       <h1>Input</h1>
       <p>
         The file you select here will be presented to your program in the
@@ -156,7 +169,7 @@
         space-separated fields.
       </p>
       <p>
-        <input type="file" id="inputfile" />
+        <input type="file" id="load_file" />
         <span id="file_spinner" title="Loading" style="display: none"><i class="fa fa-spinner fa-pulse"></i></span>
         <span id="file_ok" title="Done" style="display: none"><i class="fa fa-check"></i></span>
         <span id="file_error" title="Error" style="display: none"><i class="fa fa-times"></i></span>
