@@ -24,6 +24,7 @@ open DomManipulation
 open ModalGetNumber
 open ModalGetText
 open ModalGetLine
+open ModalResult
 open PanelFileState
 open Logging
 
@@ -460,13 +461,7 @@ let executeProgram() = begin
   try
     let result = Interpreter.evaluate ~vars:(StringMap.singleton "input" (getInputFile ())) !currentProgram in
     enque (ESuccessfulExecution {result=Literal(result)});
-    ignore (jquery "#result"
-      |> Jquery.empty
-      |> Jquery.append_ (renderValue result));
-    showModal "result_modal" ();
-    ignore(Js.Global.setTimeout (fun () ->
-      ignore (jquery "#result_close" |> Jquery.focus);
-    ) 500);
+    showResult result;
   with
     | Interpreter.RuntimeException (message, State expression, position) -> begin
         enque (ERuntimeException{message=message; expression=expression; location=position});
@@ -531,7 +526,6 @@ let init () = begin
   redraw ();
   jquery "#codebox" |> doSimpleBind "dblclick" executeProgram;
   jquery "#execute_button" |> doSimpleBind "click" executeProgram;
-  jquery "#result_close" |> doSimpleBind "click" hideModals;
   jquery "#error_close" |> doSimpleBind "click" hideModals;
   jquery "#cut_button" |> doSimpleBind "click" cutButton;
   jquery "#copy_button" |> doSimpleBind "click" copyButton;
