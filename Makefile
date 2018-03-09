@@ -80,7 +80,7 @@ all: npm build
 
 build/bundle.zip: build-bundle
 	rm -f build/bundle.zip
-	cd build && zip -r bundle.zip bundle
+	cd build && zip -r bundle.zip bundle -x "bundle/head/*"
 
 release: build/bundle.zip
 	cp -rT build/bundle ../etpl-pages/demo/$(shell git describe --dirty | tr -d "\n")
