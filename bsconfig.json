@@ -12,8 +12,7 @@
         }
     ],
     "package-specs": [
-        "amdjs",
-        "commonjs"
+        "es6"
     ],
     "bs-dependencies": [
         "bs-batteries",

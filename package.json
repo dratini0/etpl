@@ -8,8 +8,10 @@
     "infinite-jest": "git://github.com/glennsl/infinite-jest",
     "jquery": "^3.3.1",
     "json-codec": "git://github.com/dratini0/JsonCodec",
-    "requirejs": "^2.3.5",
-    "webpack": "^4.0.1"
+    "uglifyjs-webpack-plugin": "^1.2.2",
+    "webpack": "^4.1.1",
+    "webpack-cli": "^2.0.9",
+    "webpack-dev-server": "^3.1.0"
   },
   "jest": {
     "testRegex": "/lib/js/tests/.*\\.js"

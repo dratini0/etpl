@@ -1,5 +1,5 @@
 /*
- * webpack.config.js
+ * webpack.config.dev.js
  * Copyright 2017-2018 Balint Kovacs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,22 +20,21 @@ const path = require('path')
 const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 
 module.exports = {
-    mode: "production",
+    mode: "development",
     entry: path.resolve(__dirname, "lib/es6/src/frontend/frontend.js"),
     output: {
-        path: path.resolve(__dirname, 'build/bundle/js'),
+        path: path.resolve(__dirname, 'build/dev'),
         filename: 'bundle.js',
-        sourceMapFilename: 'bundle.js.map',
     },
-    devtool: "source-map",
+    devtool: "eval-source-map",
     resolve: {
         alias: {
             "FileSaver": path.resolve(__dirname, "node_modules/file-saver/FileSaver.js")
         },
     },
-    plugins: [
-        new UglifyJsPlugin({
-            sourceMap: true,
-        }),
-    ],
+    devServer: {
+        contentBase: path.resolve(__dirname, "web"),
+        publicPath: "/js/",
+        port: 8000,
+    }
 };
