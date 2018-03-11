@@ -1,5 +1,5 @@
 (*
- * interpreter.mli
+ * evaluateWorkerTypes.mli
  * Copyright 2017-2018 Balint Kovacs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,10 +16,9 @@
  *)
 
 open Language
-open Position
 
-type runtimeExceptionBody = string * state * position
-exception RuntimeException of runtimeExceptionBody
-val nextStep: ?vars: value StringMap.t -> state -> state
-val evaluateLoop: ?vars: value StringMap.t -> state -> value
-val evaluate: ?vars: value StringMap.t -> expression -> value
+type downstream = expression * value StringMap.t
+type upstream =
+  | MResult of value
+  | MRuntimeException of Interpreter.runtimeExceptionBody
+ 

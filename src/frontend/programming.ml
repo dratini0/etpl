@@ -27,11 +27,15 @@ open ModalGetLine
 open ModalResult
 open PanelFileState
 open Logging
+open EvaluateWorkerTypes
 
 open JquerySafe
 
 include ProgrammingState
 open ProgrammingState.Private
+
+module EvaluateWorker = WebWorker.DedicatedWorker(EvaluateWorkerTypes)
+include EvaluateWorker
 
 type mode =
   | ModeInsert
@@ -55,6 +59,9 @@ let prevPageButtonIndex = 12
 
 let jqueryPosition position = jquery ("#" ^ (posToId position))
 let jqueryMaybePosition position = jqueryMaybe ("#" ^ (posToId position))
+
+let executeWorker = ref None
+let workerBusy = ref false
 
 let setMode mode = begin
   currentMode := mode;
@@ -455,18 +462,47 @@ let setCurrentProgram expression = begin
   redraw()
 end
 
+let handleWorkkerMessage message = begin
+  workerBusy := false;
+  jquery1 "#stop_button" |> Jquery.hide |> ignore;
+  match message with
+    | MResult result ->
+        enque (ESuccessfulExecution {result=Literal(result)});
+        showResult result;
+    | MRuntimeException(message, State expression, position) ->
+        enque (ERuntimeException{message=message; expression=expression; location=position});
+        displayError message expression position;
+end
+
+let stopExecution () =
+  match !executeWorker with
+    | None -> ()
+    | Some worker -> begin
+        terminate worker;
+        executeWorker := None;
+        workerBusy := false;
+        jquery1 "#stop_button" |> Jquery.hide |> ignore;
+      end
+
+let ensureWorker () = begin
+  match !executeWorker with
+  | None -> begin
+      let worker = EvaluateWorker.make "js/evaluateWorker.js" in
+      onMessageSimple worker handleWorkkerMessage;
+      executeWorker := Some worker;
+      worker
+    end
+  | Some worker -> worker
+end
+
 let executeProgram() = begin
   hidePanels();
   logState();
-  try
-    let result = Interpreter.evaluate ~vars:(StringMap.singleton "input" (getInputFile ())) !currentProgram in
-    enque (ESuccessfulExecution {result=Literal(result)});
-    showResult result;
-  with
-    | Interpreter.RuntimeException (message, State expression, position) -> begin
-        enque (ERuntimeException{message=message; expression=expression; location=position});
-        displayError message expression position;
-      end
+  if !workerBusy then stopExecution();
+  let worker = ensureWorker () in
+  postMessage (!currentProgram, StringMap.singleton "input" (getInputFile ())) worker;
+  workerBusy := true;
+  jquery1 "#stop_button" |> Jquery.show |> ignore;
 end
 
 let clipboardDeleteHandler = fun [@bs.this] node _ -> begin
@@ -524,10 +560,12 @@ let showClipboard () =
 
 let init () = begin
   redraw ();
+  ensureWorker () |> ignore;
   jquery "#codebox" |> doSimpleBind "dblclick" executeProgram;
   jquery "#execute_button" |> doSimpleBind "click" executeProgram;
   jquery "#error_close" |> doSimpleBind "click" hideModals;
   jquery "#cut_button" |> doSimpleBind "click" cutButton;
   jquery "#copy_button" |> doSimpleBind "click" copyButton;
   jquery "#clipboard_button" |> doSimpleBind "click" showClipboard;
+  jquery "#stop_button" |> doSimpleBind "click" stopExecution;
 end

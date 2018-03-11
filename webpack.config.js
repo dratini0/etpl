@@ -21,11 +21,14 @@ const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 
 module.exports = {
     mode: "production",
-    entry: path.resolve(__dirname, "lib/es6/src/frontend/frontend.js"),
+    entry: {
+        bundle: path.resolve(__dirname, "lib/es6/src/frontend/frontend.js"),
+        evaluateWorker: path.resolve(__dirname, "lib/es6/src/frontend/evaluateWorker.js"),
+    },
     output: {
         path: path.resolve(__dirname, 'build/bundle/js'),
-        filename: 'bundle.js',
-        sourceMapFilename: 'bundle.js.map',
+        filename: '[name].js',
+        sourceMapFilename: '[name].js.map',
     },
     devtool: "source-map",
     resolve: {

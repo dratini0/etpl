@@ -1,5 +1,5 @@
 (*
- * interpreter.mli
+ * evaluateWorker.mli
  * Copyright 2017-2018 Balint Kovacs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,11 +15,5 @@
  * limitations under the License.
  *)
 
-open Language
-open Position
-
-type runtimeExceptionBody = string * state * position
-exception RuntimeException of runtimeExceptionBody
-val nextStep: ?vars: value StringMap.t -> state -> state
-val evaluateLoop: ?vars: value StringMap.t -> state -> value
-val evaluate: ?vars: value StringMap.t -> expression -> value
+(* This module is used exclusively for its side-effects.
+   The signature is empty *)

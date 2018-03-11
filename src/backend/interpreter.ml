@@ -20,7 +20,8 @@ open Position
 open Names
 open Types
 
-exception RuntimeException of string * state * position
+type runtimeExceptionBody = string * state * position
+exception RuntimeException of runtimeExceptionBody
 
 (* I promise that this wil make sense once we have mutable state *)
 let updateState (State(_)) e = State(e)

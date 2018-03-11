@@ -119,6 +119,10 @@ body.dev #panelbuttons > a.dev_only {
     display: block;
 }
 
+a#stop_button {
+    background: red;
+}
+
 a#debugpanel_button { /* needs more specificity than the general rule */
     background: darkgray;
 }

@@ -1,5 +1,5 @@
 (*
- * interpreter.mli
+ * evaluateWorker.ml
  * Copyright 2017-2018 Balint Kovacs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,11 +15,17 @@
  * limitations under the License.
  *)
 
+open Interpreter
 open Language
-open Position
+open EvaluateWorkerTypes
 
-type runtimeExceptionBody = string * state * position
-exception RuntimeException of runtimeExceptionBody
-val nextStep: ?vars: value StringMap.t -> state -> state
-val evaluateLoop: ?vars: value StringMap.t -> state -> value
-val evaluate: ?vars: value StringMap.t -> expression -> value
+include WebWorker.DedicatedWorkerGlobal(EvaluateWorkerTypes)
+
+let handleMessage (e, vars) = begin
+  try postMessage(MResult(evaluate ~vars:vars e)) with
+    | RuntimeException e -> postMessage(MRuntimeException e)
+end
+
+let () = begin
+  onMessageSimple handleMessage
+end
