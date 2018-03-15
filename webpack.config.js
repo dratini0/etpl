@@ -19,26 +19,42 @@ const webpack = require('webpack');
 const path = require('path')
 const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 
-module.exports = {
-    mode: "production",
-    entry: {
-        bundle: path.resolve(__dirname, "lib/es6/src/frontend/frontend.js"),
-        evaluateWorker: path.resolve(__dirname, "lib/es6/src/frontend/evaluateWorker.js"),
-    },
-    output: {
-        path: path.resolve(__dirname, 'build/bundle/js'),
-        filename: '[name].js',
-        sourceMapFilename: '[name].js.map',
-    },
-    devtool: "source-map",
-    resolve: {
-        alias: {
-            "FileSaver": path.resolve(__dirname, "node_modules/file-saver/FileSaver.js")
+const dev = !!process.env.DEV
+
+module.exports = function(env, argv){
+    const dev = env && env.dev
+    let result = {
+        mode: dev ? "development" : "production",
+        entry: {
+            bundle: path.resolve(__dirname, "lib/es6/src/frontend/frontend.js"),
+            evaluateWorker: path.resolve(__dirname, "lib/es6/src/frontend/evaluateWorker.js"),
         },
-    },
-    plugins: [
-        new UglifyJsPlugin({
-            sourceMap: true,
-        }),
-    ],
-};
+        output: {
+            path: path.resolve(__dirname, 'build/bundle/js'),
+            filename: '[name].js',
+            sourceMapFilename: '[name].js.map',
+        },
+        devtool: dev ? "eval-source-map" : "source-map",
+        resolve: {
+            alias: {
+                "FileSaver": path.resolve(__dirname, "node_modules/file-saver/FileSaver.js")
+            },
+        },
+        plugins: [
+        ],
+        devServer: {
+            contentBase: path.resolve(__dirname, "web"),
+            publicPath: "/js/",
+            port: 8000,
+        },
+    };
+
+    if(! dev) {
+        result.plugins.splice(0, 0,
+            new UglifyJsPlugin({
+                sourceMap: true,
+            })
+        )
+    };
+    return result;
+}

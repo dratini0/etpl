@@ -32,7 +32,7 @@ build: revision
 
 serve: revision
 	$(CHOKIDAR) "web/**" "src/**" -c './revision.sh "{path}"' & \
-	$(WEBPACK-DEV-SERVER) --config webpack.config.dev.js & \
+	$(WEBPACK-DEV-SERVER) --env.dev & \
 	$(BSB) -make-world -w
 
 test:
