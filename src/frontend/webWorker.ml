@@ -20,6 +20,12 @@ module type MessageTypes = sig
   type upstream
 end
 
+let workerType = match [%external document], [%external onconnect], [%external clients] with
+  | Some _, _, _ -> `main
+  | None, Some _, _ -> `shared
+  | None, None, Some _ -> `service
+  | None, None, None -> `dedicated
+
 module MessageEvent = struct
   type 'a t
   external data: 'a t -> 'a = "" [@@bs.get]
