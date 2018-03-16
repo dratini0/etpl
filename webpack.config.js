@@ -17,9 +17,6 @@
 
 const webpack = require('webpack');
 const path = require('path')
-const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
-
-const dev = !!process.env.DEV
 
 module.exports = function(env, argv){
     const dev = env && env.dev
@@ -49,12 +46,5 @@ module.exports = function(env, argv){
         },
     };
 
-    if(! dev) {
-        result.plugins.splice(0, 0,
-            new UglifyJsPlugin({
-                sourceMap: true,
-            })
-        )
-    };
     return result;
 }
