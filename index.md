@@ -2,8 +2,9 @@
 
 ETPL stands for Easy Touch Programming Language.
 This website hosts demos of the latest builds for it.
+Click here for the [latest demo](demo/latest)!
 
-### Demos
+### Version history
 
 #### Milestone 8
 * Rearrange suggestions
