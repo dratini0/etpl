@@ -5,6 +5,17 @@ This website hosts demos of the latest builds for it.
 
 ### Demos
 
+#### Milestone 8
+* Rearrange suggestions
+* Compress builds
+* Evaluate in a worker
+
+[Try it](demo/milestone8/)
+
+[Download](https://github.com/dratini0/etpl/releases/download/milestone8/milestone8.zip)
+
+[On GitHub](https://github.com/dratini0/etpl/releases/tag/milestone8)
+
 #### Milestone 7
 * Load files, split into lines and words
 * Save output as files
