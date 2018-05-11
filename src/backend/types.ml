@@ -40,6 +40,8 @@ let insertableExpressions = [
   BinaryOp(Apply, Hole, Hole), "Function application";
   BinaryOp(ArrayIndex, Hole, Hole), "Index array";
   NAryOp(ArrayForm, [Hole], 0, []), "Form array";
+  BinaryOp(Repeat, Hole, Function(None, "i", None, Hole)), "Repeat";
+  BinaryOp(For, Hole, Function(None, "index", None, Function(None, "item", None, Hole))), "Repeat";
   BinaryOp(Add, Hole, Hole), "Add";
   BinaryOp(Sub, Hole, Hole), "Subtract";
   BinaryOp(Mul, Hole, Hole), "Multiply";
@@ -57,7 +59,12 @@ let insertableExpressions = [
   BinaryOp(Pair, Hole, Hole), "Form pair";
   UnaryOp(PairLeft, Hole), "Project left";
   UnaryOp(PairRight, Hole), "Project right";
+  BinaryOp(EQ, Hole, Hole), "Equal";
+  BinaryOp(GT, Hole, Hole), "Greater than";
   BinaryOp(GTEQ, Hole, Hole), "Greater than or equal to";
+  UnaryOp(Not, Hole), "Not";
+  BinaryOp(And, Hole, Hole), "And";
+  BinaryOp(Or, Hole, Hole), "Or";
   BinaryOp(ArrayMake, Hole, Hole), "Make array";
   TernaryOp(ArraySet, Hole, Hole, Hole), "Set element of array";
   TernaryOp(ArraySlice, Hole, Hole, Hole), "Slice array";
@@ -210,6 +217,7 @@ let unaryOpConstraints substitutions = function
   | ArrayLen ->
       let alpha, substitutions2 = newFreeVariable substitutions in
       substitutions2, TNumber, TArray(FTV alpha)
+  | Not -> substitutions, TBool, TBool
 
 (* Result: state, result, operand1, operand2 *)
 let binaryOpConstraints substitutions = function
@@ -240,6 +248,17 @@ let binaryOpConstraints substitutions = function
   | ArrayMake ->
       let alpha, substitutions2 = newFreeVariable substitutions in
       substitutions2, TArray (FTV alpha), TNumber, FTV alpha
+  | Repeat ->
+      let alpha, substitutions2 = newFreeVariable substitutions in
+      substitutions2, TArray (FTV alpha), TNumber, TFun(TNumber, FTV alpha)
+  | For ->
+      let alpha, substitutions2 = newFreeVariable substitutions in
+      let beta, substitutions3 = newFreeVariable substitutions2 in
+      substitutions3, TArray(FTV beta), TArray(FTV alpha), TFun(TNumber, TFun(FTV alpha, FTV beta))
+  | EQ 
+  | GT -> substitutions, TBool, TNumber, TNumber
+  | And
+  | Or -> substitutions, TBool, TBool, TBool
 
 (* Result: state, result, operand1, operand2, operand3 *)
 let ternaryOpConstraints substitutions = function

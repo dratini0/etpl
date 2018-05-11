@@ -39,6 +39,8 @@ let evalUnary s p o e1 = match (o, e1) with
   | (PairRight, Pair(_, v2)) -> updateState s (Literal v2)
   | (ArrayClone, Array a) -> updateState s (Literal(Array (Array.copy a)))
   | (ArrayLen, Array a) -> updateState s (Literal(Number (a |> Array.length |> float_of_int)))
+  | (Not, Bool true) -> updateState s (Literal(Bool false))
+  | (Not, Bool false) -> updateState s (Literal(Bool true))
   | (o, v1) -> raise (RuntimeException(Printf.sprintf "Program is not well-typed: %s is not defined for an argument of type %s" (unaryOperatorName o) (v1 |> inferTypeValue |> typeName), s, p))
 
 let evalBinary s p o e1 e2 = match (o, e1, e2) with
@@ -62,6 +64,17 @@ let evalBinary s p o e1 e2 = match (o, e1, e2) with
   | (ArrayIndex, Array a, Number i) -> (try updateState s (Literal(Array.get a (int_of_float i))) with Invalid_argument "index out of bounds" -> raise (RuntimeException ("Index out of range for ArrayIndex", s, p)))
   | (Seq, _, _) -> updateState s (Literal e2)
   | (ArrayMake, Number e1, _) -> updateState s (Literal(Array (Array.make (int_of_float e1) e2)))
+  | (Repeat, Number n, (Function _ as f)) ->
+      if n >= 0. then
+        updateState s (NAryOp(ArrayForm, BatList.init (int_of_float n) (fun i -> BinaryOp(Apply, Literal f, Literal (Number(float_of_int i)))), 0, []))
+      else
+        raise (RuntimeException ("Repeat not defined for negative counts!", s, p))
+  | (For, Array a, (Function _ as f)) ->
+      updateState s (NAryOp(ArrayForm, Array.to_list (Array.mapi (fun i item -> BinaryOp(Apply, BinaryOp(Apply, Literal f, Literal (Number (float_of_int i))), Literal item)) a), 0, []))
+  | (EQ, Number a, Number b) -> updateState s (Literal(Bool(a == b)))
+  | (GT, Number a, Number b) -> updateState s (Literal(Bool(a > b)))
+  | (And, Bool a, Bool b) -> updateState s (Literal (Bool (a && b)))
+  | (Or, Bool a, Bool b) -> updateState s (Literal (Bool (a || b)))
   | (o, v1, v2) -> raise (RuntimeException(Printf.sprintf "Program is not well-typed: %s is not defined for an arguments of type %s and %s" (binaryOperatorName o) (v1 |> inferTypeValue |> typeName) (v2 |> inferTypeValue |> typeName), s, p))
 
 let evalTernary s p o e1 e2 e3 = match o, e1, e2, e3 with
@@ -75,7 +88,10 @@ let evalTernary s p o e1 e2 e3 = match o, e1, e2, e3 with
   | ArraySlice, Array a, Number start, Number end_ -> (
     try
       let start = int_of_float start in
-      let len = (int_of_float end_) - start in
+      let start = if start >= 0 then start else (Array.length a) + start in
+      let end_ = int_of_float end_ in
+      let end_ = if end_ >= 0 then end_ else (Array.length a) + end_ in
+      let len = end_ - start in
       updateState s (Literal(Array(Array.sub a start len)))
     with
       | Invalid_argument "Array.sub" -> raise (RuntimeException ("Index out of range for ArraySlice", s, p))

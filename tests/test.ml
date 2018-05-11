@@ -239,12 +239,14 @@ let interpreterTestCasesPositive = [
   TNumber,
   Number 7.
   ;
+  (* Polymorphic functions are still not completely implemented
   Let("id", Function(None, "x", Some(GTV 0), Variable("x")), BinaryOp(Pair, BinaryOp(Apply, Variable "id", Literal(Number 1.)), BinaryOp(Apply, Variable "id", Literal(String "ETPL")))),
   "Let,1,id,Function,1,x,Variable,1,x,BinaryOp,Pair,BinaryOp,Apply,Variable,1,id,Literal,Number,1,BinaryOp,Apply,Variable,1,id,Literal,String,1,ETPL",
   "let id = (fun x -> (x)) in (Pair(Apply(id, 1.), Apply(id, \"ETPL\")))",
   TPair(TNumber, TString),
   Pair(Number 1., String "ETPL")
   ;
+  *)
   If(BinaryOp(GTEQ, Constant Pi, Literal(Number 1.)), Literal(String "Kittens"), Hole),
   "If,BinaryOp,GTEQ,Constant,Pi,Literal,Number,1,Literal,String,1,Kittens,Hole",
   "if (GTEQ(Pi, 1.)) then (\"Kittens\") else ([])",
@@ -269,6 +271,18 @@ let interpreterTestCasesPositive = [
   "let fac = (fun (rec: fac) n -> (if (GTEQ(n, 1.)) then (Mul(n, Apply(fac, Sub(n, 1.)))) else (1.))) in (Apply(fac, 6.))",
   TNumber,
   Number 720.
+  ;
+  BinaryOp(Repeat, Literal(Number 5.), Function(None, "i", None, Variable "i")),
+  "BinaryOp,Repeat,Literal,Number,5,Function,1,i,Variable,1,i",
+  "Repeat(5., fun i -> (i))",
+  TArray TNumber,
+  Array [|Number 0.; Number 1.; Number 2.; Number 3.; Number 4.;|]
+  ;
+  BinaryOp(For, NAryOp(ArrayForm, [Literal(Number 5.); Literal(Number 4.); Literal(Number 3.); Literal(Number 2.); Literal(Number 1.); ], 0, []), Function(None, "i", None, Function(None, "e", None, BinaryOp(Add, Variable "i", Variable "e")))),
+  "BinaryOp,For,NAryOp,ArrayForm,5,Literal,Number,5,Literal,Number,4,Literal,Number,3,Literal,Number,2,Literal,Number,1,Function,1,i,Function,1,e,BinaryOp,Add,Variable,1,i,Variable,1,e",
+  "For(ArrayForm(5., 4., 3., 2., 1.), fun i -> (fun e -> (Add(i, e))))",
+  TArray TNumber,
+  Array [|Number 5.; Number 5.; Number 5.; Number 5.; Number 5.;|]
   ;
 ]
 

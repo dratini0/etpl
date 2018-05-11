@@ -47,6 +47,7 @@ type unaryOp =
   | PairRight
   | ArrayClone
   | ArrayLen
+  | Not
 
 type binaryOp =
   | Add
@@ -63,6 +64,12 @@ type binaryOp =
   | ArrayIndex
   | Seq
   | ArrayMake
+  | Repeat
+  | For
+  | EQ
+  | GT
+  | And
+  | Or
 
 type ternaryOp =
   | ArraySet

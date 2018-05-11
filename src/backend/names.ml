@@ -40,6 +40,7 @@ let unaryOperatorName = function
   | PairRight -> "PairRight"
   | ArrayClone -> "ArrayClone"
   | ArrayLen  -> "ArrayLen"
+  | Not -> "Not"
 
 let binaryOperatorName = function
   | Add -> "Add"
@@ -56,6 +57,12 @@ let binaryOperatorName = function
   | Seq -> "Seq"
   | ArrayIndex -> "ArrayIndex"
   | ArrayMake -> "ArrayMake"
+  | Repeat -> "Repeat"
+  | For -> "For"
+  | GT -> "GT"
+  | EQ -> "EQ"
+  | And -> "And"
+  | Or -> "Or"
 
 let ternaryOperatorName = function
   | ArraySet -> "ArraySet"
@@ -114,6 +121,7 @@ let unaryOperatorByName = function
   | "PairRight" -> PairRight
   | "ArrayClone" -> ArrayClone
   | "ArrayLen" -> ArrayLen
+  | "Not" -> Not
   | name -> raise (UnknownNameException ("Unary operator " ^ name))
   
 let binaryOperatorByName = function
@@ -131,6 +139,12 @@ let binaryOperatorByName = function
   | "Seq" -> Seq
   | "ArrayIndex" -> ArrayIndex
   | "ArrayMake" -> ArrayMake
+  | "Repeat" -> Repeat
+  | "For" -> For
+  | "GT" -> GT
+  | "EQ" -> EQ
+  | "And" -> And
+  | "Or" -> Or
   | name -> raise (UnknownNameException ("Binary operator " ^ name))
 
 let ternaryOperatorByName = function
