@@ -6,6 +6,15 @@ Click here for the [latest version](demo/latest/)!
 
 ### Version history
 
+#### Milestone 9
+* Some last-minute added features
+
+[Try it](demo/milestone9/)
+
+[Download](https://github.com/dratini0/etpl/releases/download/milestone9/milestone9.zip)
+
+[On GitHub](https://github.com/dratini0/etpl/releases/tag/milestone9)
+
 #### Milestone 8
 * Rearrange suggestions
 * Compress builds
