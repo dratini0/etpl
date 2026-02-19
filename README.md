@@ -5,6 +5,11 @@ used on a smartphone or other small touchscreen device.
 
 ## Instructions
 
+Note: as of 2026, this repo no longer builds.
+I need to port it to something more modern.
+I am archiving this repo, as I can't keep up with the security advisories, which are mostly from build dependencies which I have marked incorrectly.
+There are no runtime dependencies.
+
 To build ETPL from this repository, you will need:
 * `npm`
 * `make`
